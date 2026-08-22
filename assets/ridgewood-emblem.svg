@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 240" role="img" aria-label="Ridgewood emblem">
+  <g fill="none" stroke="#000000" stroke-width="18" stroke-linejoin="miter">
+    <path d="M28 24H138Q152 24 152 38V72Q152 86 138 86H28V24ZM46 43V67H134V43H46Z" fill="#000000" stroke="none"/>
+    <path d="M28 104V164L90 126L152 164V104L90 142L28 104Z" fill="#000000" stroke="none"/>
+  </g>
+  <path d="M40 216L90 172L140 216H116L90 194L64 216Z" fill="#B5121B"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 190" role="img" aria-label="Ridgewood wordmark">
+  <style>
+    .name{font-family:Arial,Helvetica,sans-serif;font-weight:700;letter-spacing:18px}
+    .sub{font-family:Arial,Helvetica,sans-serif;font-weight:600;letter-spacing:8px}
+  </style>
+  <text x="18" y="88" class="name" font-size="78" fill="#000000">RIDGE</text>
+  <path d="M477 32L521 68L565 32V86L521 54L477 86Z" fill="#000000"/>
+  <path d="M486 104L521 74L556 104H539L521 89L503 104Z" fill="#B5121B"/>
+  <text x="570" y="88" class="name" font-size="78" fill="#000000">OOD</text>
+  <text x="20" y="151" class="sub" font-size="29" fill="#000000">CONSTRUCTION &amp; DEVELOPMENT</text>
+</svg>
