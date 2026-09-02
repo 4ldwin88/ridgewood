@@ -1,7 +1,7 @@
 import type { UserState } from '../../domain/user/userState';
 import type { GovernedCommandDependencies } from '../authorization/governedCommand';
 import { executeGovernedCommand } from '../authorization/governedCommand';
-import { supabase } from '../../infrastructure/supabase/supabaseClient';
+import { supabase } from '../../infrastructure/auth/supabaseClient';
 
 export interface AuthorizeProjectCommand {
   workspaceId: string;
