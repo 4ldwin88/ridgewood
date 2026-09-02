@@ -9,7 +9,7 @@ export const PREDEVELOPMENT_DOMAINS = [
 ] as const;
 
 export type PredevelopmentDomain = (typeof PREDEVELOPMENT_DOMAINS)[number];
-export type ReadinessState = 'not_started' | 'in_progress' | 'ready' | 'blocked';
+export type ReadinessState = 'not_started' | 'in_progress' | 'satisfied' | 'blocked' | 'unknown';
 
 export interface PredevelopmentDomainState {
   opportunityId: string;
