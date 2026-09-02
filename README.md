@@ -1,25 +1,37 @@
-# Ridgewood OS Prototype
+# Ridgewood OS
 
-A navigable feature-map prototype for exploring the information architecture and operating potential of Ridgewood OS before backend implementation.
+Ridgewood OS is Ridgewood's operating application for business development, project establishment, project control, and institutional knowledge.
 
-## v0.1
+## Authority
 
-The prototype includes responsive desktop/mobile navigation and placeholder operating modules for:
+Ridgewood Drive is authoritative for business semantics, lifecycle, authority, UX behavior, and acceptance. Drive is challengeable when a rule is contradictory, technically unsound, impractical, ambiguous, unsupported by operating evidence, or unnecessarily complex. Code must never silently diverge: resolve the governing Drive specification first, then implement it.
 
-- Home / operating overview
-- Projects
-- Business development pipeline
-- Trade & consultant network
-- Reports & intelligence
-- Administration
-- Quick-action concept
+## Current milestone
 
-The purpose of v0.1 is to validate navigation, module boundaries and operating workflows before introducing a database, authentication or production integrations.
+Potential Opportunity → Qualification → Predevelopment → Authorization → Established Project.
 
-## Architecture principle
+Construction execution and closeout remain future product domains. GAP-07 estimating issue/release and GAP-08 estimate-to-project-budget handoff remain validation-blocked and must not be fabricated in code.
 
-Ridgewood OS should become a management-by-exception operating layer: consolidate project and business information, preserve institutional memory, and surface decisions, risks, deadlines and actions that require attention.
+## Architecture
 
-## Next
+The application is organized by durable product responsibility rather than screen ownership:
 
-Deepen the project workspace and lifecycle flow, then decide which modules deserve functional prototypes and which should remain conceptual until Ridgewood's operating requirements are confirmed.
+- `src/app` — composition, routing, providers and shell only.
+- `src/core` — cross-domain Ridgewood mechanics: lifecycle, authority, attention, audit.
+- `src/modules` — bounded product capabilities such as Business, Projects and Network.
+- `src/domain` — canonical business entities and invariants.
+- `src/application` — commands, queries and policies coordinating domain behavior.
+- `src/infrastructure` — database, repositories, authentication, storage and telemetry adapters.
+- `src/shared` — genuinely reusable UI/form/validation primitives.
+- `tests` — unit, integration and canonical E2E scenarios.
+- `supabase` — migrations, seed data and future server-side functions for Ridgewood's own backend.
+
+UI navigation does not define system architecture. Home, Business, Projects, Network and More compose capabilities from these layers.
+
+## Legacy policy
+
+The former static prototype runtime is intentionally removed. Git history preserves it. Do not introduce `legacy`, `old`, `deprecated`, `v1`, compatibility aliases, commented-out implementations, or duplicate internal semantics.
+
+## Development rule
+
+Material lifecycle changes are named commands/use cases, not arbitrary record updates. UI components do not directly mutate canonical persistence. Mode (Operate / Control / Direct) changes presentation and emphasis only; it never grants permission or business authority.
