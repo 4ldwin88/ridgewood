@@ -34,17 +34,28 @@ function transition(
   };
 }
 
+export function beginQualification(
+  opportunity: Opportunity,
+  actorId: string,
+  occurredAt = new Date().toISOString(),
+): OpportunityCommandResult {
+  if (!['potential', 'held'].includes(opportunity.lifecycleState)) {
+    throw new Error(`Qualification cannot begin from ${opportunity.lifecycleState}.`);
+  }
+  return transition(opportunity, 'qualification', actorId, 'qualification_started', {}, occurredAt);
+}
+
 export function recordQualificationDecision(
   opportunity: Opportunity,
   decision: QualificationDecision,
 ): OpportunityCommandResult {
   if (!decision.rationale.trim()) throw new Error('Qualification rationale is required.');
-  if (!['basic', 'held'].includes(opportunity.lifecycleState)) {
+  if (opportunity.lifecycleState !== 'qualification') {
     throw new Error(`Qualification cannot be decided from ${opportunity.lifecycleState}.`);
   }
 
   const next: OpportunityLifecycleState =
-    decision.outcome === 'advance' ? 'qualified' : decision.outcome === 'hold' ? 'held' : 'declined';
+    decision.outcome === 'advance' ? 'predevelopment' : decision.outcome === 'hold' ? 'held' : 'declined';
 
   return transition(opportunity, next, decision.decidedBy, 'qualification_decided', {
     outcome: decision.outcome,
@@ -57,8 +68,8 @@ export function beginPredevelopment(
   actorId: string,
   occurredAt = new Date().toISOString(),
 ): OpportunityCommandResult {
-  if (opportunity.lifecycleState !== 'qualified') {
-    throw new Error('Predevelopment requires a qualified Opportunity.');
+  if (opportunity.lifecycleState !== 'qualification') {
+    throw new Error('Predevelopment requires an Opportunity in Qualification.');
   }
   return transition(opportunity, 'predevelopment', actorId, 'predevelopment_started', {}, occurredAt);
 }

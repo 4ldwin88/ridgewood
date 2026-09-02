@@ -1,11 +1,12 @@
 export type OpportunityLifecycleState =
-  | 'basic'
-  | 'qualified'
+  | 'potential'
+  | 'qualification'
   | 'predevelopment'
   | 'authorization_ready'
   | 'authorized'
   | 'held'
-  | 'declined';
+  | 'declined'
+  | 'lost';
 
 export type CommercialStage =
   | 'unknown'
