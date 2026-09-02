@@ -6,7 +6,7 @@ const base: Opportunity = {
   id: 'OPP-FAIRY-LAKE',
   name: 'Fairy Lake / STANZA',
   priority: 'high',
-  lifecycleState: 'basic',
+  lifecycleState: 'qualification',
   commercialStage: 'unknown',
   createdAt: '2026-09-02T00:00:00.000Z',
   updatedAt: '2026-09-02T00:00:00.000Z',
@@ -18,12 +18,12 @@ describe('Opportunity lifecycle commands', () => {
       outcome: 'advance', rationale: 'Proceed to structured predevelopment.',
       decidedBy: 'edward', decidedAt: '2026-09-02T01:00:00.000Z',
     });
-    expect(result.opportunity.lifecycleState).toBe('qualified');
+    expect(result.opportunity.lifecycleState).toBe('predevelopment');
     expect(result.event.type).toBe('qualification_decided');
   });
 
   it('does not permit predevelopment before qualification', () => {
-    expect(() => beginPredevelopment(base, 'edward')).toThrow(/qualified Opportunity/);
+    expect(() => beginPredevelopment({ ...base, lifecycleState: 'potential' }, 'edward')).toThrow(/Qualification/);
   });
 
   it('permits explicit hold without inventing missing facts', () => {
