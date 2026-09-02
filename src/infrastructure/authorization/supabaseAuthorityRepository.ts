@@ -1,8 +1,16 @@
 import type { AuthorityRepository } from '../../application/ports/authorityRepository';
 import type { AuthorityDelegation, UserPositionAssignment } from '../../domain/user/authority';
-import { supabase } from '../supabase/supabaseClient';
+import { supabase } from '../auth/supabaseClient';
 
 type ScopeRow = { type?: UserPositionAssignment['scopeType']; id?: string } | null;
+type PositionRow = {
+  id: string; workspace_id: string; user_id: string; role_family: UserPositionAssignment['roleFamily'];
+  position_key: string; scope: ScopeRow; effective_from: string; effective_until: string | null; assigned_by: string | null;
+};
+type DelegationRow = {
+  id: string; workspace_id: string; grantor_user_id: string; grantee_user_id: string; authority_key: AuthorityDelegation['authorityKey'];
+  scope: ScopeRow; effective_from: string; effective_until: string | null; revoked_at: string | null; reason: string | null;
+};
 
 function parseScope(scope: ScopeRow): Pick<UserPositionAssignment, 'scopeType' | 'scopeId'> {
   const type = scope?.type;
@@ -22,16 +30,10 @@ export const supabaseAuthorityRepository: AuthorityRepository = {
       .eq('status', 'active');
     if (error) throw error;
 
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      workspaceId: row.workspace_id,
-      userId: row.user_id,
-      roleFamily: row.role_family,
-      positionKey: row.position_key,
-      ...parseScope(row.scope as ScopeRow),
-      activeFrom: row.effective_from,
-      activeUntil: row.effective_until ?? undefined,
-      assignedBy: row.assigned_by ?? '',
+    return ((data ?? []) as PositionRow[]).map((row) => ({
+      id: row.id, workspaceId: row.workspace_id, userId: row.user_id, roleFamily: row.role_family,
+      positionKey: row.position_key, ...parseScope(row.scope), activeFrom: row.effective_from,
+      activeUntil: row.effective_until ?? undefined, assignedBy: row.assigned_by ?? '',
     }));
   },
 
@@ -44,17 +46,10 @@ export const supabaseAuthorityRepository: AuthorityRepository = {
       .eq('status', 'active');
     if (error) throw error;
 
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      workspaceId: row.workspace_id,
-      grantedBy: row.grantor_user_id,
-      grantedTo: row.grantee_user_id,
-      authorityKey: row.authority_key,
-      ...parseScope(row.scope as ScopeRow),
-      effectiveFrom: row.effective_from,
-      effectiveUntil: row.effective_until ?? undefined,
-      revokedAt: row.revoked_at ?? undefined,
-      basis: row.reason ?? undefined,
+    return ((data ?? []) as DelegationRow[]).map((row) => ({
+      id: row.id, workspaceId: row.workspace_id, grantedBy: row.grantor_user_id, grantedTo: row.grantee_user_id,
+      authorityKey: row.authority_key, ...parseScope(row.scope), effectiveFrom: row.effective_from,
+      effectiveUntil: row.effective_until ?? undefined, revokedAt: row.revoked_at ?? undefined, basis: row.reason ?? undefined,
     }));
   },
 };
