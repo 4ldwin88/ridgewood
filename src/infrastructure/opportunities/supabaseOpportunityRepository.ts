@@ -1,11 +1,13 @@
 import type { Opportunity, OpportunityPriority } from '../../domain/opportunity/opportunity';
 import { supabase } from '../auth/supabaseClient';
 
-function fromRow(row: any): Opportunity {
+// Transitional UI adapter: the Business UI still calls this an Opportunity while
+// Opportunity is now only the initial stage of the authoritative Project State.
+function fromProjectState(row: any): Opportunity {
   return {
     id: row.id,
     name: row.name,
-    lifecycleState: row.lifecycle,
+    lifecycleState: row.state,
     commercialStage: row.commercial_stage ?? undefined,
     commercialProbability: row.commercial_probability ?? undefined,
     priority: row.priority as OpportunityPriority | undefined,
@@ -16,7 +18,7 @@ function fromRow(row: any): Opportunity {
     source: row.source_context ?? undefined,
     summary: row.summary ?? undefined,
     nextAction: row.next_action ?? undefined,
-    projectStateId: row.project_state_id ?? undefined,
+    projectStateId: row.id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   } as Opportunity;
@@ -33,18 +35,18 @@ async function userAndWorkspace() {
 export const supabaseOpportunityRepository = {
   async list(): Promise<Opportunity[]> {
     const { workspaceId } = await userAndWorkspace();
-    const { data, error } = await supabase.from('opportunities').select('*').eq('workspace_id', workspaceId).is('archived_at', null).order('updated_at', { ascending: false });
+    const { data, error } = await supabase.from('project_states').select('*').eq('workspace_id', workspaceId).is('archived_at', null).order('updated_at', { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(fromRow);
+    return (data ?? []).map(fromProjectState);
   },
 
   async create(opportunity: Opportunity): Promise<Opportunity> {
     await userAndWorkspace();
-    const { data, error } = await supabase.rpc('create_opportunity_with_project_state', {
-      opportunity_input: {
-        id: opportunity.id,
+    const { data, error } = await supabase.rpc('create_project_state', {
+      project_state_input: {
+        id: opportunity.projectStateId ?? opportunity.id,
         name: opportunity.name,
-        lifecycle: opportunity.lifecycleState,
+        state: opportunity.lifecycleState,
         commercial_stage: opportunity.commercialStage ?? null,
         commercial_probability: opportunity.commercialProbability ?? null,
         priority: opportunity.priority ?? null,
@@ -57,12 +59,12 @@ export const supabaseOpportunityRepository = {
       },
     });
     if (error) throw error;
-    return fromRow(data);
+    return fromProjectState(data);
   },
 
   async archive(id: string): Promise<void> {
     const { userId, workspaceId } = await userAndWorkspace();
-    const { error } = await supabase.from('opportunities').update({ archived_at: new Date().toISOString(), archived_by: userId }).eq('id', id).eq('workspace_id', workspaceId);
+    const { error } = await supabase.from('project_states').update({ archived_at: new Date().toISOString(), archived_by: userId, updated_at: new Date().toISOString() }).eq('id', id).eq('workspace_id', workspaceId);
     if (error) throw error;
   },
 };
