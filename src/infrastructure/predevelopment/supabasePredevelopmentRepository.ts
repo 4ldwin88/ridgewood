@@ -8,7 +8,7 @@ export async function ensurePredevelopmentDomains(projectStateId:string):Promise
 }
 export async function listPredevelopmentDomains(projectStateId:string):Promise<PredevelopmentDomainState[]>{
   const {data,error}=await supabase.from('predevelopment_domains').select('*').eq('project_state_id',projectStateId).order('domain_key'); if(error) throw error;
-  return (data??[]).map((r:any)=>({opportunityId:r.project_state_id,domain:r.domain_key as PredevelopmentDomain,readiness:r.readiness as ReadinessState,summary:r.notes??undefined,blockers:[],unknowns:[],updatedAt:r.updated_at}));
+  return (data??[]).map((r:any)=>({projectStateId:r.project_state_id,domain:r.domain_key as PredevelopmentDomain,readiness:r.readiness as ReadinessState,summary:r.notes??undefined,blockers:[],unknowns:[],updatedAt:r.updated_at}));
 }
 export async function updatePredevelopmentDomain(projectStateId:string,domain:PredevelopmentDomain,readiness:ReadinessState,notes:string):Promise<void>{
   const {data:userData}=await supabase.auth.getUser(); const uid=userData.user?.id; if(!uid) throw new Error('Authentication required.');
