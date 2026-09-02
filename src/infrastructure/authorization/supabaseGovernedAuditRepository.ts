@@ -1,5 +1,5 @@
 import type { GovernedAuditRepository } from '../../application/ports/governedAuditRepository';
-import { supabase } from '../supabase/supabaseClient';
+import { supabase } from '../auth/supabaseClient';
 
 export const supabaseGovernedAuditRepository: GovernedAuditRepository = {
   async append(input) {
