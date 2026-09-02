@@ -16,9 +16,10 @@ function fromRow(row: any): Opportunity {
     source: row.source_context ?? undefined,
     summary: row.summary ?? undefined,
     nextAction: row.next_action ?? undefined,
+    projectStateId: row.project_state_id ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  };
+  } as Opportunity;
 }
 
 async function userAndWorkspace() {
@@ -38,24 +39,23 @@ export const supabaseOpportunityRepository = {
   },
 
   async create(opportunity: Opportunity): Promise<Opportunity> {
-    const { userId, workspaceId } = await userAndWorkspace();
-    const { data, error } = await supabase.from('opportunities').insert({
-      id: opportunity.id,
-      workspace_id: workspaceId,
-      name: opportunity.name,
-      lifecycle: opportunity.lifecycleState,
-      commercial_stage: opportunity.commercialStage ?? null,
-      commercial_probability: opportunity.commercialProbability ?? null,
-      priority: opportunity.priority ?? null,
-      owner_user_id: userId,
-      organization_id: opportunity.organizationId ?? null,
-      site_location: opportunity.location ?? null,
-      sector: opportunity.sector ?? null,
-      source_context: opportunity.source ?? null,
-      summary: opportunity.summary ?? null,
-      next_action: opportunity.nextAction ?? null,
-      created_by: userId,
-    }).select('*').single();
+    await userAndWorkspace();
+    const { data, error } = await supabase.rpc('create_opportunity_with_project_state', {
+      opportunity_input: {
+        id: opportunity.id,
+        name: opportunity.name,
+        lifecycle: opportunity.lifecycleState,
+        commercial_stage: opportunity.commercialStage ?? null,
+        commercial_probability: opportunity.commercialProbability ?? null,
+        priority: opportunity.priority ?? null,
+        organization_id: opportunity.organizationId ?? null,
+        site_location: opportunity.location ?? null,
+        sector: opportunity.sector ?? null,
+        source_context: opportunity.source ?? null,
+        summary: opportunity.summary ?? null,
+        next_action: opportunity.nextAction ?? null,
+      },
+    });
     if (error) throw error;
     return fromRow(data);
   },
