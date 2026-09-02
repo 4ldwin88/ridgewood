@@ -4,6 +4,8 @@ import { supabaseOpportunityRepository } from '../../infrastructure/opportunitie
 import { developmentObservability } from '../../infrastructure/observability/supabaseDevelopmentObservability';
 
 const stages = ['Opportunity', 'Qualification', 'Predevelopment', 'Authorization', 'Project'];
+const sectors = ['Residential', 'Mixed-use', 'Commercial', 'Industrial', 'Institutional', 'Other'];
+const sources = ['Existing relationship', 'Referral', 'Inbound', 'Partner', 'Direct outreach', 'Other'];
 
 export function BusinessWorkspace() {
   const [items, setItems] = useState<Opportunity[]>([]);
@@ -21,7 +23,8 @@ export function BusinessWorkspace() {
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const name = String(form.get('name') ?? '').trim();
     if (!name) return;
     setCreating(true); setError(null);
@@ -39,7 +42,7 @@ export function BusinessWorkspace() {
         createdAt: now, updatedAt: now,
       });
       setItems((current) => [created, ...current]);
-      event.currentTarget.reset();
+      formElement.reset();
       void developmentObservability.capture({ eventName: 'command_succeeded', pagePath: '/business', metadata: { command: 'CreateOpportunity', opportunityId: created.id } });
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Opportunity could not be created.';
@@ -50,15 +53,15 @@ export function BusinessWorkspace() {
 
   return <div className="business-grid">
     <section className="panel">
-      <div className="section-heading"><div><h2>Opportunity → Project</h2><p>Capture a potential project without pretending unknown information is complete.</p></div></div>
+      <div className="section-heading"><div><h2>New opportunity</h2><p>Start with what you know. Everything except the name can be added later.</p></div></div>
       <div className="stage-row">{stages.map((stage) => <span key={stage}>{stage}</span>)}</div>
       <form className="opportunity-form" onSubmit={create} onFocus={() => void developmentObservability.capture({eventName:'form_started',pagePath:'/business',metadata:{form:'CreateOpportunity'}})}>
-        <label>Opportunity name<input name="name" required placeholder="e.g. Fairy Lake" /></label>
-        <label>Site / location<input name="location" placeholder="Unknown is acceptable" /></label>
-        <label>Sector<input name="sector" placeholder="Residential, mixed-use…" /></label>
-        <label>Source<input name="source" placeholder="How did this opportunity originate?" /></label>
-        <label className="wide">Summary<textarea name="summary" rows={3} placeholder="What is known so far?" /></label>
-        <label className="wide">Next action<input name="nextAction" placeholder="What needs to happen next?" /></label>
+        <label className="wide">Opportunity name<input name="name" required autoFocus placeholder="e.g. Fairy Lake" /></label>
+        <label>Site / location <small>(optional)</small><input name="location" placeholder="City, address or site" /></label>
+        <label>Sector <small>(optional)</small><select name="sector" defaultValue=""><option value="">Not selected</option>{sectors.map((sector) => <option key={sector} value={sector}>{sector}</option>)}</select></label>
+        <label>Source <small>(optional)</small><select name="source" defaultValue=""><option value="">Not selected</option>{sources.map((source) => <option key={source} value={source}>{source}</option>)}</select></label>
+        <label className="wide">Next step <small>(optional)</small><input name="nextAction" placeholder="Immediate follow-up, if known" /></label>
+        <details className="wide"><summary>Add context</summary><label>Summary <small>(optional)</small><textarea name="summary" rows={3} placeholder="Anything useful to know at this stage" /></label></details>
         <div className="wide form-actions"><button type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create opportunity'}</button></div>
       </form>
       {error ? <p className="error-message" role="alert">{error}</p> : null}
