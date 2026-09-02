@@ -1,0 +1,14 @@
+import { supabase } from '../auth/supabaseClient';
+
+export type QualificationArea='fit'|'stakeholders'|'site'|'commercial';
+export type QualificationAssessment='yes'|'unclear'|'no';
+export type QualificationDecision='advance'|'hold'|'decline';
+export type QualificationFinding={area:QualificationArea;assessment:QualificationAssessment;note?:string};
+
+async function context(){const {data:{user},error}=await supabase.auth.getUser();if(error||!user)throw error??new Error('Authentication required.');const {data:m,error:me}=await supabase.from('workspace_memberships').select('workspace_id').eq('user_id',user.id).eq('status','active').limit(1).single();if(me||!m)throw me??new Error('No active Ridgewood workspace.');return{userId:user.id,workspaceId:m.workspace_id as string}}
+
+export const supabaseQualificationRepository={
+ async list(opportunityId:string):Promise<QualificationFinding[]>{const {workspaceId}=await context();const {data,error}=await supabase.from('opportunity_qualification_findings').select('area,assessment,note').eq('workspace_id',workspaceId).eq('opportunity_id',opportunityId);if(error)throw error;return(data??[]) as QualificationFinding[]},
+ async save(opportunityId:string,finding:QualificationFinding):Promise<void>{const {userId,workspaceId}=await context();const {error}=await supabase.from('opportunity_qualification_findings').upsert({workspace_id:workspaceId,opportunity_id:opportunityId,area:finding.area,assessment:finding.assessment,note:finding.note??null,assessed_by:userId,assessed_at:new Date().toISOString(),updated_at:new Date().toISOString()},{onConflict:'opportunity_id,area'});if(error)throw error},
+ async decide(opportunityId:string,decision:QualificationDecision,rationale?:string):Promise<void>{const {userId,workspaceId}=await context();const {error}=await supabase.from('opportunity_qualification_decisions').insert({workspace_id:workspaceId,opportunity_id:opportunityId,decision,rationale:rationale||null,decided_by:userId});if(error)throw error;if(decision==='advance'){const {error:updateError}=await supabase.from('opportunities').update({lifecycle:'predevelopment',updated_at:new Date().toISOString()}).eq('id',opportunityId).eq('workspace_id',workspaceId);if(updateError)throw updateError}else if(decision==='hold'){const {error:updateError}=await supabase.from('opportunities').update({lifecycle:'held',updated_at:new Date().toISOString()}).eq('id',opportunityId).eq('workspace_id',workspaceId);if(updateError)throw updateError}else{const {error:updateError}=await supabase.from('opportunities').update({lifecycle:'declined',updated_at:new Date().toISOString()}).eq('id',opportunityId).eq('workspace_id',workspaceId);if(updateError)throw updateError}}
+};
