@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../infrastructure/auth/supabaseClient';
 import { developmentObservability } from '../../infrastructure/observability/supabaseDevelopmentObservability';
 import { DevNotesButton } from '../../modules/development/DevNotesButton';
+import { BusinessWorkspace } from '../../modules/business/BusinessWorkspace';
 
 type Page = 'Home' | 'Business' | 'Projects' | 'Network' | 'More';
 const pages: Page[] = ['Home', 'Business', 'Projects', 'Network', 'More'];
@@ -35,21 +36,15 @@ export function AppShell({ session }: { session: Session }) {
           <button type="button" onClick={signOut} disabled={signingOut}>{signingOut ? 'Exiting…' : 'Exit'}</button>
         </div>
       </header>
-      <nav className="primary-nav" aria-label="Primary">
-        {pages.map((item) => <button key={item} className={page === item ? 'active' : ''} onClick={() => setPage(item)}>{item}</button>)}
-      </nav>
+      <nav className="primary-nav" aria-label="Primary">{pages.map((item) => <button key={item} className={page === item ? 'active' : ''} onClick={() => setPage(item)}>{item}</button>)}</nav>
       <main className="workspace">
         <p className="eyebrow">{page}</p>
         <h1>{page === 'Business' ? 'Business pipeline' : page}</h1>
-        {page === 'Business' ? <BusinessFoundation /> : <EmptyFoundation page={page} />}
+        {page === 'Business' ? <BusinessWorkspace /> : <EmptyFoundation page={page} />}
       </main>
       <footer><span>{session.user.email}</span><span>Ridgewood OS · {APP_VERSION}</span></footer>
     </div>
   );
-}
-
-function BusinessFoundation() {
-  return <section className="panel"><div><h2>Opportunity → Project</h2><p>The governed business workflow will live here. Authentication and the application shell are connected without coupling lifecycle authority to navigation.</p></div><div className="stage-row"><span>Opportunity</span><span>Qualification</span><span>Predevelopment</span><span>Authorization</span><span>Project</span></div></section>;
 }
 
 function EmptyFoundation({ page }: { page: Page }) {
