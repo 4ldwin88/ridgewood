@@ -1,0 +1,22 @@
+-- Project State + governed document model.
+-- Applied to Ridgewood Supabase project leikcvdfvovycjcjtflq as migration project_state_governed_documents.
+--
+-- Canonical objects introduced:
+-- projects.operational_state/state_updated_at
+-- document_records
+-- document_revisions
+-- document_package_definitions
+-- document_output_manifests
+-- document_output_items
+--
+-- Invariants enforced in persistence/application layers:
+-- * stable logical document identity with numbered revisions
+-- * published revisions are not client-editable; ordinary UPDATE policy admits drafts only
+-- * output manifests point to explicit revision IDs
+-- * all exposed document tables use RLS and explicit least-privilege grants
+-- * package definitions include Opportunity & Qualification, Preconstruction, Authorization,
+--   Project / Construction, and Closeout & Warranty.
+--
+-- TODO: reconstruct the exact executable SQL from remote migration history before using this repo
+-- to bootstrap another environment. This file is currently a migration record, not an executable
+-- migration, and must not be represented as reproducible until that reconstruction is complete.
