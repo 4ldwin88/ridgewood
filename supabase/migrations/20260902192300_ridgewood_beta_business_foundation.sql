@@ -1,0 +1,23 @@
+-- Applied to Ridgewood Supabase project leikcvdfvovycjcjtflq on 2026-09-02.
+-- Canonical milestone-1 persistence foundation. RLS is mandatory on all exposed tables.
+-- Full applied SQL is intentionally maintained as a migration in Supabase migration history;
+-- repository migrations must remain reconciled with that history before release.
+--
+-- Tables established:
+-- profiles, organizations, people, opportunities, predevelopment_domains,
+-- evidence_references, actions, risk_issues, decisions, authorization_records,
+-- projects, audit_events.
+--
+-- Canonical invariants established:
+-- * Opportunity has stable UUID identity upstream.
+-- * Project has a unique originating_opportunity_id and authorization_record_id.
+-- * commercial stage/probability are distinct from lifecycle/readiness.
+-- * seven canonical predevelopment domain keys are constrained.
+-- * material decisions/authorization/audit records are append-oriented.
+-- * authenticated Data API access is explicit; anon has no table grants.
+-- * RLS is enabled on every application table.
+--
+-- IMPORTANT: The complete executable migration is tracked by Supabase migration
+-- ridgewood_beta_business_foundation. This repository marker exists because the
+-- GitHub connector cannot retrieve the provider-generated migration SQL after
+-- execution. Future migrations should be authored in-repo first and then applied.
