@@ -8,7 +8,7 @@ const projectState: ProjectState = {
   priority: 'high',
   stage: 'predevelopment',
   status: 'active',
-  commercialStage: 'feasibility',
+  commercialStage: 'predevelopment',
   createdAt: '2026-09-02T00:00:00Z',
   updatedAt: '2026-09-02T00:00:00Z',
 };
