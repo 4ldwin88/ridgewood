@@ -4,8 +4,7 @@ import { supabase } from '../auth/supabaseClient';
 export const supabaseGovernedAuditRepository: GovernedAuditRepository = {
   async append(input) {
     const { error } = await supabase.from('audit_events').insert({
-      opportunity_id: input.opportunityId ?? null,
-      project_id: input.projectId ?? null,
+      project_state_id: input.projectStateId ?? null,
       event_type: `governed_command_${input.outcome}`,
       actor_user_id: input.actorUserId,
       payload: {
