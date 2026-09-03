@@ -1,6 +1,7 @@
 import type { ProtectedAction } from '../../application/ports/authorizationVerification';
 
 export type RoleFamily = 'operator' | 'manager' | 'executive';
+export type AuthorityScopeType = 'workspace' | 'project_state' | 'document_family';
 
 export interface UserPositionAssignment {
   id: string;
@@ -8,7 +9,7 @@ export interface UserPositionAssignment {
   workspaceId: string;
   roleFamily: RoleFamily;
   positionKey: string;
-  scopeType: 'workspace' | 'opportunity' | 'project' | 'document_family';
+  scopeType: AuthorityScopeType;
   scopeId?: string;
   activeFrom: string;
   activeUntil?: string;
@@ -21,7 +22,7 @@ export interface AuthorityDelegation {
   grantedBy: string;
   grantedTo: string;
   authorityKey: string;
-  scopeType: UserPositionAssignment['scopeType'];
+  scopeType: AuthorityScopeType;
   scopeId?: string;
   effectiveFrom: string;
   effectiveUntil?: string;
