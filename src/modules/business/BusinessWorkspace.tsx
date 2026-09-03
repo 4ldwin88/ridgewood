@@ -7,7 +7,7 @@ import { ensurePredevelopmentDomains, listPredevelopmentDomains, updatePredevelo
 import { supabaseProjectStateRepository, type ProjectStateStageRequirement } from '../../infrastructure/project-state/supabaseProjectStateRepository';
 import { supabaseQualificationRepository, type QualificationArea, type QualificationAssessment, type QualificationDecision, type QualificationFinding } from '../../infrastructure/qualification/supabaseQualificationRepository';
 
-const stages = ['Opportunity', 'Qualification', 'Predevelopment', 'Authorization', 'Project'];
+const stages = ['Opportunity', 'Qualification', 'Predevelopment', 'Authorization', 'Authorized Project'];
 const sectors = ['Residential', 'Mixed-use', 'Commercial', 'Industrial', 'Institutional', 'Other'];
 const sources = ['Referral', 'Existing relationship', 'Inbound', 'Partner', 'Broker / agent', 'Direct outreach', 'Other'];
 const qualification: [QualificationArea, string, string][] = [
@@ -25,9 +25,7 @@ const predevelopment: [PredevelopmentDomain, string, string][] = [
   ['risk_decision_evidence', 'Risk & evidence', 'Material unknowns, risks and supporting evidence'],
   ['delivery_strategy', 'Delivery strategy', 'Procurement, construction and delivery approach'],
 ];
-const readinessChoices: [ReadinessState, string][] = [
-  ['not_started', 'Not started'], ['in_progress', 'In progress'], ['satisfied', 'Satisfied'], ['blocked', 'Blocked'], ['unknown', 'Unknown'],
-];
+const readinessChoices: [ReadinessState, string][] = [['not_started', 'Not started'], ['in_progress', 'In progress'], ['satisfied', 'Satisfied'], ['blocked', 'Blocked'], ['unknown', 'Unknown']];
 type View = { kind: 'pipeline' } | { kind: 'projectState'; id: string };
 
 function normalizeError(error: unknown, fallback: string): string {
@@ -41,123 +39,33 @@ function normalizeError(error: unknown, fallback: string): string {
 function normalize(value?: string): string { return (value ?? '').trim().toLocaleLowerCase(); }
 
 export function BusinessWorkspace() {
-  const [items, setItems] = useState<ProjectState[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<View>({ kind: 'pipeline' });
-  const [draftName, setDraftName] = useState('');
-  const [duplicateOverride, setDuplicateOverride] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    void supabaseProjectStateRepository.list().then((next) => {
-      if (!active) return;
-      setItems(next); setError(null); setLoading(false);
-    }).catch((caught) => {
-      if (!active) return;
-      setError(normalizeError(caught, 'Unable to load project states.')); setLoading(false);
-    });
-    return () => { active = false; };
-  }, []);
-
-  const duplicate = useMemo(() => {
-    const candidate = normalize(draftName);
-    if (!candidate || duplicateOverride) return undefined;
-    return items.find((item) => {
-      const existing = normalize(item.name);
-      return existing === candidate || (candidate.length >= 5 && existing.length >= 5 && (existing.includes(candidate) || candidate.includes(existing)));
-    });
-  }, [draftName, duplicateOverride, items]);
-
-  async function create(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const target = event.currentTarget;
-    const form = new FormData(target);
-    const name = String(form.get('name') ?? '').trim();
-    if (!name || duplicate) return;
-    setCreating(true); setError(null);
-    try {
-      const created = await supabaseProjectStateRepository.create({
-        name,
-        location: String(form.get('location') ?? '').trim() || undefined,
-        sector: String(form.get('sector') ?? '').trim() || undefined,
-        source: String(form.get('source') ?? '').trim() || undefined,
-        summary: String(form.get('summary') ?? '').trim() || undefined,
-        nextAction: String(form.get('nextAction') ?? '').trim() || undefined,
-        priority: 'medium', commercialStage: 'unknown',
-      });
-      setItems((current) => [created, ...current]);
-      target.reset(); setDraftName(''); setDuplicateOverride(false); setView({ kind: 'projectState', id: created.id });
-      void developmentObservability.capture({ eventName: 'command_succeeded', pagePath: '/business', metadata: { command: 'CreateProjectState', projectStateId: created.id } });
-    } catch (caught) { setError(normalizeError(caught, 'Project State could not be created.')); }
-    finally { setCreating(false); }
-  }
-
-  async function archive(item: ProjectState) {
-    if (!window.confirm(`Archive ${item.name}? It will be removed from the active pipeline but retained in Ridgewood.`)) return;
-    try {
-      await supabaseProjectStateRepository.archive(item.id);
-      setItems((current) => current.filter((candidate) => candidate.id !== item.id)); setView({ kind: 'pipeline' });
-      void developmentObservability.capture({ eventName: 'command_succeeded', pagePath: '/business', metadata: { command: 'ArchiveProjectState', projectStateId: item.id } });
-    } catch (caught) { setError(normalizeError(caught, 'Project State could not be archived.')); }
-  }
-
-  if (view.kind === 'projectState') {
-    const item = items.find((candidate) => candidate.id === view.id);
-    if (item) return <ProjectStateWorkspace item={item} onChanged={(updated) => setItems((current) => current.map((candidate) => candidate.id === updated.id ? updated : candidate))} onBack={() => setView({ kind: 'pipeline' })} onArchive={() => void archive(item)} />;
-  }
-
-  return <div className="business-grid">
-    <section className="panel"><h2>Opportunity → Project</h2><p>Create the Project State once. Ridgewood keeps that same identity through every stage.</p>
-      <form className="opportunity-form" onSubmit={create}>
-        <label>Working name<input name="name" required value={draftName} onChange={(event) => { setDraftName(event.target.value); setDuplicateOverride(false); }} /></label>
-        <label>Site / location <small>optional</small><input name="location" /></label>
-        <label>Sector <small>optional</small><select name="sector" defaultValue=""><option value="">Select if known</option>{sectors.map((value) => <option key={value}>{value}</option>)}</select></label>
-        <label>Source <small>optional</small><select name="source" defaultValue=""><option value="">Select if known</option>{sources.map((value) => <option key={value}>{value}</option>)}</select></label>
-        <label className="wide">Next step <small>optional</small><input name="nextAction" /></label>
-        <details className="wide"><summary>Add context</summary><label>Summary <small>optional</small><textarea name="summary" rows={3} /></label></details>
-        {duplicate ? <div className="wide duplicate-warning"><strong>Possible duplicate</strong><p>{duplicate.name} already exists.</p><button type="button" onClick={() => setView({ kind: 'projectState', id: duplicate.id })}>Open existing</button><button type="button" className="secondary" onClick={() => setDuplicateOverride(true)}>Create separate record</button></div> : null}
-        <div className="wide form-actions"><button type="submit" disabled={creating || Boolean(duplicate)}>{creating ? 'Creating…' : 'Create Project State'}</button></div>
-      </form>{error ? <p className="error-message">{error}</p> : null}
-    </section>
-    <section className="panel"><h2>Portfolio pipeline</h2>{loading ? <p>Loading project states…</p> : items.length === 0 ? <p>No active work yet. Create the first Project State to begin.</p> : <div className="opportunity-list">{items.map((item) => <button type="button" className="opportunity-card opportunity-card-button" key={item.id} onClick={() => setView({ kind: 'projectState', id: item.id })}><div><strong>{item.name}</strong><small>{item.location || 'Location unknown'}</small></div><span>{item.status === 'active' ? projectStageLabel(item.stage) : item.status}</span><p>{item.summary || item.nextAction || 'Open to continue.'}</p></button>)}</div>}</section>
-  </div>;
+  const [items, setItems] = useState<ProjectState[]>([]); const [loading, setLoading] = useState(true); const [creating, setCreating] = useState(false); const [error, setError] = useState<string | null>(null); const [view, setView] = useState<View>({ kind: 'pipeline' }); const [draftName, setDraftName] = useState(''); const [duplicateOverride, setDuplicateOverride] = useState(false);
+  useEffect(() => { let active = true; void supabaseProjectStateRepository.list().then((next) => { if (active) { setItems(next); setError(null); setLoading(false); } }).catch((caught) => { if (active) { setError(normalizeError(caught, 'Unable to load project states.')); setLoading(false); } }); return () => { active = false; }; }, []);
+  const duplicate = useMemo(() => { const candidate = normalize(draftName); if (!candidate || duplicateOverride) return undefined; return items.find((item) => { const existing = normalize(item.name); return existing === candidate || (candidate.length >= 5 && existing.length >= 5 && (existing.includes(candidate) || candidate.includes(existing))); }); }, [draftName, duplicateOverride, items]);
+  async function create(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const target = event.currentTarget; const form = new FormData(target); const name = String(form.get('name') ?? '').trim(); if (!name || duplicate) return; setCreating(true); setError(null); try { const created = await supabaseProjectStateRepository.create({ name, location: String(form.get('location') ?? '').trim() || undefined, sector: String(form.get('sector') ?? '').trim() || undefined, source: String(form.get('source') ?? '').trim() || undefined, summary: String(form.get('summary') ?? '').trim() || undefined, nextAction: String(form.get('nextAction') ?? '').trim() || undefined, priority: 'medium', commercialStage: 'unknown' }); setItems((current) => [created, ...current]); target.reset(); setDraftName(''); setDuplicateOverride(false); setView({ kind: 'projectState', id: created.id }); void developmentObservability.capture({ eventName: 'command_succeeded', pagePath: '/business', metadata: { command: 'CreateProjectState', projectStateId: created.id } }); } catch (caught) { setError(normalizeError(caught, 'Project State could not be created.')); } finally { setCreating(false); } }
+  async function archive(item: ProjectState) { if (!window.confirm(`Archive ${item.name}? It will be removed from the active pipeline but retained in Ridgewood.`)) return; try { await supabaseProjectStateRepository.archive(item.id); setItems((current) => current.filter((candidate) => candidate.id !== item.id)); setView({ kind: 'pipeline' }); } catch (caught) { setError(normalizeError(caught, 'Project State could not be archived.')); } }
+  if (view.kind === 'projectState') { const item = items.find((candidate) => candidate.id === view.id); if (item) return <ProjectStateWorkspace item={item} onChanged={(updated) => setItems((current) => current.map((candidate) => candidate.id === updated.id ? updated : candidate))} onBack={() => setView({ kind: 'pipeline' })} onArchive={() => void archive(item)} />; }
+  return <div className="business-grid"><section className="panel"><h2>Opportunity → Authorized Project</h2><p>Create the Project State once. Ridgewood keeps that same identity through every stage.</p><form className="opportunity-form" onSubmit={create}><label>Working name<input name="name" required value={draftName} onChange={(event) => { setDraftName(event.target.value); setDuplicateOverride(false); }} /></label><label>Site / location <small>optional</small><input name="location" /></label><label>Sector <small>optional</small><select name="sector" defaultValue=""><option value="">Select if known</option>{sectors.map((value) => <option key={value}>{value}</option>)}</select></label><label>Source <small>optional</small><select name="source" defaultValue=""><option value="">Select if known</option>{sources.map((value) => <option key={value}>{value}</option>)}</select></label><label className="wide">Next step <small>optional</small><input name="nextAction" /></label><details className="wide"><summary>Add context</summary><label>Summary <small>optional</small><textarea name="summary" rows={3} /></label></details>{duplicate ? <div className="wide duplicate-warning"><strong>Possible duplicate</strong><p>{duplicate.name} already exists.</p><button type="button" onClick={() => setView({ kind: 'projectState', id: duplicate.id })}>Open existing</button><button type="button" className="secondary" onClick={() => setDuplicateOverride(true)}>Create separate record</button></div> : null}<div className="wide form-actions"><button type="submit" disabled={creating || Boolean(duplicate)}>{creating ? 'Creating…' : 'Create Project State'}</button></div></form>{error ? <p className="error-message">{error}</p> : null}</section><section className="panel"><h2>Portfolio pipeline</h2>{loading ? <p>Loading project states…</p> : items.length === 0 ? <p>No active work yet. Create the first Project State to begin.</p> : <div className="opportunity-list">{items.map((item) => <button type="button" className="opportunity-card opportunity-card-button" key={item.id} onClick={() => setView({ kind: 'projectState', id: item.id })}><div><strong>{item.name}</strong><small>{item.location || 'Location unknown'}</small></div><span>{item.status === 'active' ? projectStageLabel(item.stage) : item.status}</span><p>{item.summary || item.nextAction || 'Open to continue.'}</p></button>)}</div>}</section></div>;
 }
 
 function ProjectStateWorkspace({ item, onBack, onArchive, onChanged }: { item: ProjectState; onBack: () => void; onArchive: () => void; onChanged: (item: ProjectState) => void }) {
-  const [requirements, setRequirements] = useState<ProjectStateStageRequirement[]>([]);
-  const [findings, setFindings] = useState<QualificationFinding[]>([]);
-  const [domains, setDomains] = useState<PredevelopmentDomainState[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const opportunity = item.stage === 'opportunity'; const qualificationActive = item.stage === 'qualification'; const predev = item.stage === 'predevelopment'; const terminal = item.status !== 'active';
-
+  const [requirements, setRequirements] = useState<ProjectStateStageRequirement[]>([]); const [findings, setFindings] = useState<QualificationFinding[]>([]); const [domains, setDomains] = useState<PredevelopmentDomainState[]>([]); const [busy, setBusy] = useState(false); const [editingOpportunity, setEditingOpportunity] = useState(false); const [error, setError] = useState<string | null>(null);
+  const opportunity = item.stage === 'opportunity'; const qualificationActive = item.stage === 'qualification'; const predev = item.stage === 'predevelopment'; const authorization = item.stage === 'authorization'; const terminal = item.status !== 'active';
   useEffect(() => { if (opportunity) void supabaseProjectStateRepository.opportunityRequirements(item.id).then(setRequirements).catch((caught) => setError(normalizeError(caught, 'Unable to evaluate Opportunity requirements.'))); }, [item.id, opportunity]);
-  useEffect(() => { if (qualificationActive || predev) void supabaseQualificationRepository.list(item.id).then(setFindings).catch((caught) => setError(normalizeError(caught, 'Unable to load qualification.'))); }, [item.id, qualificationActive, predev]);
-  useEffect(() => { if (predev) void ensurePredevelopmentDomains(item.id).then(() => listPredevelopmentDomains(item.id)).then(setDomains).catch((caught) => setError(normalizeError(caught, 'Unable to load predevelopment.'))); }, [item.id, predev]);
-
-  const findingMap = useMemo(() => new Map(findings.map((finding) => [finding.area, finding])), [findings]);
-  const domainMap = useMemo(() => new Map(domains.map((domain) => [domain.domain, domain])), [domains]);
-  const opportunityReady = requirements.length > 0 && requirements.filter((requirement) => requirement.required).every((requirement) => requirement.status === 'satisfied');
-  const qualificationComplete = qualification.every(([area]) => findingMap.has(area));
-  const readinessComplete = predevelopment.every(([domain]) => domainMap.get(domain)?.readiness === 'satisfied');
-
-  async function advanceOpportunity() { if (!opportunityReady || terminal) return; setBusy(true); setError(null); try { const updated = await supabaseProjectStateRepository.advanceToQualification(item.id); onChanged(updated); } catch (caught) { setError(normalizeError(caught, 'Project State could not advance to Qualification.')); } finally { setBusy(false); } }
+  useEffect(() => { if (qualificationActive || predev || authorization) void supabaseQualificationRepository.list(item.id).then(setFindings).catch((caught) => setError(normalizeError(caught, 'Unable to load qualification.'))); }, [item.id, qualificationActive, predev, authorization]);
+  useEffect(() => { if (predev || authorization) void ensurePredevelopmentDomains(item.id).then(() => listPredevelopmentDomains(item.id)).then(setDomains).catch((caught) => setError(normalizeError(caught, 'Unable to load predevelopment.'))); }, [item.id, predev, authorization]);
+  const findingMap = useMemo(() => new Map(findings.map((finding) => [finding.area, finding])), [findings]); const domainMap = useMemo(() => new Map(domains.map((domain) => [domain.domain, domain])), [domains]); const opportunityReady = requirements.length > 0 && requirements.filter((requirement) => requirement.required).every((requirement) => requirement.status === 'satisfied'); const qualificationComplete = qualification.every(([area]) => findingMap.has(area)); const readinessComplete = predevelopment.every(([domain]) => domainMap.get(domain)?.readiness === 'satisfied');
+  async function saveOpportunity(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!opportunity || terminal) return; setBusy(true); setError(null); const form = new FormData(event.currentTarget); try { const updated = await supabaseProjectStateRepository.updateOpportunityBasics(item.id, { name: String(form.get('name') ?? '').trim(), location: String(form.get('location') ?? '').trim() || undefined, sector: String(form.get('sector') ?? '').trim() || undefined, source: String(form.get('source') ?? '').trim() || undefined, summary: String(form.get('summary') ?? '').trim() || undefined, nextAction: String(form.get('nextAction') ?? '').trim() || undefined }); onChanged(updated); setRequirements(await supabaseProjectStateRepository.opportunityRequirements(item.id)); setEditingOpportunity(false); } catch (caught) { setError(normalizeError(caught, 'Opportunity information could not be saved.')); } finally { setBusy(false); } }
+  async function advanceOpportunity() { if (!opportunityReady || terminal) return; setBusy(true); setError(null); try { onChanged(await supabaseProjectStateRepository.advanceToQualification(item.id)); } catch (caught) { setError(normalizeError(caught, 'Project State could not advance to Qualification.')); } finally { setBusy(false); } }
   async function assess(area: QualificationArea, assessment: QualificationAssessment) { if (terminal || !qualificationActive) return; setBusy(true); try { const finding = { area, assessment }; await supabaseQualificationRepository.save(item.id, finding); setFindings((current) => [...current.filter((value) => value.area !== area), finding]); } catch (caught) { setError(normalizeError(caught, 'Qualification finding could not be saved.')); } finally { setBusy(false); } }
   async function decide(decision: QualificationDecision) { if (!qualificationComplete || terminal || !qualificationActive) return; setBusy(true); try { await supabaseQualificationRepository.decide(item.id, decision); onChanged(decision === 'advance' ? { ...item, stage: 'predevelopment', status: 'active', updatedAt: new Date().toISOString() } : { ...item, status: decision === 'hold' ? 'held' : 'declined', updatedAt: new Date().toISOString() }); } catch (caught) { setError(normalizeError(caught, 'Qualification decision could not be saved.')); } finally { setBusy(false); } }
-  async function setReadiness(domain: PredevelopmentDomain, readiness: ReadinessState) { setBusy(true); try { const existing = domainMap.get(domain); await updatePredevelopmentDomain(item.id, domain, readiness, existing?.summary ?? ''); setDomains((current) => current.map((value) => value.domain === domain ? { ...value, readiness, updatedAt: new Date().toISOString() } : value)); } catch (caught) { setError(normalizeError(caught, 'Predevelopment readiness could not be saved.')); } finally { setBusy(false); } }
-  async function saveNote(domain: PredevelopmentDomain, note: string) { const existing = domainMap.get(domain); if (!existing) return; try { await updatePredevelopmentDomain(item.id, domain, existing.readiness, note); setDomains((current) => current.map((value) => value.domain === domain ? { ...value, summary: note || undefined, updatedAt: new Date().toISOString() } : value)); } catch (caught) { setError(normalizeError(caught, 'Predevelopment note could not be saved.')); } }
-
-  const next = terminal ? `This Project State is ${item.status}. No stage work is currently active.` : opportunity ? (opportunityReady ? 'Opportunity requirements are satisfied. Advance to Qualification.' : 'Complete the required Opportunity capture before Qualification.') : qualificationActive ? 'Complete qualification and record a decision.' : predev ? (readinessComplete ? 'Predevelopment prerequisites are satisfied. Review governed authorization requirements.' : 'Resolve the remaining predevelopment requirements.') : 'Continue the governed Project State process.';
-
-  return <div className="opportunity-workspace"><div className="section-heading"><button type="button" className="text-button" onClick={onBack}>← Portfolio pipeline</button><button type="button" className="text-button danger" onClick={onArchive}>Archive</button></div>
-    <section className="panel opportunity-hero"><div><p className="eyebrow">{item.status === 'active' ? projectStageLabel(item.stage) : item.status}</p><h2>{item.name}</h2><p>{item.location || 'Location not yet recorded'}{item.sector ? ` · ${item.sector}` : ''}</p><small>Project State {item.id}</small></div><div className="next-step"><small>Required next work</small><strong>{next}</strong></div></section>
-    <section className="panel"><h3>End-to-end state</h3><div className="stage-row">{stages.map((stage) => <span key={stage} className={projectStageLabel(item.stage) === stage ? 'active' : ''}>{stage}</span>)}</div></section>
-    <section className="panel"><p className="eyebrow">Stage 1</p><h3>Opportunity</h3>{opportunity ? <><div className="guided-checklist">{requirements.map((requirement) => <article key={requirement.requirementKey}><strong>{requirement.label}</strong><span>{requirement.status.replace('_', ' ')}</span>{requirement.notes ? <small>{requirement.notes}</small> : null}</article>)}</div><div className="form-actions"><button type="button" disabled={!opportunityReady || busy || terminal} onClick={() => void advanceOpportunity()}>Advance to qualification</button></div></> : <p className="guidance">Opportunity capture is complete.</p>}</section>
+  async function setReadiness(domain: PredevelopmentDomain, readiness: ReadinessState) { if (!predev || terminal) return; setBusy(true); try { const existing = domainMap.get(domain); await updatePredevelopmentDomain(item.id, domain, readiness, existing?.summary ?? ''); setDomains((current) => current.map((value) => value.domain === domain ? { ...value, readiness, updatedAt: new Date().toISOString() } : value)); } catch (caught) { setError(normalizeError(caught, 'Predevelopment readiness could not be saved.')); } finally { setBusy(false); } }
+  async function saveNote(domain: PredevelopmentDomain, note: string) { const existing = domainMap.get(domain); if (!existing || !predev || terminal) return; try { await updatePredevelopmentDomain(item.id, domain, existing.readiness, note); setDomains((current) => current.map((value) => value.domain === domain ? { ...value, summary: note || undefined, updatedAt: new Date().toISOString() } : value)); } catch (caught) { setError(normalizeError(caught, 'Predevelopment note could not be saved.')); } }
+  async function enterAuthorization() { if (!predev || !readinessComplete || terminal) return; setBusy(true); setError(null); try { onChanged(await supabaseProjectStateRepository.enterAuthorizationGate(item.id)); } catch (caught) { setError(normalizeError(caught, 'Project State could not enter Authorization.')); } finally { setBusy(false); } }
+  const next = terminal ? `This Project State is ${item.status}. No stage work is currently active.` : opportunity ? (opportunityReady ? 'Opportunity requirements are satisfied. Advance to Qualification.' : 'Complete the required Opportunity capture before Qualification.') : qualificationActive ? 'Complete qualification and record a decision.' : predev ? (readinessComplete ? 'Predevelopment prerequisites are satisfied. Enter the Authorization gate.' : 'Resolve the remaining predevelopment requirements.') : authorization ? 'Authorization gate entered. Explicit business authority and protected verification are required to authorize the Project.' : 'Continue the governed Project State process.';
+  return <div className="opportunity-workspace"><div className="section-heading"><button type="button" className="text-button" onClick={onBack}>← Portfolio pipeline</button><button type="button" className="text-button danger" onClick={onArchive}>Archive</button></div><section className="panel opportunity-hero"><div><p className="eyebrow">{item.status === 'active' ? projectStageLabel(item.stage) : item.status}</p><h2>{item.name}</h2><p>{item.location || 'Location not yet recorded'}{item.sector ? ` · ${item.sector}` : ''}</p><small>Project State {item.id}</small></div><div className="next-step"><small>Required next work</small><strong>{next}</strong></div></section><section className="panel"><h3>End-to-end state</h3><div className="stage-row">{stages.map((stage) => <span key={stage} className={projectStageLabel(item.stage) === stage ? 'active' : ''}>{stage}</span>)}</div></section>
+    <section className="panel"><p className="eyebrow">Stage 1</p><h3>Opportunity</h3>{opportunity ? <>{editingOpportunity ? <form className="opportunity-form" onSubmit={saveOpportunity}><label>Working name<input name="name" required defaultValue={item.name} /></label><label>Site / location<input name="location" defaultValue={item.location ?? ''} /></label><label>Sector<select name="sector" defaultValue={item.sector ?? ''}><option value="">Select if known</option>{sectors.map((value) => <option key={value}>{value}</option>)}</select></label><label>Source<select name="source" defaultValue={item.source ?? ''}><option value="">Select if known</option>{sources.map((value) => <option key={value}>{value}</option>)}</select></label><label className="wide">Next step<input name="nextAction" defaultValue={item.nextAction ?? ''} /></label><label className="wide">Summary<textarea name="summary" rows={3} defaultValue={item.summary ?? ''} /></label><div className="wide form-actions"><button disabled={busy} type="submit">Save Opportunity</button><button className="secondary" type="button" onClick={() => setEditingOpportunity(false)}>Cancel</button></div></form> : <><div className="guided-checklist">{requirements.map((requirement) => <article key={requirement.requirementKey}><strong>{requirement.label}</strong><span>{requirement.status.replace('_', ' ')}</span></article>)}</div><div className="form-actions"><button className="secondary" type="button" disabled={busy || terminal} onClick={() => setEditingOpportunity(true)}>Edit Opportunity</button><button type="button" disabled={!opportunityReady || busy || terminal} onClick={() => void advanceOpportunity()}>Advance to qualification</button></div></>}</> : <p className="guidance">Opportunity capture is complete.</p>}</section>
     <section className="panel"><p className="eyebrow">Stage 2</p><h3>Qualification</h3><div className="guided-checklist">{qualification.map(([area, label, help]) => { const current = findingMap.get(area)?.assessment; return <article key={area}><strong>{label}</strong><small>{help}</small><div className="choice-row">{(['yes', 'unclear', 'no'] as QualificationAssessment[]).map((assessment) => <button type="button" key={assessment} disabled={busy || !qualificationActive || terminal} className={current === assessment ? 'active' : ''} onClick={() => void assess(area, assessment)}>{assessment[0].toUpperCase() + assessment.slice(1)}</button>)}</div></article>; })}</div>{qualificationActive && !terminal ? <div className="qualification-decision"><strong>{qualificationComplete ? 'Qualification captured. Record the governed disposition.' : 'Complete all qualification areas to make a decision.'}</strong><div className="form-actions"><button type="button" disabled={!qualificationComplete || busy} onClick={() => void decide('advance')}>Advance to predevelopment</button><button type="button" className="secondary" disabled={!qualificationComplete || busy} onClick={() => void decide('hold')}>Hold</button><button type="button" className="secondary" disabled={!qualificationComplete || busy} onClick={() => void decide('decline')}>Decline</button></div></div> : null}</section>
-    <section className="panel"><p className="eyebrow">Stage 3</p><h3>Predevelopment</h3><div className="readiness-grid">{predevelopment.map(([domain, label, help]) => { const current = domainMap.get(domain); return <article key={domain}><strong>{label}</strong><small>{help}</small>{predev ? <><div className="choice-row">{readinessChoices.map(([state, text]) => <button type="button" key={state} disabled={busy} className={current?.readiness === state ? 'active' : ''} onClick={() => void setReadiness(domain, state)}>{text}</button>)}</div><details><summary>Add note</summary><textarea rows={2} defaultValue={current?.summary ?? ''} onBlur={(event) => void saveNote(domain, event.currentTarget.value.trim())} /></details></> : <span>Locked until Qualification advances</span>}</article>; })}</div>{predev ? <p className="guidance">{readinessComplete ? 'All required predevelopment domains are satisfied. This does not authorize the Project.' : 'Authorization remains locked while any required domain is not satisfied.'}</p> : null}</section>
-    <section className="panel"><p className="eyebrow">Stage 4</p><h3>Project authorization</h3><p>{readinessComplete ? 'Predevelopment prerequisites are satisfied. Formal authority and protected verification remain required.' : 'The authorization gate remains locked until predevelopment requirements are satisfied.'}</p><button type="button" disabled>Authorize project</button></section>
-    {error ? <p className="error-message" role="alert">{error}</p> : null}
-  </div>;
+    <section className="panel"><p className="eyebrow">Stage 3</p><h3>Predevelopment</h3><div className="readiness-grid">{predevelopment.map(([domain, label, help]) => { const current = domainMap.get(domain); return <article key={domain}><strong>{label}</strong><small>{help}</small>{predev ? <><div className="choice-row">{readinessChoices.map(([state, text]) => <button type="button" key={state} disabled={busy || terminal} className={current?.readiness === state ? 'active' : ''} onClick={() => void setReadiness(domain, state)}>{text}</button>)}</div><details><summary>Add note</summary><textarea rows={2} defaultValue={current?.summary ?? ''} onBlur={(event) => void saveNote(domain, event.currentTarget.value.trim())} /></details></> : <span>{authorization ? 'Predevelopment complete' : 'Locked until Qualification advances'}</span>}</article>; })}</div>{predev ? <><p className="guidance">{readinessComplete ? 'All required predevelopment domains are satisfied. This does not authorize the Project.' : 'Authorization remains locked while any required domain is not satisfied.'}</p><div className="form-actions"><button type="button" disabled={!readinessComplete || busy || terminal} onClick={() => void enterAuthorization()}>Enter authorization gate</button></div></> : null}</section>
+    <section className="panel"><p className="eyebrow">Stage 4</p><h3>Project authorization</h3><p>{authorization ? 'Authorization gate entered. Project authorization remains protected until explicit business authority and strong verification are satisfied.' : 'Enter the Authorization gate after all Predevelopment prerequisites are satisfied.'}</p><button type="button" disabled>Authorize project</button></section>{error ? <p className="error-message" role="alert">{error}</p> : null}</div>;
 }
