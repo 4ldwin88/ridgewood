@@ -64,6 +64,12 @@ export const supabaseProjectStateRepository = {
     if (error) throw error;
     return fromRow(data as ProjectStateRow);
   },
+  async enterAuthorization(id: string): Promise<ProjectState> {
+    await context();
+    const { data, error } = await supabase.rpc('enter_project_state_authorization', { project_state_input: id });
+    if (error) throw error;
+    return fromRow(data as ProjectStateRow);
+  },
   async archive(id: string): Promise<void> {
     const { userId, workspaceId } = await context();
     const { error } = await supabase.from('project_states').update({ archived_at: new Date().toISOString(), archived_by: userId, updated_at: new Date().toISOString() }).eq('id', id).eq('workspace_id', workspaceId);
