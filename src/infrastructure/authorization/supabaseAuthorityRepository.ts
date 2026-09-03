@@ -1,8 +1,8 @@
 import type { AuthorityRepository } from '../../application/ports/authorityRepository';
-import type { AuthorityDelegation, UserPositionAssignment } from '../../domain/user/authority';
+import type { AuthorityDelegation, AuthorityScopeType, UserPositionAssignment } from '../../domain/user/authority';
 import { supabase } from '../auth/supabaseClient';
 
-type ScopeRow = { type?: UserPositionAssignment['scopeType']; id?: string } | null;
+type ScopeRow = { type?: string; id?: string } | null;
 type PositionRow = {
   id: string; workspace_id: string; user_id: string; role_family: UserPositionAssignment['roleFamily'];
   position_key: string; scope: ScopeRow; effective_from: string; effective_until: string | null; assigned_by: string | null;
@@ -12,9 +12,9 @@ type DelegationRow = {
   scope: ScopeRow; effective_from: string; effective_until: string | null; revoked_at: string | null; reason: string | null;
 };
 
-function parseScope(scope: ScopeRow): Pick<UserPositionAssignment, 'scopeType' | 'scopeId'> {
+function parseScope(scope: ScopeRow): { scopeType: AuthorityScopeType; scopeId?: string } {
   const type = scope?.type;
-  if (type === 'opportunity' || type === 'project' || type === 'document_family') {
+  if (type === 'project_state' || type === 'document_family') {
     return { scopeType: type, scopeId: scope?.id };
   }
   return { scopeType: 'workspace' };
