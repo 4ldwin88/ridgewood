@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - build/beta-business-e2e
+      - gate2/reconciliation-foundation
   pull_request:
 
 permissions:
