@@ -1,12 +1,9 @@
-import type { ProjectState } from '../../domain/project-state/projectState';
 import { supabase } from '../auth/supabaseClient';
 
 export type QualificationArea = 'fit' | 'stakeholders' | 'site' | 'commercial';
 export type QualificationAssessment = 'yes' | 'unclear' | 'no';
 export type QualificationDecision = 'advance' | 'hold' | 'decline';
 export type QualificationFinding = { area: QualificationArea; assessment: QualificationAssessment; note?: string };
-
-type ProjectStateRow = ProjectState & Record<string, unknown>;
 
 async function requireAuthentication(): Promise<void> {
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -30,14 +27,13 @@ export const supabaseQualificationRepository = {
     });
     if (error) throw error;
   },
-  async decide(projectStateId: string, decision: QualificationDecision, rationale?: string): Promise<ProjectStateRow> {
+  async decide(projectStateId: string, decision: QualificationDecision, rationale?: string): Promise<void> {
     await requireAuthentication();
-    const { data, error } = await supabase.rpc('set_project_state_qualification_decision', {
+    const { error } = await supabase.rpc('set_project_state_qualification_decision', {
       project_state_input: projectStateId,
       decision_input: decision,
       rationale_input: rationale ?? null,
     });
     if (error) throw error;
-    return data as ProjectStateRow;
   },
 };
