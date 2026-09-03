@@ -3,6 +3,7 @@ import { supabase } from '../auth/supabaseClient';
 
 export type StageRequirementStatus = 'not_started' | 'in_progress' | 'satisfied' | 'blocked' | 'unknown';
 export interface ProjectStateStageRequirement { requirementKey: string; label: string; status: StageRequirementStatus; required: boolean; notes?: string }
+export interface OpportunityBasicsInput { name: string; location?: string; sector?: string; source?: string; summary?: string; nextAction?: string }
 
 type ProjectStateRow = {
   id: string; name: string; stage: ProjectStage | null; status: ProjectStateStatus | null;
@@ -42,6 +43,12 @@ export const supabaseProjectStateRepository = {
   async create(input: Omit<ProjectState, 'id' | 'stage' | 'status' | 'createdAt' | 'updatedAt'>): Promise<ProjectState> {
     await context();
     const { data, error } = await supabase.rpc('create_project_state', { project_state_input: { name: input.name, commercial_stage: input.commercialStage, commercial_probability: input.probability ?? null, priority: input.priority, organization_id: input.organizationId ?? null, site_location: input.location ?? null, sector: input.sector ?? null, source_context: input.source ?? null, summary: input.summary ?? null, next_action: input.nextAction ?? null } });
+    if (error) throw error;
+    return fromRow(data as ProjectStateRow);
+  },
+  async updateOpportunityBasics(id: string, input: OpportunityBasicsInput): Promise<ProjectState> {
+    await context();
+    const { data, error } = await supabase.rpc('update_project_state_opportunity_basics', { project_state_input: id, basics_input: { name: input.name, site_location: input.location ?? null, sector: input.sector ?? null, source_context: input.source ?? null, summary: input.summary ?? null, next_action: input.nextAction ?? null } });
     if (error) throw error;
     return fromRow(data as ProjectStateRow);
   },
