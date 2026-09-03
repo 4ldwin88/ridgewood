@@ -1,15 +1,12 @@
-import type { ProjectPriority, ProjectState } from '../../domain/project-state/projectState';
+import type { ProjectPriority, ProjectStage, ProjectState, ProjectStateStatus } from '../../domain/project-state/projectState';
 import { supabase } from '../auth/supabaseClient';
 
 function fromRow(row: any): ProjectState {
-  const rawState = String(row.state ?? 'opportunity');
-  const status = ['held', 'declined', 'lost'].includes(rawState) ? rawState : 'active';
-  const stage = rawState === 'potential' ? 'opportunity' : rawState === 'authorization_ready' ? 'authorization' : rawState === 'held' || rawState === 'declined' || rawState === 'lost' ? 'qualification' : rawState;
   return {
     id: row.id,
     name: row.name,
-    stage,
-    status,
+    stage: (row.stage ?? 'opportunity') as ProjectStage,
+    status: (row.status ?? 'active') as ProjectStateStatus,
     commercialStage: row.commercial_stage ?? 'unknown',
     probability: row.commercial_probability ?? undefined,
     priority: (row.priority ?? 'medium') as ProjectPriority,
@@ -22,7 +19,7 @@ function fromRow(row: any): ProjectState {
     nextAction: row.next_action ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  } as ProjectState;
+  };
 }
 
 async function context() {
