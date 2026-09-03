@@ -31,5 +31,5 @@ export interface ProjectState {
 export const PROJECT_STAGE_ORDER: ProjectStage[] = ['opportunity', 'qualification', 'predevelopment', 'authorization', 'authorized'];
 
 export function projectStageLabel(stage: ProjectStage): string {
-  return stage === 'authorized' ? 'Project' : stage[0].toUpperCase() + stage.slice(1);
+  return stage === 'authorized' ? 'Authorized Project' : stage[0].toUpperCase() + stage.slice(1);
 }
