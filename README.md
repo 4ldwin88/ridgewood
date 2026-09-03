@@ -2,9 +2,9 @@
 
 Ridgewood OS is the governed operating system for Ridgewood's end-to-end business-development and project-delivery lifecycle.
 
-Current development version: v0.05.
+Current development version: v0.06.
 
-Development versions increment by 0.01 only when human testing identifies an issue that requires a new development version. Stable whole-number releases such as v1 and v2 are reserved for mature release gates.
+Development versions start at v0.01 and increment by 0.01 for material development changes. Stable whole-number releases such as v1 and v2 are reserved for mature release gates.
 
 ## Current implementation phase
 
