@@ -1,7 +1,7 @@
 import type { CommercialStage, ProjectPriority, ProjectStage, ProjectState, ProjectStateStatus } from '../../domain/project-state/projectState';
 import { supabase } from '../auth/supabaseClient';
 
-export type StageRequirementStatus = 'not_started' | 'in_progress' | 'satisfied' | 'blocked' | 'unknown';
+export type StageRequirementStatus = 'not_started' | 'in_progress' | 'satisfied' | 'blocked' | 'unknown' | 'not_applicable';
 export interface ProjectStateStageRequirement { requirementKey: string; label: string; status: StageRequirementStatus; required: boolean; notes?: string }
 export interface OpportunityBasicsInput { name: string; location?: string; sector?: string; source?: string; summary?: string; nextAction?: string }
 
@@ -16,7 +16,7 @@ type RequirementRow = { requirement_key: string; label: string; status: StageReq
 function fromRow(row: ProjectStateRow): ProjectState {
   return {
     id: row.id, name: row.name, stage: row.stage ?? 'opportunity', status: row.status ?? 'active',
-    commercialStage: row.commercial_stage ?? 'unknown', probability: row.commercial_probability ?? undefined,
+    commercialStage: row.commercial_stage ?? 'opportunity', probability: row.commercial_probability ?? undefined,
     priority: row.priority ?? 'medium', ownerPersonId: row.owner_user_id ?? undefined,
     organizationId: row.organization_id ?? undefined, location: row.site_location ?? undefined,
     sector: row.sector ?? undefined, source: row.source_context ?? undefined, summary: row.summary ?? undefined,
