@@ -1,6 +1,6 @@
 export interface AuditMaterial {
   type: string;
-  opportunityId: string;
+  projectStateId: string;
   occurredAt: string;
   actorId: string;
   metadata: Record<string, unknown>;
