@@ -9,7 +9,7 @@ export const PREDEVELOPMENT_DOMAINS = [
 ] as const;
 
 export type PredevelopmentDomain = (typeof PREDEVELOPMENT_DOMAINS)[number];
-export type ReadinessState = 'not_started' | 'in_progress' | 'satisfied' | 'blocked' | 'unknown';
+export type ReadinessState = 'not_started' | 'in_progress' | 'satisfied' | 'blocked' | 'unknown' | 'not_applicable';
 
 export interface PredevelopmentDomainState {
   projectStateId: string;
@@ -19,4 +19,8 @@ export interface PredevelopmentDomainState {
   blockers: string[];
   unknowns: string[];
   updatedAt: string;
+}
+
+export function isPredevelopmentDomainResolved(state: PredevelopmentDomainState): boolean {
+  return state.readiness === 'satisfied' || state.readiness === 'not_applicable';
 }
