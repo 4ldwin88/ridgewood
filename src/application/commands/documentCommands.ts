@@ -1,12 +1,8 @@
-import type {
-  DocumentLifecyclePackage,
-  DocumentRevision,
-} from '../../domain/project/documents';
+import type { DocumentLifecyclePackage, DocumentRevision } from '../../domain/documents/documents';
 
 export interface CreateDocumentDraftCommand {
   type: 'CreateDocumentDraft';
-  projectId?: string;
-  opportunityId?: string;
+  projectStateId: string;
   lifecyclePackage: DocumentLifecyclePackage;
   category: string;
   documentType: string;
@@ -46,8 +42,6 @@ export interface GenerateDocumentPackageCommand {
 
 export function assertDraftEditable(revision: DocumentRevision): void {
   if (revision.status !== 'draft') {
-    throw new Error(
-      'Published and archived revisions are immutable. Create a new draft revision instead.',
-    );
+    throw new Error('Published and archived revisions are immutable. Create a new draft revision instead.');
   }
 }
