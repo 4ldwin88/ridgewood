@@ -2,8 +2,9 @@ import type { CommercialStage, ProjectPriority, ProjectStage, ProjectState, Proj
 import { supabase } from '../auth/supabaseClient';
 
 export type StageRequirementStatus = 'not_started' | 'in_progress' | 'satisfied' | 'blocked' | 'unknown' | 'not_applicable';
-export interface ProjectStateStageRequirement { requirementKey: string; label: string; status: StageRequirementStatus; required: boolean; notes?: string }
+export interface ProjectStateStageRequirement { requirementKey: string; label: string; status: StageRequirementStatus; required: boolean; notes?: string; stage?: ProjectStage; gateKey?: string }
 export interface OpportunityBasicsInput { name: string; location?: string; sector?: string; source?: string; summary?: string; nextAction?: string }
+export interface StageRequirementInput { stage: ProjectStage; requirementKey: string; label: string; status: StageRequirementStatus; required?: boolean; notes?: string; gateKey?: string }
 
 type ProjectStateRow = {
   id: string; name: string; stage: ProjectStage | null; status: ProjectStateStatus | null;
@@ -11,7 +12,7 @@ type ProjectStateRow = {
   owner_user_id: string | null; organization_id: string | null; site_location: string | null; sector: string | null;
   source_context: string | null; summary: string | null; next_action: string | null; created_at: string; updated_at: string;
 };
-type RequirementRow = { requirement_key: string; label: string; status: StageRequirementStatus; required: boolean; notes: string | null };
+type RequirementRow = { stage?: ProjectStage; gate_key?: string | null; requirement_key: string; label: string; status: StageRequirementStatus; required: boolean; notes: string | null };
 
 function fromRow(row: ProjectStateRow): ProjectState {
   return {
@@ -24,7 +25,7 @@ function fromRow(row: ProjectStateRow): ProjectState {
   };
 }
 function requirementFromRow(row: RequirementRow): ProjectStateStageRequirement {
-  return { requirementKey: row.requirement_key, label: row.label, status: row.status, required: row.required, notes: row.notes ?? undefined };
+  return { requirementKey: row.requirement_key, label: row.label, status: row.status, required: row.required, notes: row.notes ?? undefined, stage: row.stage, gateKey: row.gate_key ?? undefined };
 }
 async function context() {
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -58,6 +59,18 @@ export const supabaseProjectStateRepository = {
     if (error) throw error;
     return ((data ?? []) as RequirementRow[]).map(requirementFromRow);
   },
+  async stageRequirements(id: string, stage?: ProjectStage): Promise<ProjectStateStageRequirement[]> {
+    await context();
+    const { data, error } = await supabase.rpc('list_project_state_stage_requirements', { project_state_input: id, stage_input: stage ?? null });
+    if (error) throw error;
+    return ((data ?? []) as RequirementRow[]).map(requirementFromRow);
+  },
+  async setStageRequirement(id: string, input: StageRequirementInput): Promise<ProjectStateStageRequirement> {
+    await context();
+    const { data, error } = await supabase.rpc('set_project_state_stage_requirement', { project_state_input: id, stage_input: input.stage, requirement_key_input: input.requirementKey, label_input: input.label, status_input: input.status, required_input: input.required ?? true, notes_input: input.notes ?? null, gate_key_input: input.gateKey ?? null });
+    if (error) throw error;
+    return requirementFromRow(data as RequirementRow);
+  },
   async advanceToQualification(id: string): Promise<ProjectState> {
     await context();
     const { data, error } = await supabase.rpc('advance_project_state_to_qualification', { project_state_input: id });
@@ -69,6 +82,13 @@ export const supabaseProjectStateRepository = {
     const { data, error } = await supabase.rpc('enter_project_state_authorization', { project_state_input: id });
     if (error) throw error;
     return fromRow(data as ProjectStateRow);
+  },
+  async authorize(id: string, authorityBasis?: string): Promise<ProjectState> {
+    await context();
+    const { data, error } = await supabase.functions.invoke('project-authorization', { body: { projectStateId: id, authorityBasis: authorityBasis ?? '' } });
+    if (error) throw error;
+    if (!data || typeof data !== 'object' || !('projectState' in data)) throw new Error('Project authorization did not return a Project State.');
+    return fromRow((data as { projectState: ProjectStateRow }).projectState);
   },
   async archive(id: string): Promise<void> {
     await context();
