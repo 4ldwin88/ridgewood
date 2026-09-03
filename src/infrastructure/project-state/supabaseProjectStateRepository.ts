@@ -65,6 +65,12 @@ export const supabaseProjectStateRepository = {
     if (error) throw error;
     return ((data ?? []) as RequirementRow[]).map(requirementFromRow);
   },
+  async ensureProjectAuthorizationSetupRequirements(id: string): Promise<ProjectStateStageRequirement[]> {
+    await context();
+    const { data, error } = await supabase.rpc('ensure_project_authorization_setup_requirements', { project_state_input: id });
+    if (error) throw error;
+    return ((data ?? []) as RequirementRow[]).map(requirementFromRow);
+  },
   async setStageRequirement(id: string, input: StageRequirementInput): Promise<ProjectStateStageRequirement> {
     await context();
     const { data, error } = await supabase.rpc('set_project_state_stage_requirement', { project_state_input: id, stage_input: input.stage, requirement_key_input: input.requirementKey, label_input: input.label, status_input: input.status, required_input: input.required ?? true, notes_input: input.notes ?? null, gate_key_input: input.gateKey ?? null });
@@ -89,6 +95,12 @@ export const supabaseProjectStateRepository = {
     if (error) throw error;
     if (!data || typeof data !== 'object' || !('projectState' in data)) throw new Error('Project authorization did not return a Project State.');
     return fromRow((data as { projectState: ProjectStateRow }).projectState);
+  },
+  async enterPreconstructionMobilization(id: string): Promise<ProjectState> {
+    await context();
+    const { data, error } = await supabase.rpc('enter_project_state_preconstruction_mobilization', { project_state_input: id });
+    if (error) throw error;
+    return fromRow(data as ProjectStateRow);
   },
   async archive(id: string): Promise<void> {
     await context();
