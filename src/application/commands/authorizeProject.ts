@@ -7,18 +7,17 @@ export interface AuthorizeProjectCommand {
 }
 
 /**
- * Project Authorization is intentionally unavailable until the server-side
- * command can validate explicit scoped business authority, canonical readiness
- * and command-bound, short-lived, replay-protected strong verification.
- *
- * Never replace this fail-closed boundary with browser-supplied booleans,
- * verification timestamps, authority strings or readiness/evidence snapshots.
- * Authorization must transition the existing Project State identity atomically.
+ * Project Authorization remains unavailable until the trusted server command
+ * validates explicit scoped business authority, governed readiness and
+ * command-bound, short-lived, replay-protected strong verification.
  */
 export async function authorizeProject(
-  _dependencies: GovernedCommandDependencies,
-  _user: UserState,
-  _command: AuthorizeProjectCommand,
+  dependencies: GovernedCommandDependencies,
+  user: UserState,
+  command: AuthorizeProjectCommand,
 ): Promise<never> {
+  void dependencies;
+  void user;
+  void command;
   throw new Error('Project Authorization is locked until trusted server-side authority and verification controls are available.');
 }
