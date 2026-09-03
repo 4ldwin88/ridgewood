@@ -71,8 +71,8 @@ export const supabaseProjectStateRepository = {
     return fromRow(data as ProjectStateRow);
   },
   async archive(id: string): Promise<void> {
-    const { userId, workspaceId } = await context();
-    const { error } = await supabase.from('project_states').update({ archived_at: new Date().toISOString(), archived_by: userId, updated_at: new Date().toISOString() }).eq('id', id).eq('workspace_id', workspaceId);
+    await context();
+    const { error } = await supabase.rpc('archive_project_state', { project_state_input: id });
     if (error) throw error;
   },
 };
