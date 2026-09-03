@@ -1,7 +1,6 @@
 export interface CreateDocumentDraftInput {
   workspaceId: string;
-  projectId?: string;
-  opportunityId?: string;
+  projectStateId: string;
   packageKey: string;
   categoryKey: string;
   documentType: string;
@@ -13,7 +12,7 @@ export interface CreateDocumentDraftInput {
  * Governed document mutations intentionally have no browser Supabase adapter.
  * Their SECURITY DEFINER database commands live in the private schema and are
  * callable only from a trusted server/Edge Function boundary after application
- * authorization and (for issued actions) fresh verification.
+ * authorization and, for issued actions, fresh verification.
  */
 export interface DocumentCommandRepository {
   createDraft(input: CreateDocumentDraftInput): Promise<string>;
