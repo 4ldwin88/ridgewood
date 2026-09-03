@@ -1,5 +1,5 @@
 import type { ProjectState } from '../../domain/project-state/projectState';
-import type { AuthorizationReadiness } from '../../domain/project/project';
+import type { AuthorizationReadiness } from '../../domain/project-state/authorization';
 
 export interface AuthorizationContext {
   actorPersonId: string;
@@ -15,15 +15,11 @@ export function evaluateAuthorizationReadiness(
   const blockers = [...unresolvedBlockers];
   const unknowns = [...unresolvedUnknowns];
 
-  if (projectState.status !== 'active') {
-    blockers.push(`Project State status is ${projectState.status}.`);
-  }
+  if (projectState.status !== 'active') blockers.push(`Project State status is ${projectState.status}.`);
   if (projectState.stage !== 'predevelopment' && projectState.stage !== 'authorization') {
     blockers.push('Project State has not completed the required Predevelopment path.');
   }
-  if (!predevelopmentReady) {
-    blockers.push('Predevelopment is not sufficiently ready for Project Authorization.');
-  }
+  if (!predevelopmentReady) blockers.push('Predevelopment is not sufficiently ready for Project Authorization.');
 
   return {
     projectStateId: projectState.id,
@@ -33,14 +29,7 @@ export function evaluateAuthorizationReadiness(
   };
 }
 
-export function assertCanAuthorizeProject(
-  readiness: AuthorizationReadiness,
-  context: AuthorizationContext,
-): void {
-  if (!context.hasProjectAuthorizationAuthority) {
-    throw new Error('Actor does not have Project Authorization authority.');
-  }
-  if (!readiness.ready) {
-    throw new Error('Project State is not ready for Project Authorization.');
-  }
+export function assertCanAuthorizeProject(readiness: AuthorizationReadiness, context: AuthorizationContext): void {
+  if (!context.hasProjectAuthorizationAuthority) throw new Error('Actor does not have Project Authorization authority.');
+  if (!readiness.ready) throw new Error('Project State is not ready for Project Authorization.');
 }
