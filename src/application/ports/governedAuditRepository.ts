@@ -7,8 +7,7 @@ export interface GovernedAuditInput {
   action: ProtectedAction;
   targetType: string;
   targetId: string;
-  opportunityId?: string;
-  projectId?: string;
+  projectStateId?: string;
   decision: AuthorizationDecision;
   outcome: 'executed' | 'denied' | 'failed';
   metadata?: Record<string, unknown>;
