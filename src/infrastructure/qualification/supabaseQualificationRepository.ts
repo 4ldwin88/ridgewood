@@ -1,6 +1,14 @@
 import { supabase } from '../auth/supabaseClient';
 
-export type QualificationArea = 'fit' | 'stakeholders' | 'site' | 'commercial';
+export const QUALIFICATION_AREAS = [
+  'opportunity_credibility',
+  'strategic_fit',
+  'relationship_authority',
+  'commercial_plausibility',
+  'execution_risk',
+] as const;
+
+export type QualificationArea = (typeof QUALIFICATION_AREAS)[number];
 export type QualificationAssessment = 'yes' | 'unclear' | 'no';
 export type QualificationDecision = 'advance' | 'hold' | 'decline';
 export type QualificationFinding = { area: QualificationArea; assessment: QualificationAssessment; note?: string };
