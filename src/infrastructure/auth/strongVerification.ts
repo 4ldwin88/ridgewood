@@ -11,7 +11,7 @@ export type StrongVerificationState = {
   currentLevel: AssuranceLevel;
   nextLevel: AssuranceLevel;
   verifiedFactorId?: string;
-  unverifiedFactorId?: string;
+  unverifiedFactorIds: string[];
   enrollment?: { factorId: string; qrCode: string; secret: string; uri?: string };
 };
 
@@ -27,23 +27,34 @@ export async function getStrongVerificationState(): Promise<StrongVerificationSt
   const allFactors: ListedFactor[] = [...factors.totp, ...factors.phone];
   const totpFactors: ListedFactor[] = factors.totp;
   const verified = allFactors.find((factor) => factor.status === 'verified');
-  const unverified = totpFactors.find((factor) => factor.status === 'unverified');
+  const unverifiedFactorIds = totpFactors.filter((factor) => factor.status === 'unverified').map((factor) => factor.id);
   return {
     currentLevel: normalizeAssuranceLevel(assurance.currentLevel),
     nextLevel: normalizeAssuranceLevel(assurance.nextLevel),
     verifiedFactorId: verified?.id,
-    unverifiedFactorId: unverified?.id,
+    unverifiedFactorIds,
   };
 }
 
-export async function beginTotpEnrollment(existingUnverifiedFactorId?: string): Promise<StrongVerificationState['enrollment']> {
-  if (existingUnverifiedFactorId) {
-    const { error: cleanupError } = await supabase.auth.mfa.unenroll({ factorId: existingUnverifiedFactorId });
+async function removeUnverifiedTotpFactors(): Promise<void> {
+  const { data: factors, error } = await supabase.auth.mfa.listFactors();
+  if (error) throw error;
+  const staleFactors: ListedFactor[] = factors.totp.filter((factor) => factor.status === 'unverified');
+  for (const factor of staleFactors) {
+    const { error: cleanupError } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
     if (cleanupError) throw cleanupError;
   }
-  const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Ridgewood OS' });
-  if (error) throw error;
-  return { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret, uri: data.totp.uri };
+}
+
+export async function beginTotpEnrollment(): Promise<StrongVerificationState['enrollment']> {
+  await removeUnverifiedTotpFactors();
+  let result = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Ridgewood OS' });
+  if (result.error && /friendly name|already exists|factor/i.test(result.error.message)) {
+    await removeUnverifiedTotpFactors();
+    result = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Ridgewood OS' });
+  }
+  if (result.error) throw result.error;
+  return { factorId: result.data.id, qrCode: result.data.totp.qr_code, secret: result.data.totp.secret, uri: result.data.totp.uri };
 }
 
 export async function verifyStrongFactor(factorId: string, code: string): Promise<void> {
