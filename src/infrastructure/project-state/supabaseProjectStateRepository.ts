@@ -34,6 +34,26 @@ async function context() {
   if (membershipError || !membership) throw membershipError ?? new Error('No active Ridgewood workspace is available for this account.');
   return { userId: authData.user.id, workspaceId: membership.workspace_id as string };
 }
+async function authorizationError(error: unknown): Promise<Error> {
+  if (error && typeof error === 'object' && 'context' in error) {
+    const response = (error as { context?: unknown }).context;
+    if (response instanceof Response) {
+      try {
+        const payload = await response.clone().json() as { message?: unknown; error?: unknown; code?: unknown };
+        const message = typeof payload.message === 'string' && payload.message.trim() ? payload.message.trim() : typeof payload.error === 'string' && payload.error.trim() ? payload.error.trim().replaceAll('_', ' ') : '';
+        const code = typeof payload.code === 'string' && payload.code.trim() ? ` (${payload.code.trim()})` : '';
+        if (message) return new Error(`Project Authorization failed: ${message}${code}`);
+      } catch {
+        try {
+          const text = (await response.clone().text()).trim();
+          if (text) return new Error(`Project Authorization failed: ${text.slice(0, 300)}`);
+        } catch { /* fall through to the SDK error */ }
+      }
+    }
+  }
+  if (error instanceof Error && error.message) return new Error(`Project Authorization failed: ${error.message}`);
+  return new Error('Project Authorization failed for an unknown reason. Reload this Project State before retrying.');
+}
 export const supabaseProjectStateRepository = {
   async list(): Promise<ProjectState[]> {
     const { workspaceId } = await context();
@@ -98,8 +118,8 @@ export const supabaseProjectStateRepository = {
   async authorize(id: string, authorityBasis?: string): Promise<ProjectState> {
     await context();
     const { data, error } = await supabase.functions.invoke('project-authorization', { body: { projectStateId: id, authorityBasis: authorityBasis ?? '' } });
-    if (error) throw error;
-    if (!data || typeof data !== 'object' || !('projectState' in data)) throw new Error('Project authorization did not return a Project State.');
+    if (error) throw await authorizationError(error);
+    if (!data || typeof data !== 'object' || !('projectState' in data)) throw new Error('Project Authorization failed: the server did not return the updated Project State.');
     return fromRow((data as { projectState: ProjectStateRow }).projectState);
   },
   async enterPreconstructionMobilization(id: string): Promise<ProjectState> {
