@@ -83,6 +83,12 @@ export const supabaseProjectStateRepository = {
     if (error) throw error;
     return fromRow(data as ProjectStateRow);
   },
+  async resumeHeld(id: string): Promise<ProjectState> {
+    await context();
+    const { data, error } = await supabase.rpc('resume_held_project_state', { project_state_input: id });
+    if (error) throw error;
+    return fromRow(data as ProjectStateRow);
+  },
   async enterAuthorization(id: string): Promise<ProjectState> {
     await context();
     const { data, error } = await supabase.rpc('enter_project_state_authorization', { project_state_input: id });
