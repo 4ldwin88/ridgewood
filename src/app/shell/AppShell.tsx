@@ -4,7 +4,6 @@ import { supabase } from '../../infrastructure/auth/supabaseClient';
 import { developmentObservability } from '../../infrastructure/observability/supabaseDevelopmentObservability';
 import { DevNotesButton } from '../../modules/development/DevNotesButton';
 import { BusinessWorkspace } from '../../modules/business/BusinessWorkspace';
-import { StrongVerificationPanel } from '../../features/auth/StrongVerificationPanel';
 
 type Page = 'Home' | 'Business' | 'Projects' | 'Network' | 'More';
 const pages: Page[] = ['Home', 'Business', 'Projects', 'Network', 'More'];
@@ -27,7 +26,7 @@ export function AppShell({ session }: { session: Session }) {
     setSigningOut(false);
   }
 
-  return <div className="app-frame"><header className="topbar"><img src="/assets/ridgewood-horizontal-light.svg" alt="Ridgewood"/><div className="top-actions"><span className="version">{APP_VERSION}</span><StrongVerificationPanel/>{feedbackEnabled ? <DevNotesButton observability={developmentObservability} pagePath={pagePath} pageTitle={page}/> : null}<button type="button" onClick={signOut} disabled={signingOut}>{signingOut ? 'Exiting…' : 'Exit'}</button></div></header><nav className="primary-nav" aria-label="Primary">{pages.map((item) => <button key={item} className={page === item ? 'active' : ''} onClick={() => setPage(item)}>{item}</button>)}</nav><main className="workspace"><p className="eyebrow">{page}</p><h1>{page === 'Business' ? 'Business pipeline' : page}</h1>{page === 'Business' ? <BusinessWorkspace/> : <EmptyFoundation page={page}/>}</main><footer><span>{session.user.email}</span><span>Ridgewood OS · {APP_VERSION}</span></footer></div>;
+  return <div className="app-frame"><header className="topbar"><img src={`${import.meta.env.BASE_URL}assets/ridgewood-horizontal-light.svg`} alt="Ridgewood"/><div className="top-actions"><span className="version">{APP_VERSION}</span>{feedbackEnabled ? <DevNotesButton observability={developmentObservability} pagePath={pagePath} pageTitle={page}/> : null}<button type="button" onClick={signOut} disabled={signingOut}>{signingOut ? 'Exiting…' : 'Exit'}</button></div></header><nav className="primary-nav" aria-label="Primary">{pages.map((item) => <button key={item} className={page === item ? 'active' : ''} onClick={() => setPage(item)}>{item}</button>)}</nav><main className="workspace"><p className="eyebrow">{page}</p><h1>{page === 'Business' ? 'Business pipeline' : page}</h1>{page === 'Business' ? <BusinessWorkspace/> : <EmptyFoundation page={page}/>}</main><footer><span>{session.user.email}</span><span>Ridgewood OS · {APP_VERSION}</span></footer></div>;
 }
 
 function EmptyFoundation({ page }: { page: Page }) {
