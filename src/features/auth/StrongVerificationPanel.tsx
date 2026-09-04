@@ -20,8 +20,12 @@ export function StrongVerificationPanel() {
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
-    try { const next = await getStrongVerificationState(); setState(next); publish(next); }
-    catch (caught) { setError(message(caught)); }
+    try {
+      const next = await getStrongVerificationState();
+      setState(next);
+      setOpen(next.currentLevel !== 'aal2');
+      publish(next);
+    } catch (caught) { setError(message(caught)); }
   }
 
   useEffect(() => {
@@ -30,9 +34,10 @@ export function StrongVerificationPanel() {
       void getStrongVerificationState().then((next) => {
         if (!active) return;
         setState(next);
+        setOpen(next.currentLevel !== 'aal2');
         publish(next);
       }).catch((caught) => {
-        if (active) setError(message(caught));
+        if (active) { setError(message(caught)); setOpen(true); }
       });
     }, 0);
     const openVerification = () => { setError(null); setOpen(true); };
@@ -45,7 +50,7 @@ export function StrongVerificationPanel() {
     try {
       const enrollment = await beginTotpEnrollment();
       const next: StrongVerificationState = { currentLevel: state?.currentLevel ?? 'aal1', nextLevel: 'aal2', verifiedFactorId: state?.verifiedFactorId, enrollment };
-      setState(next); publish(next);
+      setState(next); setOpen(true); publish(next);
     } catch (caught) { setError(message(caught)); }
     finally { setBusy(false); }
   }
@@ -69,7 +74,7 @@ export function StrongVerificationPanel() {
     {open ? <section className="verification-popover" aria-label="Strong verification">
       <strong>{verified ? 'Strong verification active' : 'Strong verification required'}</strong>
       {verified ? <p>This session is AAL2 and can execute governed Project Authorization, subject to business authority.</p> : <>
-        <p>Project Authorization requires a second factor. This verification confirms identity; it does not grant business authority.</p>
+        <p>Project Authorization requires a second factor. Complete this step before Authorize project can be enabled. This confirms identity; it does not grant business authority.</p>
         {!state?.verifiedFactorId && !state?.enrollment ? <button type="button" disabled={busy} onClick={() => void enroll()}>{busy ? 'Preparing…' : 'Set up authenticator'}</button> : null}
         {state?.enrollment ? <div className="verification-enrollment"><p>Scan this QR code with an authenticator app, or enter the secret manually.</p><img src={state.enrollment.qrCode} alt="Authenticator enrollment QR code"/><code>{state.enrollment.secret}</code></div> : null}
         {(state?.verifiedFactorId || state?.enrollment) ? <form onSubmit={verify}><label>6-digit authenticator code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} required /></label><button type="submit" disabled={busy || code.length !== 6}>{busy ? 'Verifying…' : 'Verify session'}</button></form> : null}
