@@ -1,8 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { beginTotpEnrollment, getStrongVerificationState, verifyStrongFactor, type StrongVerificationState } from '../../infrastructure/auth/strongVerification';
 
+export const STRONG_VERIFICATION_CHANGED = 'ridgewood:strong-verification-changed';
+
 function message(error: unknown) {
   return error instanceof Error ? error.message : 'Strong verification could not be completed.';
+}
+
+function publish(state: StrongVerificationState) {
+  window.dispatchEvent(new CustomEvent(STRONG_VERIFICATION_CHANGED, { detail: state }));
 }
 
 export function StrongVerificationPanel() {
@@ -13,7 +19,7 @@ export function StrongVerificationPanel() {
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
-    try { setState(await getStrongVerificationState()); }
+    try { const next = await getStrongVerificationState(); setState(next); publish(next); }
     catch (caught) { setError(message(caught)); }
   }
 
@@ -23,7 +29,8 @@ export function StrongVerificationPanel() {
     setBusy(true); setError(null);
     try {
       const enrollment = await beginTotpEnrollment();
-      setState((current) => ({ currentLevel: current?.currentLevel ?? 'aal1', nextLevel: 'aal2', verifiedFactorId: current?.verifiedFactorId, enrollment }));
+      const next: StrongVerificationState = { currentLevel: state?.currentLevel ?? 'aal1', nextLevel: 'aal2', verifiedFactorId: state?.verifiedFactorId, enrollment };
+      setState(next); publish(next);
     } catch (caught) { setError(message(caught)); }
     finally { setBusy(false); }
   }
