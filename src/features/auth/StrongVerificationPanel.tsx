@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { beginTotpEnrollment, getStrongVerificationState, verifyStrongFactor, type StrongVerificationState } from '../../infrastructure/auth/strongVerification';
 
 export const STRONG_VERIFICATION_CHANGED = 'ridgewood:strong-verification-changed';
+export const STRONG_VERIFICATION_REQUESTED = 'ridgewood:strong-verification-requested';
 
 function message(error: unknown) {
   return error instanceof Error ? error.message : 'Strong verification could not be completed.';
@@ -34,7 +35,9 @@ export function StrongVerificationPanel() {
         if (active) setError(message(caught));
       });
     }, 0);
-    return () => { active = false; window.clearTimeout(timer); };
+    const openVerification = () => { setError(null); setOpen(true); };
+    window.addEventListener(STRONG_VERIFICATION_REQUESTED, openVerification);
+    return () => { active = false; window.clearTimeout(timer); window.removeEventListener(STRONG_VERIFICATION_REQUESTED, openVerification); };
   }, []);
 
   async function enroll() {
