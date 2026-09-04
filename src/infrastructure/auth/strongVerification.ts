@@ -19,13 +19,18 @@ function normalizeAssuranceLevel(level: string | null): AssuranceLevel {
   return level === 'aal1' || level === 'aal2' ? level : null;
 }
 
+function listedFactors<T extends { id: string; status: string }>(factors: T[]): ListedFactor[] {
+  return factors.map((factor) => ({ id: factor.id, status: String(factor.status) }));
+}
+
 export async function getStrongVerificationState(): Promise<StrongVerificationState> {
   const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (assuranceError) throw assuranceError;
   const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
   if (factorsError) throw factorsError;
-  const allFactors: ListedFactor[] = [...factors.totp, ...factors.phone];
-  const totpFactors: ListedFactor[] = factors.totp;
+  const totpFactors = listedFactors(factors.totp);
+  const phoneFactors = listedFactors(factors.phone);
+  const allFactors = [...totpFactors, ...phoneFactors];
   const verified = allFactors.find((factor) => factor.status === 'verified');
   const unverifiedFactorIds = totpFactors.filter((factor) => factor.status === 'unverified').map((factor) => factor.id);
   return {
@@ -39,7 +44,7 @@ export async function getStrongVerificationState(): Promise<StrongVerificationSt
 async function removeUnverifiedTotpFactors(): Promise<void> {
   const { data: factors, error } = await supabase.auth.mfa.listFactors();
   if (error) throw error;
-  const staleFactors: ListedFactor[] = factors.totp.filter((factor) => factor.status === 'unverified');
+  const staleFactors = listedFactors(factors.totp).filter((factor) => factor.status === 'unverified');
   for (const factor of staleFactors) {
     const { error: cleanupError } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
     if (cleanupError) throw cleanupError;
