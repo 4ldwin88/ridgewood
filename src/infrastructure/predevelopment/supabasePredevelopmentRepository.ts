@@ -42,12 +42,23 @@ export async function listPredevelopmentDomains(projectStateId: string): Promise
 
 export async function updatePredevelopmentDomain(projectStateId: string, domain: PredevelopmentDomain, readiness: ReadinessState, notes: string): Promise<PredevelopmentDomainState> {
   await requireAuthentication();
-  const { data, error } = await supabase.rpc('update_project_state_predevelopment_domain', {
+  const { error } = await supabase.rpc('update_project_state_predevelopment_domain', {
     project_state_input: projectStateId,
     domain_input: domain,
     readiness_input: readiness,
     notes_input: notes,
   });
   if (error) throw error;
-  return fromRow(data as PredevelopmentRow);
+
+  const { data: persisted, error: verificationError } = await supabase
+    .from('predevelopment_domains')
+    .select('project_state_id,domain_key,readiness,notes,updated_at')
+    .eq('project_state_id', projectStateId)
+    .eq('domain_key', domain)
+    .maybeSingle();
+  if (verificationError) throw verificationError;
+  if (!persisted || persisted.readiness !== readiness) {
+    throw new Error('Predevelopment save could not be verified. Reload this Project State before trying again.');
+  }
+  return fromRow(persisted as PredevelopmentRow);
 }
