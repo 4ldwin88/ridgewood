@@ -25,7 +25,7 @@ export const supabaseQualificationRepository = {
     if (error) throw error;
     return (data ?? []) as QualificationFinding[];
   },
-  async save(projectStateId: string, finding: QualificationFinding): Promise<void> {
+  async save(projectStateId: string, finding: QualificationFinding): Promise<QualificationFinding> {
     await requireAuthentication();
     const { error } = await supabase.rpc('record_project_state_qualification_finding', {
       project_state_input: projectStateId,
@@ -34,6 +34,18 @@ export const supabaseQualificationRepository = {
       note_input: finding.note ?? null,
     });
     if (error) throw error;
+
+    const { data: persisted, error: verificationError } = await supabase
+      .from('project_state_qualification_findings')
+      .select('area,assessment,note')
+      .eq('project_state_id', projectStateId)
+      .eq('area', finding.area)
+      .maybeSingle();
+    if (verificationError) throw verificationError;
+    if (!persisted || persisted.assessment !== finding.assessment) {
+      throw new Error('Qualification save could not be verified. Reload the Project State before trying this answer again.');
+    }
+    return persisted as QualificationFinding;
   },
   async decide(projectStateId: string, decision: QualificationDecision, rationale?: string): Promise<void> {
     await requireAuthentication();
