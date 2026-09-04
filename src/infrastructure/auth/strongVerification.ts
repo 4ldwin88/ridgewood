@@ -6,7 +6,8 @@ export type StrongVerificationState = {
   currentLevel: AssuranceLevel;
   nextLevel: AssuranceLevel;
   verifiedFactorId?: string;
-  enrollment?: { factorId: string; qrCode: string; secret: string };
+  unverifiedFactorId?: string;
+  enrollment?: { factorId: string; qrCode: string; secret: string; uri?: string };
 };
 
 function normalizeAssuranceLevel(level: string | null): AssuranceLevel {
@@ -18,18 +19,25 @@ export async function getStrongVerificationState(): Promise<StrongVerificationSt
   if (assuranceError) throw assuranceError;
   const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
   if (factorsError) throw factorsError;
-  const verified = [...factors.totp, ...factors.phone].find((factor) => factor.status === 'verified');
+  const allFactors = [...factors.totp, ...factors.phone];
+  const verified = allFactors.find((factor) => factor.status === 'verified');
+  const unverified = factors.totp.find((factor) => factor.status === 'unverified');
   return {
     currentLevel: normalizeAssuranceLevel(assurance.currentLevel),
     nextLevel: normalizeAssuranceLevel(assurance.nextLevel),
     verifiedFactorId: verified?.id,
+    unverifiedFactorId: unverified?.id,
   };
 }
 
-export async function beginTotpEnrollment(): Promise<StrongVerificationState['enrollment']> {
+export async function beginTotpEnrollment(existingUnverifiedFactorId?: string): Promise<StrongVerificationState['enrollment']> {
+  if (existingUnverifiedFactorId) {
+    const { error: cleanupError } = await supabase.auth.mfa.unenroll({ factorId: existingUnverifiedFactorId });
+    if (cleanupError) throw cleanupError;
+  }
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Ridgewood OS' });
   if (error) throw error;
-  return { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret };
+  return { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret, uri: data.totp.uri };
 }
 
 export async function verifyStrongFactor(factorId: string, code: string): Promise<void> {
