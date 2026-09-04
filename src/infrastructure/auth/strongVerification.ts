@@ -2,6 +2,11 @@ import { supabase } from './supabaseClient';
 
 type AssuranceLevel = 'aal1' | 'aal2' | null;
 
+type ListedFactor = {
+  id: string;
+  status: string;
+};
+
 export type StrongVerificationState = {
   currentLevel: AssuranceLevel;
   nextLevel: AssuranceLevel;
@@ -19,9 +24,10 @@ export async function getStrongVerificationState(): Promise<StrongVerificationSt
   if (assuranceError) throw assuranceError;
   const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
   if (factorsError) throw factorsError;
-  const allFactors = [...factors.totp, ...factors.phone];
+  const allFactors: ListedFactor[] = [...factors.totp, ...factors.phone];
+  const totpFactors: ListedFactor[] = factors.totp;
   const verified = allFactors.find((factor) => factor.status === 'verified');
-  const unverified = factors.totp.find((factor) => factor.status === 'unverified');
+  const unverified = totpFactors.find((factor) => factor.status === 'unverified');
   return {
     currentLevel: normalizeAssuranceLevel(assurance.currentLevel),
     nextLevel: normalizeAssuranceLevel(assurance.nextLevel),
