@@ -80,8 +80,9 @@ jobs:
               "$PAGE_URL" || true)"
 
             if [[ "$status" == "200" ]] \
-              && grep -Eqi 'id=["'"']root["'"']' "$body" \
-              && grep -Eqi '<script[^>]+src=' "$body"; then
+              && grep -Fqi 'id="root"' "$body" \
+              && grep -Fqi '<script' "$body" \
+              && grep -Fqi 'src=' "$body"; then
               echo "Live Pages smoke test passed: HTTP 200 and Vite app shell detected."
               exit 0
             fi
