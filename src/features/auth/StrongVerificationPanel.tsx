@@ -25,14 +25,16 @@ export function StrongVerificationPanel() {
 
   useEffect(() => {
     let active = true;
-    void getStrongVerificationState().then((next) => {
-      if (!active) return;
-      setState(next);
-      publish(next);
-    }).catch((caught) => {
-      if (active) setError(message(caught));
-    });
-    return () => { active = false; };
+    const timer = window.setTimeout(() => {
+      void getStrongVerificationState().then((next) => {
+        if (!active) return;
+        setState(next);
+        publish(next);
+      }).catch((caught) => {
+        if (active) setError(message(caught));
+      });
+    }, 0);
+    return () => { active = false; window.clearTimeout(timer); };
   }, []);
 
   async function enroll() {
