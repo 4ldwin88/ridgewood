@@ -24,6 +24,6 @@ export async function beginTotpEnrollment(): Promise<StrongVerificationState['en
   throw new Error('Strong verification enrollment is temporarily disabled for Gate 2A human QA.');
 }
 
-export async function verifyStrongFactor(_factorId: string, _code: string): Promise<void> {
+export async function verifyStrongFactor(): Promise<void> {
   throw new Error('Strong verification is temporarily disabled for Gate 2A human QA.');
 }
