@@ -1,11 +1,17 @@
 import { supabase } from './supabaseClient';
 
+type AssuranceLevel = 'aal1' | 'aal2' | null;
+
 export type StrongVerificationState = {
-  currentLevel: 'aal1' | 'aal2' | null;
-  nextLevel: 'aal1' | 'aal2' | null;
+  currentLevel: AssuranceLevel;
+  nextLevel: AssuranceLevel;
   verifiedFactorId?: string;
   enrollment?: { factorId: string; qrCode: string; secret: string };
 };
+
+function normalizeAssuranceLevel(level: string | null): AssuranceLevel {
+  return level === 'aal1' || level === 'aal2' ? level : null;
+}
 
 export async function getStrongVerificationState(): Promise<StrongVerificationState> {
   const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -14,8 +20,8 @@ export async function getStrongVerificationState(): Promise<StrongVerificationSt
   if (factorsError) throw factorsError;
   const verified = [...factors.totp, ...factors.phone].find((factor) => factor.status === 'verified');
   return {
-    currentLevel: assurance.currentLevel,
-    nextLevel: assurance.nextLevel,
+    currentLevel: normalizeAssuranceLevel(assurance.currentLevel),
+    nextLevel: normalizeAssuranceLevel(assurance.nextLevel),
     verifiedFactorId: verified?.id,
   };
 }
