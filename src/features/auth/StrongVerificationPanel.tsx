@@ -23,7 +23,17 @@ export function StrongVerificationPanel() {
     catch (caught) { setError(message(caught)); }
   }
 
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => {
+    let active = true;
+    void getStrongVerificationState().then((next) => {
+      if (!active) return;
+      setState(next);
+      publish(next);
+    }).catch((caught) => {
+      if (active) setError(message(caught));
+    });
+    return () => { active = false; };
+  }, []);
 
   async function enroll() {
     setBusy(true); setError(null);
