@@ -1,44 +1,21 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   createProjectStateDocumentDraft,
-  listProjectStateDocumentDrafts,
+  createProjectStateDocumentRevision,
+  discardProjectStateDocumentDraft,
+  listProjectStateDocuments,
+  publishProjectStateDocumentRevision,
   updateProjectStateDocumentDraft,
-  type ProjectStateDocumentDraft,
+  type ProjectStateDocumentRecord,
+  type ProjectStateDocumentRevision,
 } from '../../infrastructure/documents/supabaseDocumentRepository';
 
-type SiteFormData = {
-  siteIdentity: string;
-  siteControl: string;
-  planningStatus: string;
-  approvalStatus: string;
-  constraints: string[];
-  servicing: string[];
-  accessStatus: string;
-  dueDiligence: string[];
-  overallReadiness: number;
-  notes: string;
-};
-
-const emptySiteForm: SiteFormData = {
-  siteIdentity: '', siteControl: '', planningStatus: '', approvalStatus: '', constraints: [],
-  servicing: [], accessStatus: '', dueDiligence: [], overallReadiness: 3, notes: '',
-};
+type SiteFormData = { siteIdentity: string; siteControl: string; planningStatus: string; approvalStatus: string; constraints: string[]; servicing: string[]; accessStatus: string; dueDiligence: string[]; overallReadiness: number; notes: string; };
+const emptySiteForm: SiteFormData = { siteIdentity: '', siteControl: '', planningStatus: '', approvalStatus: '', constraints: [], servicing: [], accessStatus: '', dueDiligence: [], overallReadiness: 3, notes: '' };
 const asText = (value: unknown) => typeof value === 'string' ? value : '';
 const asList = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
-const toSiteForm = (data: Record<string, unknown>): SiteFormData => ({
-  siteIdentity: asText(data.siteIdentity),
-  siteControl: asText(data.siteControl || data.ownershipControl),
-  planningStatus: asText(data.planningStatus),
-  approvalStatus: asText(data.approvalStatus || data.approvals),
-  constraints: asList(data.constraints),
-  servicing: asList(data.servicing),
-  accessStatus: asText(data.accessStatus),
-  dueDiligence: asList(data.dueDiligence),
-  overallReadiness: typeof data.overallReadiness === 'number' ? data.overallReadiness : 3,
-  notes: asText(data.notes || data.openItems),
-});
-function errorText(error: unknown) { return error instanceof Error ? error.message : 'The form could not be saved.'; }
-
+const toSiteForm = (data: Record<string, unknown>): SiteFormData => ({ siteIdentity: asText(data.siteIdentity), siteControl: asText(data.siteControl || data.ownershipControl), planningStatus: asText(data.planningStatus), approvalStatus: asText(data.approvalStatus || data.approvals), constraints: asList(data.constraints), servicing: asList(data.servicing), accessStatus: asText(data.accessStatus), dueDiligence: asList(data.dueDiligence), overallReadiness: typeof data.overallReadiness === 'number' ? data.overallReadiness : 3, notes: asText(data.notes || data.openItems) });
+function errorText(error: unknown) { return error instanceof Error ? error.message : 'The form command failed.'; }
 const controlOptions = ['Owned', 'Under contract', 'Option / conditional control', 'Client controlled', 'No control', 'Unknown'];
 const planningOptions = ['Conforming / permitted', 'Minor approvals needed', 'Rezoning / major planning needed', 'Planning review underway', 'Unknown'];
 const approvalOptions = ['Not assessed', 'Requirements identified', 'Applications underway', 'Key approvals received', 'Complete'];
@@ -46,50 +23,22 @@ const constraintOptions = ['Environmental', 'Flood / drainage', 'Grading / topog
 const servicingOptions = ['Water', 'Sanitary', 'Storm', 'Hydro', 'Gas', 'Telecom'];
 const dueDiligenceOptions = ['Survey', 'Title', 'Environmental', 'Geotechnical', 'Planning review', 'Servicing review', 'Cost review', 'Schedule review'];
 
-export function PredevelopmentFormsWorkspace({ projectStateId, disabled = false }: { projectStateId: string; disabled?: boolean }) {
-  const [drafts, setDrafts] = useState<ProjectStateDocumentDraft[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [values, setValues] = useState<SiteFormData>(emptySiteForm);
-  const siteDraft = useMemo(() => drafts.find((draft) => draft.documentType === 'predevelopment_development_site'), [drafts]);
-
-  async function reload() {
-    const next = await listProjectStateDocumentDrafts(projectStateId);
-    setDrafts(next);
-    const draft = next.find((candidate) => candidate.documentType === 'predevelopment_development_site');
-    setValues(draft ? toSiteForm(draft.data) : emptySiteForm);
-  }
-  useEffect(() => { let active = true; setLoading(true); listProjectStateDocumentDrafts(projectStateId).then((next) => {
-    if (!active) return; setDrafts(next); const draft = next.find((candidate) => candidate.documentType === 'predevelopment_development_site'); setValues(draft ? toSiteForm(draft.data) : emptySiteForm); setLoading(false);
-  }).catch((caught) => { if (active) { setError(errorText(caught)); setLoading(false); } }); return () => { active = false; }; }, [projectStateId]);
-
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (disabled || saving) return; setSaving(true); setError(null); setFeedback(null);
-    try {
-      if (siteDraft) await updateProjectStateDocumentDraft(siteDraft.revisionId, values);
-      else await createProjectStateDocumentDraft(projectStateId, { packageKey: 'predevelopment', category: 'development_site', documentType: 'predevelopment_development_site', title: 'Development & Site Review', initialData: values });
-      await reload(); setFeedback('Development & Site draft persisted and reloaded.');
-    } catch (caught) { setError(errorText(caught)); } finally { setSaving(false); }
-  }
-
-  const choose = (key: 'siteControl' | 'planningStatus' | 'approvalStatus' | 'accessStatus', options: string[]) =>
-    <div className="choice-grid">{options.map((option) => <button key={option} type="button" className={values[key] === option ? 'choice-button selected' : 'choice-button'} disabled={disabled || saving} onClick={() => setValues((current) => ({ ...current, [key]: option }))}>{option}</button>)}</div>;
-  const checks = (key: 'constraints' | 'servicing' | 'dueDiligence', options: string[]) => <div className="check-grid">{options.map((option) => <label key={option} className="check-option"><input type="checkbox" checked={values[key].includes(option)} disabled={disabled || saving} onChange={() => setValues((current) => ({ ...current, [key]: current[key].includes(option) ? current[key].filter((item) => item !== option) : [...current[key], option] }))} />{option}</label>)}</div>;
-
-  if (loading) return <section className="panel"><h3>Predevelopment forms</h3><p>Loading forms…</p></section>;
-  return <section className="panel"><p className="eyebrow">Predevelopment evidence</p><h3>Development & Site Review</h3><p>Structured review. Select answers first; type only where project-specific detail is necessary.</p><form className="structured-form" onSubmit={save}>
-    <fieldset><legend>Site</legend><label>Site identity / address<input value={values.siteIdentity} disabled={disabled || saving} onChange={(event) => setValues((current) => ({ ...current, siteIdentity: event.target.value }))} placeholder="Address or site name" /></label></fieldset>
-    <fieldset><legend>Site control</legend>{choose('siteControl', controlOptions)}</fieldset>
-    <fieldset><legend>Planning / zoning</legend>{choose('planningStatus', planningOptions)}</fieldset>
-    <fieldset><legend>Approvals</legend>{choose('approvalStatus', approvalOptions)}</fieldset>
-    <fieldset><legend>Known constraints</legend>{checks('constraints', constraintOptions)}</fieldset>
-    <fieldset><legend>Servicing reviewed / available</legend>{checks('servicing', servicingOptions)}</fieldset>
-    <fieldset><legend>Site access</legend>{choose('accessStatus', ['Suitable', 'Manageable constraints', 'Major constraint', 'Not assessed'])}</fieldset>
-    <fieldset><legend>Due diligence completed</legend>{checks('dueDiligence', dueDiligenceOptions)}</fieldset>
-    <fieldset><legend>Overall development readiness</legend><div className="scale-row">{[1,2,3,4,5].map((score) => <button key={score} type="button" className={values.overallReadiness === score ? 'scale-button selected' : 'scale-button'} disabled={disabled || saving} onClick={() => setValues((current) => ({ ...current, overallReadiness: score }))}>{score}<small>{score === 1 ? 'Very low' : score === 5 ? 'Very high' : ''}</small></button>)}</div></fieldset>
-    <fieldset><legend>Exceptions / blockers / project-specific notes</legend><textarea rows={3} value={values.notes} disabled={disabled || saving} onChange={(event) => setValues((current) => ({ ...current, notes: event.target.value }))} placeholder="Only add detail that cannot be captured above." /></fieldset>
-    <div className="form-actions"><button type="submit" disabled={disabled || saving}>{saving ? 'Saving…' : siteDraft ? 'Save draft' : 'Create draft'}</button></div>
-  </form>{feedback ? <p className="success-message">{feedback}</p> : null}{error ? <p className="error-message">{error}</p> : null}</section>;
+export function PredevelopmentFormsWorkspace({ projectStateId, projectName, projectLocation, disabled = false }: { projectStateId: string; projectName: string; projectLocation?: string; disabled?: boolean }) {
+  const [record, setRecord] = useState<ProjectStateDocumentRecord | null>(null); const [loading, setLoading] = useState(true); const [busy, setBusy] = useState<string | null>(null); const [error, setError] = useState<string | null>(null); const [feedback, setFeedback] = useState<string | null>(null); const [values, setValues] = useState<SiteFormData>(emptySiteForm); const [editing, setEditing] = useState(false); const [historyOpen, setHistoryOpen] = useState(false);
+  const draft = useMemo(() => record?.revisions.find((r) => r.state === 'draft') ?? null, [record]);
+  const published = useMemo(() => record?.revisions.find((r) => r.state === 'published') ?? null, [record]);
+  const history = useMemo(() => record?.revisions.filter((r) => r.state === 'published' || r.state === 'superseded') ?? [], [record]);
+  async function reload() { const records = await listProjectStateDocuments(projectStateId); const next = records.find((candidate) => candidate.documentType === 'predevelopment_development_site') ?? null; setRecord(next); const active = next?.revisions.find((r) => r.state === 'draft') ?? next?.revisions.find((r) => r.state === 'published'); setValues(active ? toSiteForm(active.data) : { ...emptySiteForm, siteIdentity: projectLocation ?? '' }); setEditing(Boolean(next?.revisions.find((r) => r.state === 'draft'))); }
+  useEffect(() => { let active = true; setLoading(true); listProjectStateDocuments(projectStateId).then((records) => { if (!active) return; const next = records.find((candidate) => candidate.documentType === 'predevelopment_development_site') ?? null; setRecord(next); const current = next?.revisions.find((r) => r.state === 'draft') ?? next?.revisions.find((r) => r.state === 'published'); setValues(current ? toSiteForm(current.data) : { ...emptySiteForm, siteIdentity: projectLocation ?? '' }); setEditing(Boolean(next?.revisions.find((r) => r.state === 'draft'))); setLoading(false); }).catch((caught) => { if (active) { setError(errorText(caught)); setLoading(false); } }); return () => { active = false; }; }, [projectStateId, projectLocation]);
+  async function save(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (disabled || busy) return; setBusy('save'); setError(null); setFeedback(null); try { if (draft) await updateProjectStateDocumentDraft(draft.revisionId, values); else await createProjectStateDocumentDraft(projectStateId, { packageKey: 'predevelopment', category: 'development_site', documentType: 'predevelopment_development_site', title: 'Development & Site Review', initialData: values }); await reload(); setFeedback('Draft saved.'); } catch (caught) { setError(errorText(caught)); } finally { setBusy(null); } }
+  async function publish() { if (!draft || busy) return; const note = published ? window.prompt('What changed? Briefly explain this revision.') : undefined; if (published && !note?.trim()) return; if (!window.confirm(`Publish revision ${draft.revisionNumber} of Development & Site Review?`)) return; setBusy('publish'); setError(null); try { await updateProjectStateDocumentDraft(draft.revisionId, values); await publishProjectStateDocumentRevision(draft.revisionId, note); await reload(); setEditing(false); setFeedback('Published revision is now governed and read-only.'); } catch (caught) { setError(errorText(caught)); } finally { setBusy(null); } }
+  async function editPublished() { if (!published || busy) return; setBusy('revision'); setError(null); try { await createProjectStateDocumentRevision(published.revisionId); await reload(); setFeedback('Revision draft created above the published form.'); } catch (caught) { setError(errorText(caught)); } finally { setBusy(null); } }
+  async function discardDraft() { if (!draft || busy || !window.confirm('Discard this draft? Unsaved revision work will be removed.')) return; setBusy('discard'); setError(null); try { await discardProjectStateDocumentDraft(draft.revisionId); await reload(); setFeedback('Draft discarded. Published evidence was not changed.'); } catch (caught) { setError(errorText(caught)); } finally { setBusy(null); } }
+  function cancelEditing() { if (!editing) return; if (window.confirm('Cancel editing? Changes since the last save will be lost.')) { setValues(draft ? toSiteForm(draft.data) : published ? toSiteForm(published.data) : { ...emptySiteForm, siteIdentity: projectLocation ?? '' }); setEditing(false); } }
+  const choose = (key: 'siteControl' | 'planningStatus' | 'approvalStatus' | 'accessStatus', options: string[]) => <div className="choice-grid">{options.map((option) => <button key={option} type="button" className={values[key] === option ? 'choice-button selected' : 'choice-button'} disabled={disabled || Boolean(busy) || !editing} onClick={() => setValues((current) => ({ ...current, [key]: option }))}>{option}</button>)}</div>;
+  const checks = (key: 'constraints' | 'servicing' | 'dueDiligence', options: string[]) => <div className="check-grid">{options.map((option) => <label key={option} className="check-option"><input type="checkbox" checked={values[key].includes(option)} disabled={disabled || Boolean(busy) || !editing} onChange={() => setValues((current) => ({ ...current, [key]: current[key].includes(option) ? current[key].filter((item) => item !== option) : [...current[key], option] }))} />{option}</label>)}</div>;
+  if (loading) return <div className="document-workspace"><p>Loading Development & Site Review…</p></div>;
+  const status = draft ? 'Incomplete' : published ? 'Complete' : 'Not started';
+  return <div className="document-workspace"><div className="document-context"><strong>Development & Site Review</strong><span className="status-pill">{status}</span><small>{projectName} · Project State {projectStateId}</small></div>{draft ? <div className="revision-banner"><strong>Revision {draft.revisionNumber} draft</strong><span>Working copy</span></div> : null}<form className="structured-form" onSubmit={save}><fieldset><legend>Site</legend><label>Site identity / address<input value={values.siteIdentity} disabled={disabled || Boolean(busy) || !editing} onChange={(event) => setValues((current) => ({ ...current, siteIdentity: event.target.value }))} placeholder="Address or site name" /></label></fieldset><fieldset><legend>Site control</legend>{choose('siteControl', controlOptions)}</fieldset><fieldset><legend>Planning / zoning</legend>{choose('planningStatus', planningOptions)}</fieldset><fieldset><legend>Approvals</legend>{choose('approvalStatus', approvalOptions)}</fieldset><fieldset><legend>Known constraints</legend>{checks('constraints', constraintOptions)}</fieldset><fieldset><legend>Servicing reviewed / available</legend>{checks('servicing', servicingOptions)}</fieldset><fieldset><legend>Site access</legend>{choose('accessStatus', ['Suitable', 'Manageable constraints', 'Major constraint', 'Not assessed'])}</fieldset><fieldset><legend>Due diligence completed</legend>{checks('dueDiligence', dueDiligenceOptions)}</fieldset><fieldset><legend>Overall development readiness</legend><div className="scale-row">{[1,2,3,4,5].map((score) => <button key={score} type="button" className={values.overallReadiness === score ? 'scale-button selected' : 'scale-button'} disabled={disabled || Boolean(busy) || !editing} onClick={() => setValues((current) => ({ ...current, overallReadiness: score }))}>{score}<small>{score === 1 ? 'Very low' : score === 5 ? 'Very high' : ''}</small></button>)}</div></fieldset><fieldset><legend>Exceptions / blockers / project-specific notes</legend><textarea rows={3} value={values.notes} disabled={disabled || Boolean(busy) || !editing} onChange={(event) => setValues((current) => ({ ...current, notes: event.target.value }))} /></fieldset><div className="form-actions">{editing ? <><button type="submit" disabled={disabled || Boolean(busy)}>{busy === 'save' ? 'Saving…' : 'Save draft'}</button><button type="button" className="secondary" disabled={Boolean(busy)} onClick={cancelEditing}>Cancel</button>{draft ? <button type="button" disabled={Boolean(busy)} onClick={() => void publish()}>{busy === 'publish' ? 'Publishing…' : 'Publish'}</button> : null}{draft ? <button type="button" className="secondary" disabled={Boolean(busy)} onClick={() => void discardDraft()}>Delete draft</button> : null}</> : published ? <button type="button" disabled={disabled || Boolean(busy)} onClick={() => void editPublished()}>{busy === 'revision' ? 'Creating revision…' : 'Edit'}</button> : <button type="button" disabled={disabled || Boolean(busy)} onClick={() => setEditing(true)}>Start form</button>}</div></form>{published ? <PublishedSummary revision={published} /> : null}{history.length ? <div className="revision-history"><button type="button" className="text-button" onClick={() => setHistoryOpen((value) => !value)}>{historyOpen ? 'Hide' : 'Show'} revision history ({history.length})</button>{historyOpen ? history.map((revision) => <article key={revision.revisionId}><strong>Revision {revision.revisionNumber}</strong><span>{revision.state}</span><small>{revision.publishedAt ? new Date(revision.publishedAt).toLocaleString() : ''} · {revision.changeNote || 'No change note'}</small></article>) : null}</div> : null}{feedback ? <p className="guidance success" role="status">{feedback}</p> : null}{error ? <p className="error-message" role="alert">{error}</p> : null}</div>;
 }
+function PublishedSummary({ revision }: { revision: ProjectStateDocumentRevision }) { return <div className="published-summary"><strong>Published revision {revision.revisionNumber}</strong><small>{revision.publishedAt ? new Date(revision.publishedAt).toLocaleString() : ''} · {revision.changeNote || 'Initial publication'}</small></div>; }
