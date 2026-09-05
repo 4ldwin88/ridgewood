@@ -7,7 +7,7 @@ import { BusinessWorkspace } from '../../modules/business/BusinessWorkspace';
 
 type Page = 'Home' | 'Business' | 'Projects' | 'Network' | 'More';
 const pages: Page[] = ['Home', 'Business', 'Projects', 'Network', 'More'];
-export const APP_VERSION = 'v0.10';
+export const APP_VERSION = 'v0.11';
 const feedbackEnabled = import.meta.env.VITE_DEV_FEEDBACK_ENABLED !== 'false';
 
 export function AppShell({ session }: { session: Session }) {
