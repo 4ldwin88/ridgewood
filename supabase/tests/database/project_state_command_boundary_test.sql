@@ -73,6 +73,14 @@ select ok(
   'public document draft update gateway is SECURITY INVOKER'
 );
 select ok(
+  (select p.prosecdef and coalesce(array_to_string(p.proconfig, ', '), '') = 'search_path=""' from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname='create_project_state_document_draft_command'),
+  'private document draft creation command is SECURITY DEFINER with empty search_path'
+);
+select ok(
+  (select p.prosecdef and coalesce(array_to_string(p.proconfig, ', '), '') = 'search_path=""' from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname='update_project_state_document_draft_command'),
+  'private document draft update command is SECURITY DEFINER with empty search_path'
+);
+select ok(
   not exists (
     select 1
     from pg_proc p
