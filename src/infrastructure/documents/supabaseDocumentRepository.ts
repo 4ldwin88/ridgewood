@@ -12,6 +12,23 @@ export interface ProjectStateDocumentDraft {
   updatedAt: string;
 }
 
+type DocumentRevisionRow = {
+  id: string;
+  revision_number: number;
+  state: string;
+  source_data: Record<string, unknown> | null;
+};
+
+type DocumentRecordRow = {
+  id: string;
+  title: string;
+  document_type: string;
+  category_key: string;
+  package_key: string;
+  updated_at: string;
+  document_revisions: DocumentRevisionRow[] | null;
+};
+
 export async function listProjectStateDocumentDrafts(projectStateId: string): Promise<ProjectStateDocumentDraft[]> {
   const { data, error } = await supabase
     .from('document_records')
@@ -19,9 +36,10 @@ export async function listProjectStateDocumentDrafts(projectStateId: string): Pr
     .eq('project_state_id', projectStateId)
     .order('updated_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []).flatMap((record: any) => (record.document_revisions ?? [])
-    .filter((revision: any) => revision.state === 'draft')
-    .map((revision: any) => ({
+  const records = (data ?? []) as DocumentRecordRow[];
+  return records.flatMap((record) => (record.document_revisions ?? [])
+    .filter((revision) => revision.state === 'draft')
+    .map((revision) => ({
       revisionId: revision.id,
       documentId: record.id,
       revisionNumber: revision.revision_number,
