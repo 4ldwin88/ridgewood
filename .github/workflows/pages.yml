@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -29,30 +29,21 @@ jobs:
           cache-dependency-path: package.json
       - name: Install dependencies
         run: npm install --ignore-scripts
-      - name: Export generated npm lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: ridgewood-package-lock
-          path: package-lock.json
-          if-no-files-found: error
-          retention-days: 1
-      - name: Dependency audit evidence
+      - name: Persist generated npm lockfile
+        shell: bash
         run: |
-          npm audit --json > dependency-audit.json || true
-          node - <<'NODE'
-          const fs = require('fs')
-          const audit = JSON.parse(fs.readFileSync('dependency-audit.json', 'utf8'))
-          const rows = Object.entries(audit.vulnerabilities || {}).map(([name, v]) => ({
-            name,
-            severity: v.severity,
-            direct: Boolean(v.isDirect),
-            via: (v.via || []).map(x => typeof x === 'string' ? x : `${x.name}: ${x.title}`),
-            effects: v.effects || [],
-            range: v.range,
-            fixAvailable: v.fixAvailable,
-          }))
-          console.log(JSON.stringify({ metadata: audit.metadata, vulnerabilities: rows }, null, 2))
-          NODE
+          set -euo pipefail
+          if git diff --quiet -- package-lock.json && git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            echo "package-lock.json already matches the generated dependency graph."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "Lock Gate 2A npm dependencies"
+            git push origin HEAD:gate2/reconciliation-foundation
+          fi
+      - name: Dependency audit
+        run: npm audit --audit-level=high
       - name: Validate
         run: |
           npm run typecheck
