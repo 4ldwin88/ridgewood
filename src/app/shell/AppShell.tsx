@@ -4,10 +4,11 @@ import { supabase } from '../../infrastructure/auth/supabaseClient';
 import { developmentObservability } from '../../infrastructure/observability/supabaseDevelopmentObservability';
 import { DevNotesButton } from '../../modules/development/DevNotesButton';
 import { BusinessWorkspace } from '../../modules/business/BusinessWorkspace';
+import { ProjectsWorkspace } from '../../modules/projects/ProjectsWorkspace';
 
 type Page = 'Home' | 'Business' | 'Projects' | 'Network' | 'More';
 const pages: Page[] = ['Home', 'Business', 'Projects', 'Network', 'More'];
-export const APP_VERSION = 'v0.13';
+export const APP_VERSION = 'v0.14';
 const feedbackEnabled = import.meta.env.VITE_DEV_FEEDBACK_ENABLED !== 'false';
 
 export function AppShell({ session }: { session: Session }) {
@@ -17,7 +18,7 @@ export function AppShell({ session }: { session: Session }) {
   useEffect(() => { void developmentObservability.capture({ eventName: 'route_view', pagePath, metadata: { page } }); }, [page, pagePath]);
   async function signOut() { setSigningOut(true); void developmentObservability.capture({ eventName: 'auth_signed_out', pagePath }); await supabase.auth.signOut(); setSigningOut(false); }
   const pageTitle = page === 'Business' ? 'Business pipeline' : page;
-  const content = page === 'Business' ? <BusinessWorkspace/> : <EmptyFoundation page={page}/>;
+  const content = page === 'Business' ? <BusinessWorkspace/> : page === 'Projects' ? <ProjectsWorkspace/> : <EmptyFoundation page={page}/>;
   return <div className="app-frame"><header className="topbar"><img src={`${import.meta.env.BASE_URL}assets/ridgewood-horizontal-light.svg`} alt="Ridgewood"/><div className="top-actions"><span className="version">{APP_VERSION}</span>{feedbackEnabled ? <DevNotesButton observability={developmentObservability} pagePath={pagePath} pageTitle={page}/> : null}<button type="button" onClick={signOut} disabled={signingOut}>{signingOut ? 'Exiting…' : 'Exit'}</button></div></header><nav className="primary-nav" aria-label="Primary">{pages.map((item) => <button key={item} className={page === item ? 'active' : ''} onClick={() => setPage(item)}>{item}</button>)}</nav><main className="workspace"><p className="eyebrow">{page}</p><h1>{pageTitle}</h1>{content}</main><footer><span>{session.user.email}</span><span>Ridgewood OS · {APP_VERSION}</span></footer></div>;
 }
 function EmptyFoundation({ page }: { page: Page }) { return <section className="panel"><h2>{page} foundation</h2><p>This surface is intentionally minimal until its governed capability is implemented.</p></section>; }
