@@ -15,122 +15,25 @@ type ProjectStateRow = {
 type RequirementRow = { stage?: ProjectStage; gate_key?: string | null; requirement_key: string; label: string; status: StageRequirementStatus; required: boolean; notes: string | null };
 
 function fromRow(row: ProjectStateRow): ProjectState {
-  return {
-    id: row.id, name: row.name, stage: row.stage ?? 'opportunity', status: row.status ?? 'active',
-    commercialStage: row.commercial_stage ?? 'opportunity', probability: row.commercial_probability ?? undefined,
-    priority: row.priority ?? 'medium', ownerPersonId: row.owner_user_id ?? undefined,
-    organizationId: row.organization_id ?? undefined, location: row.site_location ?? undefined,
-    sector: row.sector ?? undefined, source: row.source_context ?? undefined, summary: row.summary ?? undefined,
-    nextAction: row.next_action ?? undefined, createdAt: row.created_at, updatedAt: row.updated_at,
-  };
+  return { id: row.id, name: row.name, stage: row.stage ?? 'opportunity', status: row.status ?? 'active', commercialStage: row.commercial_stage ?? 'opportunity', probability: row.commercial_probability ?? undefined, priority: row.priority ?? 'medium', ownerPersonId: row.owner_user_id ?? undefined, organizationId: row.organization_id ?? undefined, location: row.site_location ?? undefined, sector: row.sector ?? undefined, source: row.source_context ?? undefined, summary: row.summary ?? undefined, nextAction: row.next_action ?? undefined, createdAt: row.created_at, updatedAt: row.updated_at };
 }
-function requirementFromRow(row: RequirementRow): ProjectStateStageRequirement {
-  return { requirementKey: row.requirement_key, label: row.label, status: row.status, required: row.required, notes: row.notes ?? undefined, stage: row.stage, gateKey: row.gate_key ?? undefined };
-}
-async function context() {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) throw authError ?? new Error('Authentication required.');
-  const { data: membership, error: membershipError } = await supabase.from('workspace_memberships').select('workspace_id').eq('user_id', authData.user.id).eq('status', 'active').limit(1).single();
-  if (membershipError || !membership) throw membershipError ?? new Error('No active Ridgewood workspace is available for this account.');
-  return { userId: authData.user.id, workspaceId: membership.workspace_id as string };
-}
-async function authorizationError(error: unknown): Promise<Error> {
-  if (error && typeof error === 'object' && 'context' in error) {
-    const response = (error as { context?: unknown }).context;
-    if (response instanceof Response) {
-      try {
-        const payload = await response.clone().json() as { message?: unknown; error?: unknown; code?: unknown };
-        const message = typeof payload.message === 'string' && payload.message.trim() ? payload.message.trim() : typeof payload.error === 'string' && payload.error.trim() ? payload.error.trim().replaceAll('_', ' ') : '';
-        const code = typeof payload.code === 'string' && payload.code.trim() ? ` (${payload.code.trim()})` : '';
-        if (message) return new Error(`Project Authorization failed: ${message}${code}`);
-      } catch {
-        try {
-          const text = (await response.clone().text()).trim();
-          if (text) return new Error(`Project Authorization failed: ${text.slice(0, 300)}`);
-        } catch { /* fall through to the SDK error */ }
-      }
-    }
-  }
-  if (error instanceof Error && error.message) return new Error(`Project Authorization failed: ${error.message}`);
-  return new Error('Project Authorization failed for an unknown reason. Reload this Project State before retrying.');
-}
+function requirementFromRow(row: RequirementRow): ProjectStateStageRequirement { return { requirementKey: row.requirement_key, label: row.label, status: row.status, required: row.required, notes: row.notes ?? undefined, stage: row.stage, gateKey: row.gate_key ?? undefined }; }
+async function context() { const { data: authData, error: authError } = await supabase.auth.getUser(); if (authError || !authData.user) throw authError ?? new Error('Authentication required.'); const { data: membership, error: membershipError } = await supabase.from('workspace_memberships').select('workspace_id').eq('user_id', authData.user.id).eq('status', 'active').limit(1).single(); if (membershipError || !membership) throw membershipError ?? new Error('No active Ridgewood workspace is available for this account.'); return { userId: authData.user.id, workspaceId: membership.workspace_id as string }; }
+async function authorizationError(error: unknown): Promise<Error> { if (error && typeof error === 'object' && 'context' in error) { const response=(error as {context?:unknown}).context; if(response instanceof Response){try{const payload=await response.clone().json() as {message?:unknown;error?:unknown;code?:unknown};const message=typeof payload.message==='string'&&payload.message.trim()?payload.message.trim():typeof payload.error==='string'&&payload.error.trim()?payload.error.trim().replaceAll('_',' '):'';const code=typeof payload.code==='string'&&payload.code.trim()?` (${payload.code.trim()})`:'';if(message)return new Error(`Project Authorization failed: ${message}${code}`)}catch{try{const text=(await response.clone().text()).trim();if(text)return new Error(`Project Authorization failed: ${text.slice(0,300)}`)}catch{/* fall through */}}}} if(error instanceof Error&&error.message)return new Error(`Project Authorization failed: ${error.message}`);return new Error('Project Authorization failed for an unknown reason. Reload this Project State before retrying.'); }
+const authorizedStages: ProjectStage[]=['project_authorization_setup','preconstruction_mobilization','construction_control','completion_turnover','project_closeout','warranty_final_close','closed'];
 export const supabaseProjectStateRepository = {
-  async list(): Promise<ProjectState[]> {
-    const { workspaceId } = await context();
-    const { data, error } = await supabase.from('project_states').select('*').eq('workspace_id', workspaceId).is('archived_at', null).order('updated_at', { ascending: false });
-    if (error) throw error;
-    return ((data ?? []) as ProjectStateRow[]).map(fromRow);
-  },
-  async create(input: Omit<ProjectState, 'id' | 'stage' | 'status' | 'createdAt' | 'updatedAt'>): Promise<ProjectState> {
-    await context();
-    const { data, error } = await supabase.rpc('create_project_state', { project_state_input: { name: input.name, commercial_stage: input.commercialStage, commercial_probability: input.probability ?? null, priority: input.priority, organization_id: input.organizationId ?? null, site_location: input.location ?? null, sector: input.sector ?? null, source_context: input.source ?? null, summary: input.summary ?? null, next_action: input.nextAction ?? null } });
-    if (error) throw error;
-    return fromRow(data as ProjectStateRow);
-  },
-  async updateOpportunityBasics(id: string, input: OpportunityBasicsInput): Promise<ProjectState> {
-    await context();
-    const { data, error } = await supabase.rpc('update_project_state_opportunity_basics', { project_state_input: id, basics_input: { name: input.name, site_location: input.location ?? null, sector: input.sector ?? null, source_context: input.source ?? null, summary: input.summary ?? null, next_action: input.nextAction ?? null } });
-    if (error) throw error;
-    return fromRow(data as ProjectStateRow);
-  },
-  async opportunityRequirements(id: string): Promise<ProjectStateStageRequirement[]> {
-    await context();
-    const { data, error } = await supabase.rpc('refresh_project_state_opportunity_requirements', { project_state_input: id });
-    if (error) throw error;
-    return ((data ?? []) as RequirementRow[]).map(requirementFromRow);
-  },
-  async stageRequirements(id: string, stage?: ProjectStage): Promise<ProjectStateStageRequirement[]> {
-    await context();
-    const { data, error } = await supabase.rpc('list_project_state_stage_requirements', { project_state_input: id, stage_input: stage ?? null });
-    if (error) throw error;
-    return ((data ?? []) as RequirementRow[]).map(requirementFromRow);
-  },
-  async ensureProjectAuthorizationSetupRequirements(id: string): Promise<ProjectStateStageRequirement[]> {
-    await context();
-    const { data, error } = await supabase.rpc('ensure_project_authorization_setup_requirements', { project_state_input: id });
-    if (error) throw error;
-    return ((data ?? []) as RequirementRow[]).map(requirementFromRow);
-  },
-  async setStageRequirement(id: string, input: StageRequirementInput): Promise<ProjectStateStageRequirement> {
-    await context();
-    const { data, error } = await supabase.rpc('set_project_state_stage_requirement', { project_state_input: id, stage_input: input.stage, requirement_key_input: input.requirementKey, label_input: input.label, status_input: input.status, required_input: input.required ?? true, notes_input: input.notes ?? null, gate_key_input: input.gateKey ?? null });
-    if (error) throw error;
-    return requirementFromRow(data as RequirementRow);
-  },
-  async advanceToQualification(id: string): Promise<ProjectState> {
-    await context();
-    const { data, error } = await supabase.rpc('advance_project_state_to_qualification', { project_state_input: id });
-    if (error) throw error;
-    return fromRow(data as ProjectStateRow);
-  },
-  async resumeHeld(id: string): Promise<ProjectState> {
-    await context();
-    const { data, error } = await supabase.rpc('resume_held_project_state', { project_state_input: id });
-    if (error) throw error;
-    return fromRow(data as ProjectStateRow);
-  },
-  async enterAuthorization(id: string): Promise<ProjectState> {
-    await context();
-    const { data, error } = await supabase.rpc('enter_project_state_authorization', { project_state_input: id });
-    if (error) throw error;
-    return fromRow(data as ProjectStateRow);
-  },
-  async authorize(id: string, authorityBasis?: string): Promise<ProjectState> {
-    await context();
-    const { data, error } = await supabase.functions.invoke('project-authorization', { body: { projectStateId: id, authorityBasis: authorityBasis ?? '' } });
-    if (error) throw await authorizationError(error);
-    if (!data || typeof data !== 'object' || !('projectState' in data)) throw new Error('Project Authorization failed: the server did not return the updated Project State.');
-    return fromRow((data as { projectState: ProjectStateRow }).projectState);
-  },
-  async enterPreconstructionMobilization(id: string): Promise<ProjectState> {
-    await context();
-    const { data, error } = await supabase.rpc('enter_project_state_preconstruction_mobilization', { project_state_input: id });
-    if (error) throw error;
-    return fromRow(data as ProjectStateRow);
-  },
-  async archive(id: string): Promise<void> {
-    await context();
-    const { error } = await supabase.rpc('archive_project_state', { project_state_input: id });
-    if (error) throw error;
-  },
+ async list():Promise<ProjectState[]>{const{workspaceId}=await context();const{data,error}=await supabase.from('project_states').select('*').eq('workspace_id',workspaceId).is('archived_at',null).not('stage','in',`(${authorizedStages.join(',')})`).order('updated_at',{ascending:false});if(error)throw error;return((data??[])as ProjectStateRow[]).map(fromRow)},
+ async listProjects():Promise<ProjectState[]>{const{workspaceId}=await context();const{data,error}=await supabase.from('project_states').select('*').eq('workspace_id',workspaceId).is('archived_at',null).in('stage',authorizedStages).order('updated_at',{ascending:false});if(error)throw error;return((data??[])as ProjectStateRow[]).map(fromRow)},
+ async create(input:Omit<ProjectState,'id'|'stage'|'status'|'createdAt'|'updatedAt'>):Promise<ProjectState>{await context();const{data,error}=await supabase.rpc('create_project_state',{project_state_input:{name:input.name,commercial_stage:input.commercialStage,commercial_probability:input.probability??null,priority:input.priority,organization_id:input.organizationId??null,site_location:input.location??null,sector:input.sector??null,source_context:input.source??null,summary:input.summary??null,next_action:input.nextAction??null}});if(error)throw error;return fromRow(data as ProjectStateRow)},
+ async updateOpportunityBasics(id:string,input:OpportunityBasicsInput):Promise<ProjectState>{await context();const{data,error}=await supabase.rpc('update_project_state_opportunity_basics',{project_state_input:id,basics_input:{name:input.name,site_location:input.location??null,sector:input.sector??null,source_context:input.source??null,summary:input.summary??null,next_action:input.nextAction??null}});if(error)throw error;return fromRow(data as ProjectStateRow)},
+ async opportunityRequirements(id:string):Promise<ProjectStateStageRequirement[]>{await context();const{data,error}=await supabase.rpc('refresh_project_state_opportunity_requirements',{project_state_input:id});if(error)throw error;return((data??[])as RequirementRow[]).map(requirementFromRow)},
+ async stageRequirements(id:string,stage?:ProjectStage):Promise<ProjectStateStageRequirement[]>{await context();const{data,error}=await supabase.rpc('list_project_state_stage_requirements',{project_state_input:id,stage_input:stage??null});if(error)throw error;return((data??[])as RequirementRow[]).map(requirementFromRow)},
+ async ensureProjectAuthorizationSetupRequirements(id:string):Promise<ProjectStateStageRequirement[]>{await context();const{data,error}=await supabase.rpc('ensure_project_authorization_setup_requirements',{project_state_input:id});if(error)throw error;return((data??[])as RequirementRow[]).map(requirementFromRow)},
+ async setStageRequirement(id:string,input:StageRequirementInput):Promise<ProjectStateStageRequirement>{await context();const{data,error}=await supabase.rpc('set_project_state_stage_requirement',{project_state_input:id,stage_input:input.stage,requirement_key_input:input.requirementKey,label_input:input.label,status_input:input.status,required_input:input.required??true,notes_input:input.notes??null,gate_key_input:input.gateKey??null});if(error)throw error;return requirementFromRow(data as RequirementRow)},
+ async advanceToQualification(id:string):Promise<ProjectState>{await context();const{data,error}=await supabase.rpc('advance_project_state_to_qualification',{project_state_input:id});if(error)throw error;return fromRow(data as ProjectStateRow)},
+ async resumeHeld(id:string):Promise<ProjectState>{await context();const{data,error}=await supabase.rpc('resume_held_project_state',{project_state_input:id});if(error)throw error;return fromRow(data as ProjectStateRow)},
+ async enterAuthorization(id:string):Promise<ProjectState>{await context();const{data,error}=await supabase.rpc('enter_project_state_authorization',{project_state_input:id});if(error)throw error;return fromRow(data as ProjectStateRow)},
+ async authorize(id:string,authorityBasis?:string):Promise<ProjectState>{await context();const{data,error}=await supabase.functions.invoke('project-authorization',{body:{projectStateId:id,authorityBasis:authorityBasis??''}});if(error)throw await authorizationError(error);if(!data||typeof data!=='object'||!('projectState'in data))throw new Error('Project Authorization failed: the server did not return the updated Project State.');return fromRow((data as {projectState:ProjectStateRow}).projectState)},
+ async enterPreconstructionMobilization(id:string):Promise<ProjectState>{await context();const{data,error}=await supabase.rpc('enter_project_state_preconstruction_mobilization',{project_state_input:id});if(error)throw error;return fromRow(data as ProjectStateRow)},
+ async archive(id:string):Promise<void>{await context();const{error}=await supabase.rpc('archive_project_state',{project_state_input:id});if(error)throw error}
 };
