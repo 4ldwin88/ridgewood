@@ -3,7 +3,6 @@ export type ProjectStage =
   | 'qualification'
   | 'predevelopment'
   | 'authorization'
-  | 'authorized'
   | 'project_authorization_setup'
   | 'preconstruction_mobilization'
   | 'construction_control'
@@ -31,7 +30,6 @@ export type CommercialStage =
   | 'qualification'
   | 'predevelopment'
   | 'authorization'
-  | 'authorized'
   | 'project_authorization_setup'
   | 'preconstruction_mobilization'
   | 'construction_control'
@@ -66,7 +64,6 @@ export const PROJECT_STAGE_ORDER: ProjectStage[] = [
   'qualification',
   'predevelopment',
   'authorization',
-  'authorized',
   'project_authorization_setup',
   'preconstruction_mobilization',
   'construction_control',
@@ -81,7 +78,6 @@ const PROJECT_STAGE_LABELS: Record<ProjectStage, string> = {
   qualification: 'Qualification',
   predevelopment: 'Predevelopment',
   authorization: 'Authorization',
-  authorized: 'Authorized',
   project_authorization_setup: 'Project Authorization & Setup',
   preconstruction_mobilization: 'Pre-Construction & Mobilization',
   construction_control: 'Construction & Control',
