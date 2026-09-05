@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -26,22 +26,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: package.json
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
-        run: npm install --ignore-scripts
-      - name: Persist generated npm lockfile
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- package-lock.json && git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
-            echo "package-lock.json already matches the generated dependency graph."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add package-lock.json
-            git commit -m "Lock Gate 2A npm dependencies"
-            git push origin HEAD:gate2/reconciliation-foundation
-          fi
+        run: npm ci --ignore-scripts
       - name: Dependency audit
         run: npm audit --audit-level=high
       - name: Validate
