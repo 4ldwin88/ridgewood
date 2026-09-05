@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../auth/supabaseClient';
 
 export interface ProjectStateDocumentDraft {
   revisionId: string;
