@@ -107,7 +107,7 @@ export function QualificationReviewWorkspace({
                 className={selected ? 'choice-button selected' : 'choice-button'}
                 disabled={!preauthorization || Boolean(action)}
                 onClick={() => void save(area, value)}
-              >{value === 'yes' ? 'Yes' : value === 'unclear' ? 'Unclear' : 'No'}</button>;
+              >{selected ? '✓ ' : ''}{value === 'yes' ? 'Yes' : value === 'unclear' ? 'Unclear' : 'No'}</button>;
             })}
           </div>
           <label>Evidence / note <span className="optional-marker">Optional</span>
@@ -119,7 +119,7 @@ export function QualificationReviewWorkspace({
               placeholder="Record the basis, evidence, dependency or material unknown."
             />
           </label>
-          {finding ? <small className="saved-indicator">Saved finding: {finding.assessment}</small> : <small>Not started</small>}
+          {finding ? <small className="saved-indicator">✓ Saved finding: {finding.assessment}</small> : <small>Not started</small>}
         </fieldset>;
       })}
     </div>
