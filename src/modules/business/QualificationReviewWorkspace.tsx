@@ -7,12 +7,12 @@ import {
   type QualificationFinding,
 } from '../../infrastructure/qualification/supabaseQualificationRepository';
 
-const areas: [QualificationArea, string, string][] = [
-  ['opportunity_credibility', 'Opportunity credibility', 'Is the opportunity sufficiently real and worth Ridgewood attention?'],
-  ['strategic_fit', 'Ridgewood role & strategic fit', 'Does the work fit Ridgewood’s intended role and capabilities?'],
-  ['relationship_authority', 'Relationship & authority', 'Are client, partners, decision-makers and the authority path understood?'],
-  ['commercial_plausibility', 'Commercial plausibility', 'Is there a credible commercial path worth developing?'],
-  ['execution_risk', 'Execution & risk plausibility', 'Can Ridgewood plausibly deliver given known constraints and capacity?'],
+const areas: [QualificationArea, string, string, string][] = [
+  ['opportunity_credibility', '2.1', 'Opportunity Credibility', 'Is the opportunity sufficiently real and worth Ridgewood attention?'],
+  ['strategic_fit', '2.2', 'Strategic Role & Fit', 'Does the work fit Ridgewood’s intended role and capabilities?'],
+  ['relationship_authority', '2.3', 'Relationship & Authority', 'Are client, partners, decision-makers and the authority path understood?'],
+  ['commercial_plausibility', '2.4', 'Commercial Plausibility', 'Is there a credible commercial path worth developing?'],
+  ['execution_risk', '2.5', 'Execution & Risk Plausibility', 'Can Ridgewood plausibly deliver given known constraints and capacity?'],
 ];
 
 function errorText(error: unknown, fallback: string) {
@@ -92,12 +92,12 @@ export function QualificationReviewWorkspace({
     {feedback ? <p className="guidance success">{feedback}</p> : null}
 
     <div className="qualification-area-list">
-      {areas.map(([area, label, help]) => {
+      {areas.map(([area, displayIdentifier, label, help]) => {
         const finding = findingMap.get(area);
         return <fieldset className="qualification-area" key={area}>
-          <legend>{label} <span className="required-marker">Required</span></legend>
+          <legend>{displayIdentifier} {label} <span className="required-marker">Required</span></legend>
           <small>{help}</small>
-          <div className="choice-row" role="group" aria-label={`${label} assessment`}>
+          <div className="choice-row" role="group" aria-label={`${displayIdentifier} ${label} assessment`}>
             {(['yes', 'unclear', 'no'] as QualificationAssessment[]).map(value => {
               const selected = finding?.assessment === value;
               return <button
