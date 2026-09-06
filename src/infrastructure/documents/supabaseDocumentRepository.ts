@@ -1,5 +1,6 @@
 import { supabase } from '../auth/supabaseClient';
 
+export interface DocumentFieldChange { field: string; before: unknown; after: unknown }
 export interface ProjectStateDocumentRevision {
   revisionId: string;
   documentId: string;
@@ -14,6 +15,7 @@ export interface ProjectStateDocumentRevision {
   createdAt: string;
   publishedAt: string | null;
   publishedBy: string | null;
+  changes: DocumentFieldChange[];
 }
 
 export interface ProjectStateDocumentRecord {
@@ -47,36 +49,44 @@ type DocumentRecordRow = {
   document_revisions: DocumentRevisionRow[] | null;
 };
 
+function comparable(value: unknown): string { return JSON.stringify(value ?? null); }
+function fieldChanges(current: Record<string, unknown>, previous?: Record<string, unknown>): DocumentFieldChange[] {
+  if (!previous) return [];
+  return [...new Set([...Object.keys(previous), ...Object.keys(current)])].sort().filter((field) => comparable(previous[field]) !== comparable(current[field])).map((field) => ({ field, before: previous[field], after: current[field] }));
+}
+
 export async function listProjectStateDocuments(projectStateId: string): Promise<ProjectStateDocumentRecord[]> {
   const { data, error } = await supabase
     .from('document_records')
-    .select('id,title,document_type,category_key,package_key,updated_at,document_revisions(id,revision_number,state,source_data,change_reason,created_at,published_at,published_by)')
+    .select('id,title,document_type,category_key,package_key,updated_at,document_revisions(id,revision_number,state,source_data,change_reason,created_at,published_at,published_by,archived_at)')
     .eq('project_state_id', projectStateId)
+    .is('document_revisions.archived_at', null)
     .order('updated_at', { ascending: false });
   if (error) throw error;
-  return ((data ?? []) as DocumentRecordRow[]).map((record) => ({
-    documentId: record.id,
-    title: record.title,
-    documentType: record.document_type,
-    category: record.category_key,
-    packageKey: record.package_key,
-    updatedAt: record.updated_at,
-    revisions: (record.document_revisions ?? []).map((revision) => ({
-      revisionId: revision.id,
-      documentId: record.id,
-      revisionNumber: revision.revision_number,
-      state: revision.state,
-      title: record.title,
-      documentType: record.document_type,
-      category: record.category_key,
-      packageKey: record.package_key,
-      data: revision.source_data ?? {},
-      changeNote: revision.change_reason,
-      createdAt: revision.created_at,
-      publishedAt: revision.published_at,
-      publishedBy: revision.published_by,
-    })).sort((a, b) => b.revisionNumber - a.revisionNumber),
-  }));
+  return ((data ?? []) as DocumentRecordRow[]).map((record) => {
+    const ordered = [...(record.document_revisions ?? [])].sort((a, b) => a.revision_number - b.revision_number);
+    const revisions = ordered.map((revision, index) => {
+      const revisionData = revision.source_data ?? {};
+      const previousPublished = ordered.slice(0, index).reverse().find((candidate) => candidate.state === 'published' || candidate.state === 'superseded');
+      return {
+        revisionId: revision.id,
+        documentId: record.id,
+        revisionNumber: revision.revision_number,
+        state: revision.state,
+        title: record.title,
+        documentType: record.document_type,
+        category: record.category_key,
+        packageKey: record.package_key,
+        data: revisionData,
+        changeNote: revision.change_reason,
+        createdAt: revision.created_at,
+        publishedAt: revision.published_at,
+        publishedBy: revision.published_by,
+        changes: fieldChanges(revisionData, previousPublished?.source_data ?? undefined),
+      };
+    }).sort((a, b) => b.revisionNumber - a.revisionNumber);
+    return { documentId: record.id, title: record.title, documentType: record.document_type, category: record.category_key, packageKey: record.package_key, updatedAt: record.updated_at, revisions };
+  });
 }
 
 export async function createProjectStateDocumentDraft(projectStateId: string, input: {
@@ -95,33 +105,22 @@ export async function createProjectStateDocumentDraft(projectStateId: string, in
 }
 
 export async function updateProjectStateDocumentDraft(revisionId: string, data: Record<string, unknown>): Promise<void> {
-  const { error } = await supabase.rpc('update_project_state_document_draft', {
-    target_revision_id: revisionId,
-    source_data_input: data,
-  });
+  const { error } = await supabase.rpc('update_project_state_document_draft', { target_revision_id: revisionId, source_data_input: data });
   if (error) throw error;
 }
 
 export async function publishProjectStateDocumentRevision(revisionId: string, changeNote?: string): Promise<void> {
-  const { error } = await supabase.rpc('publish_project_state_document_revision', {
-    target_revision_id: revisionId,
-    change_note_input: changeNote?.trim() || null,
-  });
+  const { error } = await supabase.rpc('publish_project_state_document_revision', { target_revision_id: revisionId, change_note_input: changeNote?.trim() || null });
   if (error) throw error;
 }
 
 export async function createProjectStateDocumentRevision(publishedRevisionId: string): Promise<string> {
-  const { data, error } = await supabase.rpc('create_project_state_document_revision', {
-    target_published_revision_id: publishedRevisionId,
-  });
+  const { data, error } = await supabase.rpc('create_project_state_document_revision', { target_published_revision_id: publishedRevisionId });
   if (error) throw error;
   return data as string;
 }
 
 export async function discardProjectStateDocumentDraft(revisionId: string): Promise<void> {
-  const { error } = await supabase.rpc('discard_project_state_document_draft', {
-    target_revision_id: revisionId,
-    reason_input: 'Draft discarded by user',
-  });
+  const { error } = await supabase.rpc('discard_project_state_document_draft', { target_revision_id: revisionId, reason_input: 'Draft discarded by user' });
   if (error) throw error;
 }
