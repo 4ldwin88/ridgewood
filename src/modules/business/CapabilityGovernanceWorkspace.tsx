@@ -8,7 +8,7 @@ const knowledgeStates:KnowledgeState[]=['known','unknown','unverified','not_appl
 type Props={projectStateId:string;lifecycleStage:LifecycleStage;capabilityKey:string;label:string;disabled?:boolean};
 export function CapabilityGovernanceWorkspace({projectStateId,lifecycleStage,capabilityKey,label,disabled=false}:Props){
  const[data,setData]=useState<ProjectStateCrossCutting>(empty),[open,setOpen]=useState<'actions'|'risks'|'decisions'|'evidence'|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null),[feedback,setFeedback]=useState<string|null>(null);
- const reload=useCallback(async()=>{try{const all=await listProjectStateCrossCutting(projectStateId);setData(filterCrossCuttingByContext(all,lifecycleStage,capabilityKey));setError(null)}catch(e){setError(e instanceof Error?e.message:'Governed capability records could not load.')}},[projectStateId,lifecycleStage,capabilityKey]);
+ const reload=useCallback(async()=>{try{const all=await listProjectStateCrossCutting(projectStateId);setData(filterCrossCuttingByContext(all,{lifecycleStage,capabilityKey}));setError(null)}catch(e){setError(e instanceof Error?e.message:'Governed capability records could not load.')}},[projectStateId,lifecycleStage,capabilityKey]);
  useEffect(()=>{void reload()},[reload]);
  const run=async(work:()=>Promise<void>,message:string)=>{setBusy(true);setError(null);setFeedback(null);try{await work();await reload();setFeedback(message)}catch(e){setError(e instanceof Error?e.message:'The governed command failed.')}finally{setBusy(false)}};
  const count=data.actions.length+data.risksIssues.length+data.decisions.length+data.evidence.length;
