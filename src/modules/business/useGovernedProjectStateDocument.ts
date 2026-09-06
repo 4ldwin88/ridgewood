@@ -67,7 +67,6 @@ export function useGovernedProjectStateDocument(projectStateId: string, definiti
       await publishProjectStateDocumentRevision(revisionId, changeNote);
       await reload();
       setFeedback('Published');
-      completeWorkspaceModal('published');
     } catch (e) { setError(`Publish failed: ${message(e)}`); throw e; }
     finally { setBusy(null); }
   }
