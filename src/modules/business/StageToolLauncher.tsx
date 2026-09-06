@@ -18,6 +18,7 @@ const workStateLabel: Record<StageToolWorkState, string> = {
 };
 
 export function StageToolLauncher({
+  displayIdentifier,
   label,
   description,
   state,
@@ -25,6 +26,7 @@ export function StageToolLauncher({
   disabled = false,
   onOpen,
 }: {
+  displayIdentifier?: string;
   label: string;
   description?: string;
   state: StageToolWorkState;
@@ -32,18 +34,19 @@ export function StageToolLauncher({
   disabled?: boolean;
   onOpen: () => void;
 }) {
+  const accessibleLabel = `${displayIdentifier ? `${displayIdentifier} ` : ''}${label}`;
   return (
     <button
       type="button"
       className="stage-tool-launcher"
       disabled={disabled}
       onClick={onOpen}
-      aria-label={`${label} — ${workStateLabel[state]}`}
+      aria-label={`${accessibleLabel} — ${workStateLabel[state]}`}
     >
       <span className="stage-tool-launcher__identity">
         {icon ? <span className="stage-tool-launcher__icon" aria-hidden="true">{icon}</span> : null}
         <span className="stage-tool-launcher__copy">
-          <strong>{label}</strong>
+          <strong>{displayIdentifier ? `${displayIdentifier} ` : ''}{label}</strong>
           {description ? <small>{description}</small> : null}
         </span>
       </span>
