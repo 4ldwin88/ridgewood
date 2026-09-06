@@ -15,6 +15,7 @@ export type ProjectStateStatus =
   | 'active'
   | 'held'
   | 'declined'
+  | 'withdrawn_lost'
   | 'lost'
   | 'cancelled'
   | 'terminated'
