@@ -8,6 +8,7 @@ import {
   updateProjectStateDocumentDraft,
   type ProjectStateDocumentRecord,
 } from '../../infrastructure/documents/supabaseDocumentRepository';
+import { completeWorkspaceModal } from './WorkspaceModal';
 
 export type GovernedDocumentDefinition = {
   packageKey: string;
@@ -54,7 +55,7 @@ export function useGovernedProjectStateDocument(projectStateId: string, definiti
 
   async function save(data: Record<string, unknown>) {
     setBusy('save'); setError(null); setFeedback(null);
-    try { await persist(data); await reload(); setFeedback('Draft saved.'); }
+    try { await persist(data); await reload(); setFeedback('Saved'); completeWorkspaceModal('saved'); }
     catch (e) { setError(`Draft could not be saved: ${message(e)}`); throw e; }
     finally { setBusy(null); }
   }
@@ -65,7 +66,8 @@ export function useGovernedProjectStateDocument(projectStateId: string, definiti
       const revisionId = await persist(data);
       await publishProjectStateDocumentRevision(revisionId, changeNote);
       await reload();
-      setFeedback('Published revision is governed and read-only.');
+      setFeedback('Published');
+      completeWorkspaceModal('published');
     } catch (e) { setError(`Publish failed: ${message(e)}`); throw e; }
     finally { setBusy(null); }
   }
