@@ -1,9 +1,18 @@
 # Ridgewood Opportunity → Authorize human test
 
-**Human testing: v0.23 FAILED (4ldwin). v0.24 repair candidate pending deployment and retest.** Automated
+**Human testing: v0.23 FAILED (4ldwin). v0.24 deployed; human retest NOT RUN.** Automated
 rehearsals do not change this status. 4ldwin and Edward must record their own
 results before the demo is accepted. Use a designated synthetic project and test
 accounts, never an actual commitment or client record.
+
+## Current retest candidate — v0.24
+
+- Open https://4ldwin88.github.io/ridgewood/ and verify **v0.24** is displayed. Refresh if the previous version remains cached.
+- Deployed commit: `daec611ebac51f8502407b8e525e51a8adf935d6`.
+- Backend/workspace and existing account are unchanged.
+- Start with the **Human feedback repair — v0.24** checks at the end of this script. The Opportunity requirement must update without refreshing the browser.
+- Archive old synthetic authorized projects individually from Projects; use Archived projects to read retained history. No database reset or bulk archival occurred.
+- Edward's independent test still requires his own approved workspace access.
 
 ## Previous deployed candidate — v0.23, failed human test
 
@@ -30,7 +39,7 @@ script; access must be provisioned before the human session.
 | Step | Do this | Expected result |
 | --- | --- | --- |
 | 1 | Sign in; open Business. Create `HUMAN TEST — <initials/date>` with a synthetic site and summary. | One Project State exists; its identity remains consistent throughout. |
-| 2 | Try advancing before adding a next-step action. Add an Opportunity action, then return to the project. | The missing requirement blocks advancement; the saved action satisfies it. Record any need to reload manually. |
+| 2 | Try advancing before adding a next-step action. Add an Opportunity action, then return to the project. | The missing requirement blocks advancement; the saved action satisfies it. The requirement and Advance button update without a manual reload. |
 | 3 | Reload and reopen the project, then advance to Qualification. | Saved identity and action persist; the correct stage opens. |
 | 4 | Answer all five qualification areas. Try Unclear without an advance rationale, then supply a rationale. Continue to Predevelopment. | Incomplete findings or missing required rationale prevent advancement; uncertainty remains visible. |
 | 5 | Open Development & Site. Change a field and try Close, Escape on desktop, and an intentional rightward edge swipe on mobile. Decline discard. | The unsaved work stays open. On mobile the form fits, buttons remain reachable, and swipe does not accidentally lose edits. |
@@ -56,7 +65,8 @@ Do not include passwords, access tokens or private client content in screenshots
 | Tester | Candidate version/SHA/URL | Device | Failed steps | Overall result | Date |
 | --- | --- | --- | --- | --- | --- |
 | 4ldwin | v0.23 / fc0d1cf / deployed URL above | Not specified | Attention wording; Actions/Risks auto-close; drawer coverage; stale Opportunity readiness | FAIL | 2026-09-10 |
-| Edward | Pending | Pending | Not run | NOT RUN | — |
+| 4ldwin | v0.24 / daec611 / current URL above | Pending | Awaiting retest | NOT RUN | — |
+| Edward | v0.24 / access pending | Pending | Not run | NOT RUN | — |
 
 Acceptance requires no unresolved data-loss, authorization, identity, publication
 immutability or blocking workflow defect. Record any accepted minor issues
