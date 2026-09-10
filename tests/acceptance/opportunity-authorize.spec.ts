@@ -19,12 +19,24 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
     const url = new URL(route.request().url());
     return url.hostname === '127.0.0.1' ? route.continue() : route.abort();
   });
+  let releaseOrganizations!: () => void;
+  const organizationsGate = new Promise<void>(resolve => { releaseOrganizations = resolve; });
+  await page.route('**/rest/v1/organizations?*', async route => {
+    // Delay the real initial request; never fabricate its response.
+    await organizationsGate;
+    await route.continue();
+  });
   page.on('dialog', dialog => void dialog.accept());
   await page.goto('/');
   await page.getByLabel('Email', { exact: true }).fill('edward-demo@example.invalid');
   await page.getByLabel('Password', { exact: true }).fill('Synthetic-local-only-2026!');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.getByRole('button', { name: 'New opportunity', exact: true }).click();
+  const newOpportunity = page.getByRole('button', { name: 'New opportunity', exact: true });
+  await expect(newOpportunity).toBeVisible();
+  await expect(newOpportunity).toBeDisabled();
+  await expect(page.getByRole('status')).toHaveText('Loading Business workspace…');
+  releaseOrganizations();
+  await newOpportunity.click();
   const intake = page.getByRole('dialog', { name: 'New opportunity', exact: true });
   await intake.getByLabel(/Project name/).fill(name);
   await intake.getByLabel('Site / location').fill('Synthetic site — not a real project');
