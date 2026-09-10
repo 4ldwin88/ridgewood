@@ -1,11 +1,11 @@
 # Ridgewood Opportunity → Authorize human test
 
-**Human testing: NOT RUN. Deployed candidate verified and ready for 4ldwin’s test.** Automated
+**Human testing: v0.23 FAILED (4ldwin). v0.24 repair candidate pending deployment and retest.** Automated
 rehearsals do not change this status. 4ldwin and Edward must record their own
 results before the demo is accepted. Use a designated synthetic project and test
 accounts, never an actual commitment or client record.
 
-## Verified candidate — 2026-09-10
+## Previous deployed candidate — v0.23, failed human test
 
 - URL: https://4ldwin88.github.io/ridgewood/
 - Displayed version: **v0.23**.
@@ -55,9 +55,17 @@ Do not include passwords, access tokens or private client content in screenshots
 
 | Tester | Candidate version/SHA/URL | Device | Failed steps | Overall result | Date |
 | --- | --- | --- | --- | --- | --- |
-| 4ldwin | Pending | Pending | Not run | NOT RUN | — |
+| 4ldwin | v0.23 / fc0d1cf / deployed URL above | Not specified | Attention wording; Actions/Risks auto-close; drawer coverage; stale Opportunity readiness | FAIL | 2026-09-10 |
 | Edward | Pending | Pending | Not run | NOT RUN | — |
 
 Acceptance requires no unresolved data-loss, authorization, identity, publication
 immutability or blocking workflow defect. Record any accepted minor issues
 explicitly. Pin the accepted demo release; test later lifecycle changes separately.
+
+## Human feedback repair — v0.24
+
+4ldwin reports the shell still looks like the prior prototype, Attention incorrectly looks completed on creation, Actions/Risks close after adding an item, most forms are not drawers, and Next step identified stays Not started after completing actions. Requested archiving of old Projects tests or a reset. v0.23 is not accepted.
+
+Repair scope: extend the shared drawer to ordinary forms/tools; preserve compact authorization confirmations; show No attention needed instead of Complete; keep workspaces open after saves; refresh Opportunity requirements after cross-stage mutations; add Active/Archived Projects views using the existing authenticated archive command. No database reset or bulk archival. Preserve archived authorization records. Mobile drawers retain a 16px left margin and intentional swipe handle. This owner request extends the earlier single-form reference scope. It is not a claim that the complete competitive UX research has been implemented.
+
+Retest first: create a synthetic opportunity; Attention should say No attention needed. In Actions add and mark an item Done without reopening. Close: Next step identified must say satisfied and Advance must work immediately without reload. Cancel the only action: the requirement must become not started; restore it to Done: readiness must return. Repeat add/edit in Risks without reopening. Check drawers and save-without-close in all seven Predevelopment forms, then archive one synthetic authorized project and view its retained record under Archived projects. v0.24 human result remains NOT RUN.

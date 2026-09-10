@@ -1,3 +1,4 @@
+import { useDrawerWorkState } from './WorkspaceDrawer';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { GovernedPublishedSummary, GovernedRevisionHistory } from './GovernedRevisionHistory';
 import { useGovernedProjectStateDocument } from './useGovernedProjectStateDocument';
@@ -11,7 +12,7 @@ const definition={packageKey:'predevelopment',category:'product_program',documen
 export function ProductProgramWorkspace({projectStateId,projectName,disabled=false,onChanged}:{projectStateId:string;projectName:string;disabled?:boolean;onChanged?:()=>void}){
  const doc=useGovernedProjectStateDocument(projectStateId,definition),[values,setValues]=useState<ProductProgramData>(empty),[editing,setEditing]=useState(false),[historyOpen,setHistoryOpen]=useState(false),active=doc.draft??doc.published;
  useEffect(()=>{setValues(active?fromData(active.data):empty);setEditing(Boolean(doc.draft)||!doc.published)},[active?.revisionId,doc.draft?.revisionId,doc.published?.revisionId]);
- const canEdit=!disabled&&(Boolean(doc.draft)||!doc.published||editing);
+ const canEdit=!disabled&&(Boolean(doc.draft)||!doc.published||editing);useDrawerWorkState(canEdit&&JSON.stringify(values)!==JSON.stringify(active?fromData(active.data):empty),Boolean(doc.busy));
  const blockers=useMemo(()=>{const b:string[]=[];if(!values.productType.trim())b.push('Product / asset type');if(!values.intendedUsers.trim())b.push('Intended user / customer');if(!values.programSummary.trim())b.push('Program summary');if(!values.scale.trim())b.push('Scale / quantity');if(!values.qualityPositioning.trim())b.push('Quality / positioning');return b},[values]);
  const set=(key:keyof ProductProgramData,value:string)=>setValues(v=>({...v,[key]:value}));
  const field=(key:keyof ProductProgramData,label:string,required=false,rows=2)=><label>{label}<small className={required?'field-requirement required':'field-requirement'}>{required?'Required':'Optional'}</small><textarea rows={rows} value={values[key]} disabled={!canEdit||Boolean(doc.busy)} onChange={e=>set(key,e.target.value)}/></label>;
