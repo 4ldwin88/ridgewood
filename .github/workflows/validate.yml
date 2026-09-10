@@ -69,3 +69,13 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Verify production Pages build
+        env:
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_lrUiFE9I4ryDIfXVlgujSg_yVeFBLRX
+          PAGE_URL: http://127.0.0.1:4175/ridgewood/
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          npm run build
+          node scripts/write-release-manifest.mjs
+          npx vite preview --host 127.0.0.1 --port 4175 > /tmp/ridgewood-preview.log 2>&1 &
+          node scripts/verify-deployed-demo.mjs
