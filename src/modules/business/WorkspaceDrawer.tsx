@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
 type WorkState = { dirty: boolean; busy: boolean };
 type DrawerEvent = 'opened' | 'closed' | 'close_blocked' | 'discard_confirmed';
@@ -7,8 +7,8 @@ const positions = new Map<string, number>();
 
 export function useDrawerWorkState(dirty: boolean, busy: boolean) {
   const report = useContext(WorkContext);
-  useEffect(() => { report?.({ dirty, busy }); }, [report, dirty, busy]);
-  useEffect(() => () => report?.({ dirty: false, busy: false }), [report]);
+  useLayoutEffect(() => { report?.({ dirty, busy }); }, [report, dirty, busy]);
+  useLayoutEffect(() => () => report?.({ dirty: false, busy: false }), [report]);
 }
 
 export function WorkspaceDrawer({ title, contextKey, onClose, onEvent, children }: {
@@ -23,7 +23,10 @@ export function WorkspaceDrawer({ title, contextKey, onClose, onEvent, children 
   const [expanded, setExpanded] = useState(false);
   const gesture = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => { callbacks.current = { onClose, onEvent }; }, [onClose, onEvent]);
-  useEffect(() => { work.current = state; }, [state]);
+  const reportWork = useCallback((next: WorkState) => {
+    work.current = next;
+    setState(next);
+  }, []);
 
   function close() {
     if (work.current.busy) { callbacks.current.onEvent?.('close_blocked'); return; }
@@ -77,7 +80,7 @@ export function WorkspaceDrawer({ title, contextKey, onClose, onEvent, children 
         if (start && event.clientX - start.x > 70 && Math.abs(event.clientY - start.y) < 45) close();
       }}>›</button>
     <div className="workspace-drawer__body" ref={body}>
-      <WorkContext.Provider value={setState}>{children}</WorkContext.Provider>
+      <WorkContext.Provider value={reportWork}>{children}</WorkContext.Provider>
     </div>
   </dialog>;
 }
