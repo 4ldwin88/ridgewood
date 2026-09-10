@@ -14,8 +14,14 @@ root = Path(__file__).resolve().parents[1]
 command = sys.argv[1] if len(sys.argv) > 1 else 'setup'
 with psycopg.connect(DB) as db:
     if command in ('deny-authorization', 'allow-authorization'):
-        effect = 'deny' if command.startswith('deny') else 'grant'
-        db.execute("update public.user_permission_overrides set effect=%s where permission_key='project.authorize' and user_id=(select id from auth.users where email=%s)", (effect, EMAIL))
+        effect = 'revoke' if command.startswith('deny') else 'grant'
+        changed = db.execute("update public.user_permission_overrides set effect=%s where permission_key='project.authorize' and user_id=(select id from auth.users where email=%s)", (effect, EMAIL))
+        assert changed.rowcount == 1, 'Expected one synthetic permission override'
+    elif command == 'verify-result':
+        project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Human acceptance rehearsal'", (EMAIL,)).fetchall()
+        assert len(project) == 1 and project[0][1] == 'project_authorization_setup', project
+        assert db.execute('select count(*) from public.authorization_records where project_state_id=%s', (project[0][0],)).fetchone()[0] == 1
+        assert db.execute("select count(*) from public.document_revisions r join public.document_records d on d.id=r.document_record_id where d.project_state_id=%s and r.state='published' and r.published_source_snapshot is not null", (project[0][0],)).fetchone()[0] == 7
     elif command == 'setup':
         status = json.loads(Path('/tmp/ridgewood-local-status.json').read_text())
         assert status['API_URL'] == API, 'Refusing non-local API'

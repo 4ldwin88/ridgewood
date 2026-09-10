@@ -90,4 +90,5 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await page.getByRole('button', { name: 'View Pre-Authorization / Authorization Record' }).click();
   await expect(page.getByRole('heading', { name: 'Frozen authorization record' })).toBeVisible();
   await expect(page.getByText('Synthetic executive acceptance', { exact: true })).toBeVisible();
+  execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'verify-result']);
 });
