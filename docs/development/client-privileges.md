@@ -64,6 +64,8 @@ business-authority or end-to-end demo certification.
   confirmed this mismatch. The new successful workflow test covers qualification
   advancement, not editing an assessment after advancement. Reproduce and repair
   that branch next, with a readiness-regression assertion.
+  **Subsequently resolved:** see qualification-reassessment.md for the tested
+  repair installed as 20260910215109 and the remaining two demo milestones.
 - Stage-requirement direct writes still rely on existing workspace-membership RLS;
   this change does not certify the full business-authority model.
 - Permission revocation, network response loss/retry behavior and authenticated
