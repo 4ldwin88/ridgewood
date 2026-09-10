@@ -1,3 +1,4 @@
+import { useDrawerWorkState } from './WorkspaceDrawer';
 import { useMemo, useState } from 'react';
 import {
   supabaseQualificationRepository,
@@ -24,6 +25,7 @@ export function QualificationReviewWorkspace({projectStateId,findings,currentSta
   const complete=areas.every(([area])=>findingMap.has(area));
   const unresolved=areas.filter(([area])=>!findingMap.has(area));
 
+  useDrawerWorkState(Boolean(rationale)||areas.some(([area])=>(notes[area]??'')!==(findings.find(f=>f.area===area)?.note??'')),Boolean(action));
   async function save(area:QualificationArea,assessment:QualificationAssessment){setAction(`qualification:${area}`);setError(null);setFeedback(null);try{const saved=await supabaseQualificationRepository.save(projectStateId,{area,assessment,note:notes[area]?.trim()||undefined});onFindingsChanged([...findings.filter(f=>f.area!==area),saved]);if(currentStage==='predevelopment'||currentStage==='authorization'){await onDownstreamReassessment?.();setFeedback('Qualification updated. Downstream readiness was reopened for reassessment.')}else setFeedback('Qualification finding saved.')}catch(e){setError(errorText(e,'Qualification finding could not be saved.'))}finally{setAction(null)}}
   async function decide(decision:QualificationDecision){setAction(`decision:${decision}`);setError(null);try{await onDecision(decision,rationale.trim()||undefined)}catch(e){setError(errorText(e,'Qualification decision failed.'))}finally{setAction(null)}}
 

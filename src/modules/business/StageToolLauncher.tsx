@@ -1,4 +1,5 @@
 export type StageToolWorkState =
+  | 'clear'
   | 'not_started'
   | 'in_progress'
   | 'complete'
@@ -8,6 +9,7 @@ export type StageToolWorkState =
   | 'unknown';
 
 const workStateLabel: Record<StageToolWorkState, string> = {
+  clear: 'No attention needed',
   not_started: 'Not started',
   in_progress: 'In progress',
   complete: 'Complete',

@@ -8,7 +8,6 @@ import {
   updateProjectStateDocumentDraft,
   type ProjectStateDocumentRecord,
 } from '../../infrastructure/documents/supabaseDocumentRepository';
-import { completeWorkspaceModal } from './WorkspaceModal';
 
 export type GovernedDocumentDefinition = {
   packageKey: string;
@@ -55,7 +54,7 @@ export function useGovernedProjectStateDocument(projectStateId: string, definiti
 
   async function save(data: Record<string, unknown>) {
     setBusy('save'); setError(null); setFeedback(null);
-    try { await persist(data); await reload(); setFeedback('Saved'); completeWorkspaceModal('saved'); }
+    try { await persist(data); await reload(); setFeedback('Saved'); }
     catch (e) { setError(`Draft could not be saved: ${message(e)}`); throw e; }
     finally { setBusy(null); }
   }

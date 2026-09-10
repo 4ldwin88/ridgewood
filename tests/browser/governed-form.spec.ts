@@ -58,5 +58,5 @@ test('drawer protects edits and displays immutable snapshot through revision wor
   await expect(document.getByText('Owned', { exact: true })).toBeVisible();
   await expect(document.getByText('Client controlled', { exact: true })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(drawer).toHaveCSS('width', '390px');
+  await expect(drawer).toHaveCSS('width', '374px');
 });

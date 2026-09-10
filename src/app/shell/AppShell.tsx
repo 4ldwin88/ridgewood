@@ -1,4 +1,4 @@
-import ridgewoodLogo from '../../../assets/ridgewood-horizontal-light.svg';
+import ridgewoodLogo from '../../../assets/ridgewood-horizontal-dark.svg';
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../infrastructure/auth/supabaseClient';
@@ -9,7 +9,7 @@ import { ProjectsWorkspace } from '../../modules/projects/ProjectsWorkspace';
 
 type Page = 'Home' | 'Business' | 'Projects' | 'Network' | 'More';
 const pages: Page[] = ['Home', 'Business', 'Projects', 'Network', 'More'];
-export const APP_VERSION = 'v0.23';
+export const APP_VERSION = 'v0.24';
 const feedbackEnabled = import.meta.env.VITE_DEV_FEEDBACK_ENABLED !== 'false';
 
 export function AppShell({ session }: { session: Session }) {
