@@ -1,0 +1,43 @@
+"""Synthetic auth/authority fixtures for the disposable localhost stack only."""
+import json
+import sys
+import uuid
+from pathlib import Path
+from urllib.request import Request, urlopen
+import psycopg
+
+API = 'http://127.0.0.1:54321'
+DB = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+EMAIL = 'edward-demo@example.invalid'
+PASSWORD = 'Synthetic-local-only-2026!'
+root = Path(__file__).resolve().parents[1]
+command = sys.argv[1] if len(sys.argv) > 1 else 'setup'
+with psycopg.connect(DB) as db:
+    if command in ('deny-authorization', 'allow-authorization'):
+        effect = 'revoke' if command.startswith('deny') else 'grant'
+        changed = db.execute("update public.user_permission_overrides set effect=%s where permission_key='project.authorize' and user_id=(select id from auth.users where email=%s)", (effect, EMAIL))
+        assert changed.rowcount == 1, 'Expected one synthetic permission override'
+    elif command == 'verify-result':
+        project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Human acceptance rehearsal'", (EMAIL,)).fetchall()
+        assert len(project) == 1 and project[0][1] == 'project_authorization_setup', project
+        assert db.execute('select count(*) from public.authorization_records where project_state_id=%s', (project[0][0],)).fetchone()[0] == 1
+        assert db.execute("select count(*) from public.document_revisions r join public.document_records d on d.id=r.document_record_id where d.project_state_id=%s and r.state='published' and r.published_source_snapshot is not null", (project[0][0],)).fetchone()[0] == 7
+    elif command == 'setup':
+        status = json.loads(Path('/tmp/ridgewood-local-status.json').read_text())
+        assert status['API_URL'] == API, 'Refusing non-local API'
+        headers = {'Authorization': 'Bearer '+status['SERVICE_ROLE_KEY'], 'apikey': status['SERVICE_ROLE_KEY'], 'Content-Type': 'application/json'}
+        def user(email):
+            request = Request(API+'/auth/v1/admin/users', data=json.dumps({'email':email,'password':PASSWORD,'email_confirm':True}).encode(), headers=headers)
+            with urlopen(request, timeout=15) as response:
+                return str(uuid.UUID(json.load(response)['id']))
+        owner, outsider = user(EMAIL), user('outsider-demo@example.invalid')
+        workspace = str(uuid.uuid4())
+        db.execute('insert into public.workspaces(id,name,created_by) values(%s,%s,%s)', (workspace,'Synthetic browser acceptance',owner))
+        db.execute("insert into public.workspace_memberships(workspace_id,user_id,technical_role,status) values(%s,%s,'owner','active')", (workspace,owner))
+        db.execute("insert into public.user_permission_overrides(workspace_id,user_id,permission_key,effect,assigned_by) select %s,%s,permission_key,'grant',%s from public.app_permissions", (workspace,owner,owner))
+        db.execute("insert into public.position_assignments(workspace_id,user_id,role_family,position_key,position_title,scope,status,effective_from,assigned_by) values(%s,%s,'executive','acceptance_exec','Synthetic executive','{\"type\":\"workspace\"}','active',now()-interval '1 minute',%s)", (workspace,owner,owner))
+        # Only the public local key reaches Vite. No service credential is written.
+        (root/'.env.acceptance.local').write_text('VITE_SUPABASE_PUBLISHABLE_KEY='+status['ANON_KEY']+'\nVITE_DEV_TELEMETRY_ENABLED=false\nVITE_DEV_FEEDBACK_ENABLED=false\n')
+    else:
+        raise SystemExit('Unknown local fixture operation')
+print('Local acceptance fixture operation completed.')

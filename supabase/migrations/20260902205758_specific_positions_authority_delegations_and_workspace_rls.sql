@@ -48,10 +48,13 @@ grant select on table public.authority_delegations to authenticated;
 create policy position_assignments_select_workspace on public.position_assignments for select to authenticated using (public.is_workspace_member(workspace_id));
 create policy authority_delegations_select_workspace on public.authority_delegations for select to authenticated using (public.is_workspace_member(workspace_id));
 
+-- Remove permissive pre-workspace Opportunity policies. PostgreSQL permissive policies OR together,
+-- so retaining them would defeat workspace isolation.
 drop policy if exists opportunities_authenticated_select on public.opportunities;
 drop policy if exists opportunities_creator_insert on public.opportunities;
 drop policy if exists opportunities_owner_update on public.opportunities;
 
+-- Workspace creation/membership are provisioned through a trusted boundary, not self-service Data API writes.
 drop policy if exists memberships_insert_own_workspace on public.workspace_memberships;
 revoke insert, update, delete on table public.workspace_memberships from anon, authenticated;
 revoke insert, update, delete on table public.workspaces from anon, authenticated;

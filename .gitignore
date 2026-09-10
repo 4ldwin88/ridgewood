@@ -2,3 +2,13 @@
 Thumbs.db
 .vscode/
 .idea/
+
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+.env.acceptance.local
+supabase/.temp/
+test-results/
+playwright-report/

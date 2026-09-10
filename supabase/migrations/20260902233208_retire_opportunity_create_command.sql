@@ -1,0 +1,1 @@
+revoke execute on function public.create_opportunity_with_project_state(jsonb) from authenticated, anon; comment on function public.create_opportunity_with_project_state(jsonb) is 'Retired transitional command. Opportunity is a Project State stage; runtime must call create_project_state(jsonb).';

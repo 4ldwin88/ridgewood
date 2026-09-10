@@ -1,0 +1,67 @@
+name: Database replay
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - name: Initialize isolated local configuration
+        run: |
+          supabase init
+          mv supabase/migrations /tmp/ridgewood-recovered-migrations
+      - name: Replay migrations on clean Supabase
+        run: |
+          supabase start
+          psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -f supabase/platform/replay-prerequisites.sql
+          mv /tmp/ridgewood-recovered-migrations supabase/migrations
+          supabase migration up --local
+      - name: Verify document lifecycle and immutability
+        run: |
+          supabase test db supabase/tests/database/client_privileges_test.sql supabase/tests/database/project_state_command_boundary_test.sql supabase/tests/database/qualification_grants_test.sql
+          supabase test db supabase/tests/database/published_document_payload_test.sql
+          psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -At -f supabase/tests/database/governed_form_live_contract_test.sql | tee /tmp/form-contract-results.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          results = [json.loads(line) for line in Path('/tmp/form-contract-results.txt').read_text().splitlines() if line.startswith('["1..12"')]
+          assert len(results) == 1, 'Missing contract test output'
+          assert len([x for x in results[0] if x.startswith('ok ')]) == 12, results
+          assert not any(x.startswith('not ok') for x in results[0]), results
+          PY
+      - name: Verify qualification reassessment
+        run: |
+          psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -At -f supabase/tests/database/qualification_reassessment_test.sql | tee /tmp/reassessment-results.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          results = [json.loads(line) for line in Path('/tmp/reassessment-results.txt').read_text().splitlines() if line.startswith('["1..13"')]
+          assert len(results) == 1, 'Missing reassessment test output'
+          assert len([x for x in results[0] if x.startswith('ok ')]) == 13, results
+          assert not any(x.startswith('not ok') or x.startswith('#') for x in results[0]), results
+          PY
+      - name: Verify overlapping commands and retries
+        run: |
+          python -m pip install 'psycopg[binary]==3.2.10'
+          python scripts/test-command-concurrency.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Verify real authenticated browser lifecycle
+        run: |
+          npm ci --ignore-scripts
+          npx playwright install --with-deps chromium
+          supabase status -o json > /tmp/ridgewood-local-status.json
+          python scripts/local-acceptance-fixtures.py setup
+          supabase functions serve project-authorization > /tmp/ridgewood-edge.log 2>&1 &
+          npx playwright test --config playwright.acceptance.config.ts
+      - name: Stop isolated containers
+        if: always()
+        run: supabase stop --no-backup

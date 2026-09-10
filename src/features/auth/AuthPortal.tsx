@@ -1,3 +1,4 @@
+import ridgewoodLogo from '../../../assets/ridgewood-horizontal-light.svg';
 import { FormEvent, useState } from 'react';
 import { APP_VERSION } from '../../app/shell/AppShell';
 import { isTestingSignupEnabled } from '../../infrastructure/auth/authMode';
@@ -25,7 +26,7 @@ export function AuthPortal() {
   }
 
   return <main className="auth-page"><section className="auth-card" aria-labelledby="auth-title">
-    <img src="/assets/ridgewood-horizontal-light.svg" alt="Ridgewood" className="auth-logo" />
+    <img src={ridgewoodLogo} alt="Ridgewood" className="auth-logo" />
     <p className="eyebrow">Ridgewood OS · {APP_VERSION}</p>
     <h1 id="auth-title">{view === 'sign-in' ? 'Sign in' : 'Create testing account'}</h1>
     <p className="auth-copy">{view === 'sign-in' ? 'Access the Ridgewood operating system.' : 'Testing access only. Production accounts will be provisioned through subscribed organizations.'}</p>

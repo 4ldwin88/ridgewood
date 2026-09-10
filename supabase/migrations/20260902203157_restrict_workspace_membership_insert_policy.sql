@@ -1,0 +1,1 @@
+drop policy memberships_insert_own_workspace on public.workspace_memberships; create policy memberships_insert_own_workspace on public.workspace_memberships for insert to authenticated with check (user_id = auth.uid() and technical_role = 'owner' and status = 'active');

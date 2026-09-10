@@ -3,7 +3,7 @@ name: Deploy Gate 2A Prototype
 on:
   push:
     branches:
-      - gate2/reconciliation-foundation
+      - release/edward-demo
   workflow_dispatch:
 
 permissions:
@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/release/edward-demo'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,7 +40,9 @@ jobs:
       - name: Build prototype
         env:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_lrUiFE9I4ryDIfXVlgujSg_yVeFBLRX
-        run: npm run build
+        run: |
+          npm run build
+          node scripts/write-release-manifest.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
@@ -61,39 +64,20 @@ jobs:
         uses: actions/deploy-pages@v4
 
   smoke-test:
-    name: Verify deployed app
+    name: Verify deployed candidate in browser
     runs-on: ubuntu-latest
     needs: deploy
+    timeout-minutes: 10
     steps:
-      - name: Wait for Pages propagation and verify HTTP + app shell
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - name: Verify release identity, sign-in and responsive assets
         env:
           PAGE_URL: ${{ needs.deploy.outputs.page_url }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Verifying deployed Ridgewood app at ${PAGE_URL}"
-          body="$(mktemp)"
-          trap 'rm -f "$body"' EXIT
-
-          for attempt in {1..12}; do
-            status="$(curl --silent --show-error --location \
-              --connect-timeout 10 --max-time 30 \
-              --output "$body" --write-out '%{http_code}' \
-              "$PAGE_URL" || true)"
-
-            if [[ "$status" == "200" ]] \
-              && grep -Fqi 'id="root"' "$body" \
-              && grep -Fqi '<script' "$body" \
-              && grep -Fqi 'src=' "$body"; then
-              echo "Live Pages smoke test passed: HTTP 200 and Vite app shell detected."
-              exit 0
-            fi
-
-            echo "Attempt ${attempt}/12 not ready (HTTP ${status:-curl-error}); retrying in 10s."
-            sleep 10
-          done
-
-          echo "Live Pages smoke test failed. The build is deployed but is NOT ready for human testing." >&2
-          echo "Response preview:" >&2
-          head -c 1000 "$body" >&2 || true
-          exit 1
+          EXPECTED_SHA: ${{ github.sha }}
+        run: node scripts/verify-deployed-demo.mjs
