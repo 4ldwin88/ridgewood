@@ -1,0 +1,1234 @@
+{
+  "note": "Name/timestamp comparison only; not semantic equivalence. Never repair remote history from this report without full replay and SQL comparison.",
+  "remoteCount": 126,
+  "localCount": 77,
+  "remoteOnlyNames": [
+    {
+      "name": "published_document_artifact_storage_model",
+      "sql_md5": "f919c25df34e93c0ea1a7e0fa3cc21d2",
+      "version": "20260902201825"
+    },
+    {
+      "name": "preserve_published_source_for_revision_drafts",
+      "sql_md5": "699326338c50ef7d2ebcc058ffcf630f",
+      "version": "20260902202659"
+    },
+    {
+      "name": "harden_issued_document_revision_immutability",
+      "sql_md5": "c84c90a4b1d6c611ad34885f73d34be0",
+      "version": "20260902202716"
+    },
+    {
+      "name": "workspace_tenancy_foundation",
+      "sql_md5": "e0793b547b1cf07c31d06ebe8e95067e",
+      "version": "20260902202733"
+    },
+    {
+      "name": "secure_workspace_membership_helper",
+      "sql_md5": "b61cda8ce04f6be607215fc5ca300e41",
+      "version": "20260902202740"
+    },
+    {
+      "name": "workspace_bootstrap_and_opportunity_rls",
+      "sql_md5": "c829e870056d55d45a032872bbac0492",
+      "version": "20260902203008"
+    },
+    {
+      "name": "move_workspace_bootstrap_to_private_schema",
+      "sql_md5": "4baaacd8c5726ad641805f49ebeec4b0",
+      "version": "20260902203017"
+    },
+    {
+      "name": "workspace_membership_insert_policy",
+      "sql_md5": "de72ed20f7d46e3352ba4785c827e981",
+      "version": "20260902203152"
+    },
+    {
+      "name": "restrict_workspace_membership_insert_policy",
+      "sql_md5": "ac78f2eebf1e6eb123ae86c74c7161df",
+      "version": "20260902203157"
+    },
+    {
+      "name": "bind_membership_to_created_workspace",
+      "sql_md5": "e88891f0843cd637dca6328a17efeb55",
+      "version": "20260902203206"
+    },
+    {
+      "name": "qualification_and_predevelopment_workspace_access",
+      "sql_md5": "3fdb75356f6b1cc8b567daf89c8944e2",
+      "version": "20260902203354"
+    },
+    {
+      "name": "user_state_roles_and_permissions",
+      "sql_md5": "3d8643481132216dfec7a9c5c9409d19",
+      "version": "20260902204128"
+    },
+    {
+      "name": "fix_governed_document_command_execution_boundary",
+      "sql_md5": "c4d71d87e2b34389064e4e86ab33e7f3",
+      "version": "20260902211507"
+    },
+    {
+      "name": "make_project_state_canonical_e2e_root",
+      "sql_md5": "b0b118a9418453e6244917eea8f91278",
+      "version": "20260902232520"
+    },
+    {
+      "name": "create_project_state_stage_requirements",
+      "sql_md5": "e9b29c4843bd73a8c4905a5e269ab404",
+      "version": "20260902232532"
+    },
+    {
+      "name": "seed_project_state_opportunity_requirements",
+      "sql_md5": "fea329947c56840967a77e446bbd1495",
+      "version": "20260902232540"
+    },
+    {
+      "name": "derive_initial_project_state_requirements",
+      "sql_md5": "625ea5a6bfec9b73ac11a98adf4929fa",
+      "version": "20260902232553"
+    },
+    {
+      "name": "restrict_project_state_table_privileges",
+      "sql_md5": "04ae2602ccb20246d2a01d6e06757097",
+      "version": "20260902233155"
+    },
+    {
+      "name": "retire_opportunity_create_command",
+      "sql_md5": "0837f23f43f160495a07a2d96ef63709",
+      "version": "20260902233208"
+    },
+    {
+      "name": "align_project_state_create_with_rls",
+      "sql_md5": "bba807f040c266ed5530233ab2b4cd58",
+      "version": "20260902233223"
+    },
+    {
+      "name": "tighten_project_state_insert_policy",
+      "sql_md5": "d11d01bc2b631a3e2ae899250d48742d",
+      "version": "20260902233228"
+    },
+    {
+      "name": "project_state_stage_rls_reconciliation",
+      "sql_md5": "952dc5f4de002ea8583d917637a01828",
+      "version": "20260902233238"
+    },
+    {
+      "name": "make_stage_records_project_state_native",
+      "sql_md5": "a8c588920a3f75cbe3c9eb01be8bfb9e",
+      "version": "20260902233753"
+    },
+    {
+      "name": "restrict_project_state_archival_execution",
+      "sql_md5": "780ac82b3164e120dc48f6dccdb48408",
+      "version": "20260903033915"
+    },
+    {
+      "name": "gate2_wave0_project_state_lifecycle",
+      "sql_md5": "79a4f2dda9211f5bd0dcc4500a6ae312",
+      "version": "20260903173457"
+    },
+    {
+      "name": "gate2_wave0_relax_development_immutability",
+      "sql_md5": "130f2957e87dcd9e39a59adc76d90acb",
+      "version": "20260903173520"
+    },
+    {
+      "name": "gate2_wave0_tenancy_and_rpc_hardening",
+      "sql_md5": "f62771b489eb791f5b03c850d45504af",
+      "version": "20260903190313"
+    },
+    {
+      "name": "gate2_wave0_contextual_predevelopment",
+      "sql_md5": "a73c05e423ae960aee327f0954adc98d",
+      "version": "20260903190343"
+    },
+    {
+      "name": "gate2_wave0_qualification_five_domain_reconciliation",
+      "sql_md5": "5529c8fc813702c68abd85186c9714e2",
+      "version": "20260903191415"
+    },
+    {
+      "name": "gate2_wave0_generalize_stage_requirements",
+      "sql_md5": "717b4cf04d67a2e9d55fcb4716e34d82",
+      "version": "20260903192804"
+    },
+    {
+      "name": "gate2_wave0_gate01_project_authorization_reconcile",
+      "sql_md5": "acb4db11b7d0f77d8f09f1e9acdeaba9",
+      "version": "20260903195141"
+    },
+    {
+      "name": "gate2_initialize_project_authorization_setup",
+      "sql_md5": "4afc97b29773a5c12fadbb45191641b6",
+      "version": "20260903201204"
+    },
+    {
+      "name": "gate2a_restore_workspace_member_helper_execute",
+      "sql_md5": "f321eafd2a7da6ece544391c1cc6a9fa",
+      "version": "20260903221258"
+    },
+    {
+      "name": "gate2a_resume_held_project_state",
+      "sql_md5": "5b4dad341d4a9cfeb595214c724530da",
+      "version": "20260904021608"
+    },
+    {
+      "name": "gate2a_normalize_workspace_authority_scope",
+      "sql_md5": "825606ad561fb456079a27e846c8bb6a",
+      "version": "20260904162825"
+    },
+    {
+      "name": "gate2a_project_state_document_draft_update",
+      "sql_md5": "bab0a1e987a0e812eb6c47315c3dc343",
+      "version": "20260905070033"
+    },
+    {
+      "name": "gate2a_lock_project_state_direct_mutations",
+      "sql_md5": "335a9a60a69d7979184a10b8354b74c0",
+      "version": "20260905083101"
+    },
+    {
+      "name": "gate2a_restore_project_state_command_table_privileges",
+      "sql_md5": "ddfb72973b3eda020808801288edb4b0",
+      "version": "20260905083106"
+    },
+    {
+      "name": "gate2a_restrict_private_gateway_direct_execute",
+      "sql_md5": "154fd5960731e173a47248f95b14cd71",
+      "version": "20260905091641"
+    },
+    {
+      "name": "gate2a_restore_private_gateway_wrapper_execute",
+      "sql_md5": "e83f9ac4d74408beba52339cfaaa4b85",
+      "version": "20260905091648"
+    },
+    {
+      "name": "gate2a_project_state_document_revision_lifecycle",
+      "sql_md5": "c0840ae1cfd1d297334628157807b8ea",
+      "version": "20260905145712"
+    },
+    {
+      "name": "gate2a_fix_predevelopment_notes_normalization",
+      "sql_md5": "a41ad6bd9c95edf9b7dbb7e8a25d0968",
+      "version": "20260905152458"
+    },
+    {
+      "name": "gate2a_freeze_authorization_evidence_snapshot",
+      "sql_md5": "bee5025018222a06aa8be4abea600e3c",
+      "version": "20260905200249"
+    },
+    {
+      "name": "fix_restoration_reassessment_requirement_insert",
+      "sql_md5": "9b7df58bb40a419fe618d44daa2fd413",
+      "version": "20260906023843"
+    },
+    {
+      "name": "gate2a_harden_contextual_cross_stage_commands",
+      "sql_md5": "8807bc5e77e5fe13e37c73861c08506e",
+      "version": "20260906060026"
+    },
+    {
+      "name": "authorization_correction_addendum",
+      "sql_md5": "72f5908b983b1baf02435d46e2ec9000",
+      "version": "20260906071856"
+    },
+    {
+      "name": "harden_authorization_amendment_command",
+      "sql_md5": "309ecb6579791fac89240c0c7441966e",
+      "version": "20260906071904"
+    },
+    {
+      "name": "gate2a_authorization_correction_addendum",
+      "sql_md5": "c4a9622a9031db14ebca234ca98bb3de",
+      "version": "20260906072503"
+    },
+    {
+      "name": "gate2a_fix_authorization_correction_audit",
+      "sql_md5": "9a3cd064b86d96e878f27e3d85268086",
+      "version": "20260906072514"
+    },
+    {
+      "name": "gate2a_remove_legacy_authorization_amendment_overload",
+      "sql_md5": "7b6cd31de9bfb545f50a4e015c0bf0c5",
+      "version": "20260906073452"
+    },
+    {
+      "name": "gate2a_security_invoker_rpc_boundaries",
+      "sql_md5": "606928ac352d54bfe7f4b407652edda0",
+      "version": "20260906080322"
+    },
+    {
+      "name": "gate2a_restore_rpc_definer_internal_helpers",
+      "sql_md5": "f68055448fc8e8f35aa00d02a841ebe7",
+      "version": "20260906080337"
+    }
+  ],
+  "localOnlyNames": [
+    {
+      "name": "project_state_canonical_e2e_root",
+      "version": "20260903032800"
+    },
+    {
+      "name": "project_state_native_stage_commands",
+      "version": "20260903033100"
+    },
+    {
+      "name": "gate2a_remove_anon_project_state_privileges",
+      "version": "20260905090000"
+    },
+    {
+      "name": "strengthen_project_authorization_evidence_snapshot",
+      "version": "20260905201500"
+    }
+  ],
+  "differentTimestamps": [
+    {
+      "name": "ridgewood_beta_business_foundation",
+      "local": "20260902192300",
+      "remote": "20260902192256"
+    },
+    {
+      "name": "secure_platform_rls_helper",
+      "local": "20260902192400",
+      "remote": "20260902192311"
+    },
+    {
+      "name": "project_state_governed_documents",
+      "local": "20260902203000",
+      "remote": "20260902201253"
+    },
+    {
+      "name": "add_development_feedback_and_telemetry",
+      "local": "20260902210000",
+      "remote": "20260902194108"
+    },
+    {
+      "name": "atomic_governed_project_authorization",
+      "local": "20260902211200",
+      "remote": "20260902211238"
+    },
+    {
+      "name": "governed_document_draft_and_revision_commands",
+      "local": "20260902211201",
+      "remote": "20260902211449"
+    },
+    {
+      "name": "move_document_commands_to_private_api",
+      "local": "20260902211500",
+      "remote": "20260902211539"
+    },
+    {
+      "name": "authenticated_document_command_gateway",
+      "local": "20260902212400",
+      "remote": "20260902212347"
+    },
+    {
+      "name": "grant_workspace_membership_helper_execution",
+      "local": "20260902222500",
+      "remote": "20260902221944"
+    },
+    {
+      "name": "opportunity_archival",
+      "local": "20260903000100",
+      "remote": "20260902224127"
+    },
+    {
+      "name": "project_state_identity_from_opportunity",
+      "local": "20260903000200",
+      "remote": "20260902231401"
+    },
+    {
+      "name": "guided_opportunity_qualification",
+      "local": "20260903010000",
+      "remote": "20260902224633"
+    },
+    {
+      "name": "govern_project_state_opportunity_edits",
+      "local": "20260903030000",
+      "remote": "20260903025834"
+    },
+    {
+      "name": "move_business_stages_to_project_state",
+      "local": "20260903032900",
+      "remote": "20260902233109"
+    },
+    {
+      "name": "project_state_direct_create_command",
+      "local": "20260903033000",
+      "remote": "20260902233126"
+    },
+    {
+      "name": "attach_cross_cutting_records_to_project_state",
+      "local": "20260903033200",
+      "remote": "20260902234125"
+    },
+    {
+      "name": "repoint_cross_cutting_rls_to_project_state",
+      "local": "20260903033300",
+      "remote": "20260903000521"
+    },
+    {
+      "name": "remove_obsolete_opportunity_entity",
+      "local": "20260903033400",
+      "remote": "20260903000527"
+    },
+    {
+      "name": "separate_project_state_stage_and_status",
+      "local": "20260903033500",
+      "remote": "20260903002157"
+    },
+    {
+      "name": "govern_opportunity_to_qualification",
+      "local": "20260903033600",
+      "remote": "20260903013650"
+    },
+    {
+      "name": "remove_legacy_opportunity_and_project_identity_schema",
+      "local": "20260903034000",
+      "remote": "20260903015025"
+    },
+    {
+      "name": "govern_qualification_and_predevelopment_progression",
+      "local": "20260903040000",
+      "remote": "20260903030539"
+    },
+    {
+      "name": "gate2a_initialize_authorization_requirements_on_entry",
+      "local": "20260904062000",
+      "remote": "20260904061037"
+    },
+    {
+      "name": "gate2a_fix_authorization_requirement_audit_actor",
+      "local": "20260904064000",
+      "remote": "20260904063755"
+    },
+    {
+      "name": "gate2a_cast_opportunity_requirement_readiness",
+      "local": "20260904221000",
+      "remote": "20260904224521"
+    },
+    {
+      "name": "gate2a_project_state_document_parent",
+      "local": "20260905065000",
+      "remote": "20260905070003"
+    },
+    {
+      "name": "gate2a_harden_workspace_member_helper_search_path",
+      "local": "20260905083000",
+      "remote": "20260905082151"
+    },
+    {
+      "name": "gate2a_pin_privileged_project_command_search_paths",
+      "local": "20260905084500",
+      "remote": "20260905083226"
+    },
+    {
+      "name": "gate2a_gateway_opportunity_edit_and_qualification_entry",
+      "local": "20260905085500",
+      "remote": "20260905084801"
+    },
+    {
+      "name": "gate2a_command_gateway_create_project_state",
+      "local": "20260905093000",
+      "remote": "20260905084619"
+    },
+    {
+      "name": "gate2a_gateway_qualification_hold_resume_archive",
+      "local": "20260905094000",
+      "remote": "20260905085852"
+    },
+    {
+      "name": "gate2a_gateway_authorization_and_preconstruction_transitions",
+      "local": "20260905095000",
+      "remote": "20260905090028"
+    },
+    {
+      "name": "gate2a_enforce_project_state_command_only_mutation",
+      "local": "20260905101500",
+      "remote": "20260905090555"
+    },
+    {
+      "name": "gate2a_private_gateway_project_authorization",
+      "local": "20260905103000",
+      "remote": "20260905091514"
+    },
+    {
+      "name": "gate2a_private_gateway_document_drafts_and_membership_helper",
+      "local": "20260905104000",
+      "remote": "20260905091602"
+    },
+    {
+      "name": "remove_obsolete_authorized_lifecycle_stage",
+      "local": "20260905110000",
+      "remote": "20260905094638"
+    },
+    {
+      "name": "gate2a_enable_pgtap_for_command_boundary_tests",
+      "local": "20260905110100",
+      "remote": "20260905093109"
+    },
+    {
+      "name": "gate2a_private_gateway_qualification_finding",
+      "local": "20260905152000",
+      "remote": "20260905151533"
+    },
+    {
+      "name": "gate2a_fix_project_state_command_text_normalization",
+      "local": "20260905152500",
+      "remote": "20260905151616"
+    },
+    {
+      "name": "gate2a_private_gateway_predevelopment_domains",
+      "local": "20260905152600",
+      "remote": "20260905152439"
+    },
+    {
+      "name": "gate2a_pre_authorization_revision_boundaries",
+      "local": "20260905155500",
+      "remote": "20260905155228"
+    },
+    {
+      "name": "gate2a_structured_document_published_snapshot",
+      "local": "20260905171800",
+      "remote": "20260905171619"
+    },
+    {
+      "name": "fix_preauthorization_opportunity_edit_reassessment_table",
+      "local": "20260905174800",
+      "remote": "20260905174702"
+    },
+    {
+      "name": "generalize_predevelopment_document_readiness",
+      "local": "20260905193000",
+      "remote": "20260905185421"
+    },
+    {
+      "name": "freeze_preauthorization_documents_after_authorization",
+      "local": "20260906014100",
+      "remote": "20260906014302"
+    },
+    {
+      "name": "gate2a_preauthorization_disposition_commands",
+      "local": "20260906021500",
+      "remote": "20260906020241"
+    },
+    {
+      "name": "gate2a_harden_preauthorization_disposition_audit",
+      "local": "20260906021501",
+      "remote": "20260906021315"
+    },
+    {
+      "name": "harden_preauthorization_disposition_history",
+      "local": "20260906023000",
+      "remote": "20260906022836"
+    },
+    {
+      "name": "flag_restored_preauthorization_for_reassessment",
+      "local": "20260906024500",
+      "remote": "20260906023816"
+    },
+    {
+      "name": "gate2a_enforce_restoration_reassessment_and_qualification_disposition_audit",
+      "local": "20260906033500",
+      "remote": "20260906033813"
+    },
+    {
+      "name": "gate2a_enforce_governed_document_required_fields",
+      "local": "20260906041000",
+      "remote": "20260906035345"
+    },
+    {
+      "name": "gate2a_harden_document_validation_function_privileges",
+      "local": "20260906042500",
+      "remote": "20260906042416"
+    },
+    {
+      "name": "gate2a_expand_opportunity_operating_controls",
+      "local": "20260906062000",
+      "remote": "20260906063801"
+    },
+    {
+      "name": "gate2a_contextualize_cross_stage_records",
+      "local": "20260906090000",
+      "remote": "20260906055853"
+    },
+    {
+      "name": "gate2a_opportunity_canonical_actions",
+      "local": "20260906093000",
+      "remote": "20260906074542"
+    },
+    {
+      "name": "gate2a_opportunity_canonical_actions",
+      "local": "20260906093000",
+      "remote": "20260906075752"
+    },
+    {
+      "name": "gate2a_unify_authorization_amendment_authority",
+      "local": "20260906094000",
+      "remote": "20260906073446"
+    },
+    {
+      "name": "gate2a_opportunity_stage_scoped_actions",
+      "local": "20260906100000",
+      "remote": "20260906085826"
+    },
+    {
+      "name": "gate2a_private_rpc_boundaries",
+      "local": "20260906101500",
+      "remote": "20260906081544"
+    },
+    {
+      "name": "gate2a_restore_private_helper_execution",
+      "local": "20260906113000",
+      "remote": "20260906092501"
+    },
+    {
+      "name": "gate2a_completed_action_satisfies_opportunity_next_step",
+      "local": "20260906120000",
+      "remote": "20260906095137"
+    },
+    {
+      "name": "gate2a_action_mutations_refresh_opportunity_readiness",
+      "local": "20260906122500",
+      "remote": "20260906121943"
+    },
+    {
+      "name": "gate2a_restore_authorization_command_execution",
+      "local": "20260906124000",
+      "remote": "20260906103451"
+    }
+  ],
+  "remoteLedger": [
+    {
+      "name": "ridgewood_beta_business_foundation",
+      "sql_md5": "691632ee1003ab795bd7bbff95484446",
+      "version": "20260902192256"
+    },
+    {
+      "name": "secure_platform_rls_helper",
+      "sql_md5": "814a9e5e19701740424f929637c2b859",
+      "version": "20260902192311"
+    },
+    {
+      "name": "add_development_feedback_and_telemetry",
+      "sql_md5": "af2914797df1fdf853e3f4fbb724540c",
+      "version": "20260902194108"
+    },
+    {
+      "name": "project_state_governed_documents",
+      "sql_md5": "83aca9695240599b7559af711ada1411",
+      "version": "20260902201253"
+    },
+    {
+      "name": "published_document_artifact_storage_model",
+      "sql_md5": "f919c25df34e93c0ea1a7e0fa3cc21d2",
+      "version": "20260902201825"
+    },
+    {
+      "name": "preserve_published_source_for_revision_drafts",
+      "sql_md5": "699326338c50ef7d2ebcc058ffcf630f",
+      "version": "20260902202659"
+    },
+    {
+      "name": "harden_issued_document_revision_immutability",
+      "sql_md5": "c84c90a4b1d6c611ad34885f73d34be0",
+      "version": "20260902202716"
+    },
+    {
+      "name": "workspace_tenancy_foundation",
+      "sql_md5": "e0793b547b1cf07c31d06ebe8e95067e",
+      "version": "20260902202733"
+    },
+    {
+      "name": "secure_workspace_membership_helper",
+      "sql_md5": "b61cda8ce04f6be607215fc5ca300e41",
+      "version": "20260902202740"
+    },
+    {
+      "name": "workspace_bootstrap_and_opportunity_rls",
+      "sql_md5": "c829e870056d55d45a032872bbac0492",
+      "version": "20260902203008"
+    },
+    {
+      "name": "move_workspace_bootstrap_to_private_schema",
+      "sql_md5": "4baaacd8c5726ad641805f49ebeec4b0",
+      "version": "20260902203017"
+    },
+    {
+      "name": "workspace_membership_insert_policy",
+      "sql_md5": "de72ed20f7d46e3352ba4785c827e981",
+      "version": "20260902203152"
+    },
+    {
+      "name": "restrict_workspace_membership_insert_policy",
+      "sql_md5": "ac78f2eebf1e6eb123ae86c74c7161df",
+      "version": "20260902203157"
+    },
+    {
+      "name": "bind_membership_to_created_workspace",
+      "sql_md5": "e88891f0843cd637dca6328a17efeb55",
+      "version": "20260902203206"
+    },
+    {
+      "name": "qualification_and_predevelopment_workspace_access",
+      "sql_md5": "3fdb75356f6b1cc8b567daf89c8944e2",
+      "version": "20260902203354"
+    },
+    {
+      "name": "user_state_roles_and_permissions",
+      "sql_md5": "3d8643481132216dfec7a9c5c9409d19",
+      "version": "20260902204128"
+    },
+    {
+      "name": "specific_positions_authority_delegations_and_workspace_rls",
+      "sql_md5": "c9e518d192e735db74f68653e625d22d",
+      "version": "20260902205758"
+    },
+    {
+      "name": "harden_governed_document_and_project_mutations",
+      "sql_md5": "9797c281c4085fb7bef91cb07bd4ddf9",
+      "version": "20260902210656"
+    },
+    {
+      "name": "atomic_governed_project_authorization",
+      "sql_md5": "223e561b32aa79da89a8a9ecfaf81cef",
+      "version": "20260902211238"
+    },
+    {
+      "name": "governed_document_draft_and_revision_commands",
+      "sql_md5": "a5149447a9fbd958ecf2ff37b2a71256",
+      "version": "20260902211449"
+    },
+    {
+      "name": "fix_governed_document_command_execution_boundary",
+      "sql_md5": "c4d71d87e2b34389064e4e86ab33e7f3",
+      "version": "20260902211507"
+    },
+    {
+      "name": "move_document_commands_to_private_api",
+      "sql_md5": "f4d88eb3f74d65679f185087464c9642",
+      "version": "20260902211539"
+    },
+    {
+      "name": "authenticated_document_command_gateway",
+      "sql_md5": "abf5a93f8abc5d9f4be1dd7c072fc351",
+      "version": "20260902212347"
+    },
+    {
+      "name": "grant_workspace_membership_helper_execution",
+      "sql_md5": "5d802e0825200d8d8a67562880faf48c",
+      "version": "20260902221944"
+    },
+    {
+      "name": "opportunity_archival",
+      "sql_md5": "e98439d28d1d40d44a14c8a07d2ce80e",
+      "version": "20260902224127"
+    },
+    {
+      "name": "guided_opportunity_qualification",
+      "sql_md5": "81835eee65861f0608146a3fffd04904",
+      "version": "20260902224633"
+    },
+    {
+      "name": "project_state_identity_from_opportunity",
+      "sql_md5": "aa87a3032a207fbc6735da457de61478",
+      "version": "20260902231401"
+    },
+    {
+      "name": "make_project_state_canonical_e2e_root",
+      "sql_md5": "b0b118a9418453e6244917eea8f91278",
+      "version": "20260902232520"
+    },
+    {
+      "name": "create_project_state_stage_requirements",
+      "sql_md5": "e9b29c4843bd73a8c4905a5e269ab404",
+      "version": "20260902232532"
+    },
+    {
+      "name": "seed_project_state_opportunity_requirements",
+      "sql_md5": "fea329947c56840967a77e446bbd1495",
+      "version": "20260902232540"
+    },
+    {
+      "name": "derive_initial_project_state_requirements",
+      "sql_md5": "625ea5a6bfec9b73ac11a98adf4929fa",
+      "version": "20260902232553"
+    },
+    {
+      "name": "move_business_stages_to_project_state",
+      "sql_md5": "2a47145783b6f82e1d36162051899952",
+      "version": "20260902233109"
+    },
+    {
+      "name": "project_state_direct_create_command",
+      "sql_md5": "d9fcfcab58de1c8a62be6e67bbec78b7",
+      "version": "20260902233126"
+    },
+    {
+      "name": "restrict_project_state_table_privileges",
+      "sql_md5": "04ae2602ccb20246d2a01d6e06757097",
+      "version": "20260902233155"
+    },
+    {
+      "name": "retire_opportunity_create_command",
+      "sql_md5": "0837f23f43f160495a07a2d96ef63709",
+      "version": "20260902233208"
+    },
+    {
+      "name": "align_project_state_create_with_rls",
+      "sql_md5": "bba807f040c266ed5530233ab2b4cd58",
+      "version": "20260902233223"
+    },
+    {
+      "name": "tighten_project_state_insert_policy",
+      "sql_md5": "d11d01bc2b631a3e2ae899250d48742d",
+      "version": "20260902233228"
+    },
+    {
+      "name": "project_state_stage_rls_reconciliation",
+      "sql_md5": "952dc5f4de002ea8583d917637a01828",
+      "version": "20260902233238"
+    },
+    {
+      "name": "make_stage_records_project_state_native",
+      "sql_md5": "a8c588920a3f75cbe3c9eb01be8bfb9e",
+      "version": "20260902233753"
+    },
+    {
+      "name": "attach_cross_cutting_records_to_project_state",
+      "sql_md5": "6d49820309c1b9ec0d37591ea4fff89e",
+      "version": "20260902234125"
+    },
+    {
+      "name": "repoint_cross_cutting_rls_to_project_state",
+      "sql_md5": "d4e881a34d539a111c5707372522deda",
+      "version": "20260903000521"
+    },
+    {
+      "name": "remove_obsolete_opportunity_entity",
+      "sql_md5": "9e00c3ebeb0b69e899487040c269afe3",
+      "version": "20260903000527"
+    },
+    {
+      "name": "separate_project_state_stage_and_status",
+      "sql_md5": "bd43d83b870f3508c2acad5a0877519f",
+      "version": "20260903002157"
+    },
+    {
+      "name": "govern_opportunity_to_qualification",
+      "sql_md5": "909f732029c323e80295cbb8676b8d31",
+      "version": "20260903013650"
+    },
+    {
+      "name": "remove_legacy_opportunity_and_project_identity_schema",
+      "sql_md5": "29752c60f3637742d6045192b5377a51",
+      "version": "20260903015025"
+    },
+    {
+      "name": "govern_project_state_opportunity_edits",
+      "sql_md5": "5253225b4b1805d962ea8022c9967726",
+      "version": "20260903025834"
+    },
+    {
+      "name": "govern_qualification_and_predevelopment_progression",
+      "sql_md5": "f179d9907b822ce3219d3975aa2a63d9",
+      "version": "20260903030539"
+    },
+    {
+      "name": "govern_project_state_archival",
+      "sql_md5": "4696d86c06331aa7fd745da9bc8d3622",
+      "version": "20260903033855"
+    },
+    {
+      "name": "restrict_project_state_archival_execution",
+      "sql_md5": "780ac82b3164e120dc48f6dccdb48408",
+      "version": "20260903033915"
+    },
+    {
+      "name": "replace_legacy_project_authorization_with_project_state_command",
+      "sql_md5": "e1e7ea64a3b11735bc34fadff0ae9534",
+      "version": "20260903034427"
+    },
+    {
+      "name": "hide_workspace_membership_helper_from_rpc",
+      "sql_md5": "d114e883f6f748b3e558042bc3ac80ea",
+      "version": "20260903044351"
+    },
+    {
+      "name": "gate2_wave0_project_state_lifecycle",
+      "sql_md5": "79a4f2dda9211f5bd0dcc4500a6ae312",
+      "version": "20260903173457"
+    },
+    {
+      "name": "gate2_wave0_relax_development_immutability",
+      "sql_md5": "130f2957e87dcd9e39a59adc76d90acb",
+      "version": "20260903173520"
+    },
+    {
+      "name": "gate2_wave0_tenancy_and_rpc_hardening",
+      "sql_md5": "f62771b489eb791f5b03c850d45504af",
+      "version": "20260903190313"
+    },
+    {
+      "name": "gate2_wave0_contextual_predevelopment",
+      "sql_md5": "a73c05e423ae960aee327f0954adc98d",
+      "version": "20260903190343"
+    },
+    {
+      "name": "gate2_wave0_qualification_five_domain_reconciliation",
+      "sql_md5": "5529c8fc813702c68abd85186c9714e2",
+      "version": "20260903191415"
+    },
+    {
+      "name": "gate2_wave0_generalize_stage_requirements",
+      "sql_md5": "717b4cf04d67a2e9d55fcb4716e34d82",
+      "version": "20260903192804"
+    },
+    {
+      "name": "gate2_wave0_gate01_project_authorization_reconcile",
+      "sql_md5": "acb4db11b7d0f77d8f09f1e9acdeaba9",
+      "version": "20260903195141"
+    },
+    {
+      "name": "gate2_initialize_project_authorization_setup",
+      "sql_md5": "4afc97b29773a5c12fadbb45191641b6",
+      "version": "20260903201204"
+    },
+    {
+      "name": "gate2a_restore_workspace_member_helper_execute",
+      "sql_md5": "f321eafd2a7da6ece544391c1cc6a9fa",
+      "version": "20260903221258"
+    },
+    {
+      "name": "gate2a_resume_held_project_state",
+      "sql_md5": "5b4dad341d4a9cfeb595214c724530da",
+      "version": "20260904021608"
+    },
+    {
+      "name": "gate2a_initialize_authorization_requirements_on_entry",
+      "sql_md5": "3ba3e1d7134ced822b97aea6ef5d34a6",
+      "version": "20260904061037"
+    },
+    {
+      "name": "gate2a_fix_authorization_requirement_audit_actor",
+      "sql_md5": "bfb5cf5533ce79323cd33c3a503ed8e3",
+      "version": "20260904063755"
+    },
+    {
+      "name": "gate2a_normalize_workspace_authority_scope",
+      "sql_md5": "825606ad561fb456079a27e846c8bb6a",
+      "version": "20260904162825"
+    },
+    {
+      "name": "gate2a_fix_authorization_readiness_snapshot_column",
+      "sql_md5": "092230c21e71ad815400808272bb7375",
+      "version": "20260904182820"
+    },
+    {
+      "name": "gate2a_authorization_rpc_security_boundary",
+      "sql_md5": "424e6d58d8d5f704399232d226e27b35",
+      "version": "20260904185215"
+    },
+    {
+      "name": "gate2a_align_project_state_stage_constraint",
+      "sql_md5": "bd8721bed98da83b89e5b2f60865c7c3",
+      "version": "20260904185603"
+    },
+    {
+      "name": "gate2a_cast_opportunity_requirement_readiness",
+      "sql_md5": "60519fc22f878473ee443f5a5869b8a4",
+      "version": "20260904224521"
+    },
+    {
+      "name": "gate2a_project_state_document_parent",
+      "sql_md5": "5dc164c0cd4494e87ecadb9f24b66037",
+      "version": "20260905070003"
+    },
+    {
+      "name": "gate2a_project_state_document_draft_update",
+      "sql_md5": "bab0a1e987a0e812eb6c47315c3dc343",
+      "version": "20260905070033"
+    },
+    {
+      "name": "gate2a_harden_workspace_member_helper_search_path",
+      "sql_md5": "7753b400d97e254405b5637b875579c3",
+      "version": "20260905082151"
+    },
+    {
+      "name": "gate2a_lock_project_state_direct_mutations",
+      "sql_md5": "335a9a60a69d7979184a10b8354b74c0",
+      "version": "20260905083101"
+    },
+    {
+      "name": "gate2a_restore_project_state_command_table_privileges",
+      "sql_md5": "ddfb72973b3eda020808801288edb4b0",
+      "version": "20260905083106"
+    },
+    {
+      "name": "gate2a_pin_privileged_project_command_search_paths",
+      "sql_md5": "426821fc06896e55c2ce45454e1d3f33",
+      "version": "20260905083226"
+    },
+    {
+      "name": "gate2a_command_gateway_create_project_state",
+      "sql_md5": "dfb89bccb124c3ca5972859ed89183bc",
+      "version": "20260905084619"
+    },
+    {
+      "name": "gate2a_gateway_opportunity_edit_and_qualification_entry",
+      "sql_md5": "454d9801fd99cc7f54350bda1ff73537",
+      "version": "20260905084801"
+    },
+    {
+      "name": "gate2a_gateway_qualification_hold_resume_archive",
+      "sql_md5": "8a712d3f079e15e97e2d63732362b4f2",
+      "version": "20260905085852"
+    },
+    {
+      "name": "gate2a_gateway_authorization_and_preconstruction_transitions",
+      "sql_md5": "6cb9cd4599e8bb01e981d6ba6582d902",
+      "version": "20260905090028"
+    },
+    {
+      "name": "gate2a_enforce_project_state_command_only_mutation",
+      "sql_md5": "d79d6cc88968d5f1cca38cdd387c3d55",
+      "version": "20260905090555"
+    },
+    {
+      "name": "gate2a_private_gateway_project_authorization",
+      "sql_md5": "23c4aaf3ad054b7256799f4a8d4de0fe",
+      "version": "20260905091514"
+    },
+    {
+      "name": "gate2a_private_gateway_document_drafts_and_membership_helper",
+      "sql_md5": "f2ae607bfd1a0e3fc9d4df632f529d5d",
+      "version": "20260905091602"
+    },
+    {
+      "name": "gate2a_restrict_private_gateway_direct_execute",
+      "sql_md5": "154fd5960731e173a47248f95b14cd71",
+      "version": "20260905091641"
+    },
+    {
+      "name": "gate2a_restore_private_gateway_wrapper_execute",
+      "sql_md5": "e83f9ac4d74408beba52339cfaaa4b85",
+      "version": "20260905091648"
+    },
+    {
+      "name": "gate2a_enable_pgtap_for_command_boundary_tests",
+      "sql_md5": "dd80faa7d9b5d90a935cbd1a1fa12161",
+      "version": "20260905093109"
+    },
+    {
+      "name": "remove_obsolete_authorized_lifecycle_stage",
+      "sql_md5": "41b41f5bbc48c43be08215ad95e83073",
+      "version": "20260905094638"
+    },
+    {
+      "name": "gate2a_project_state_document_revision_lifecycle",
+      "sql_md5": "c0840ae1cfd1d297334628157807b8ea",
+      "version": "20260905145712"
+    },
+    {
+      "name": "gate2a_private_gateway_qualification_finding",
+      "sql_md5": "66764d2d2143e1f4d7cd626201482509",
+      "version": "20260905151533"
+    },
+    {
+      "name": "gate2a_fix_project_state_command_text_normalization",
+      "sql_md5": "7e20cdcf5534be7b1504fd945f349565",
+      "version": "20260905151616"
+    },
+    {
+      "name": "gate2a_private_gateway_predevelopment_domains",
+      "sql_md5": "e7e7b570c32afdd320ead8d2dc6e54b8",
+      "version": "20260905152439"
+    },
+    {
+      "name": "gate2a_fix_predevelopment_notes_normalization",
+      "sql_md5": "a41ad6bd9c95edf9b7dbb7e8a25d0968",
+      "version": "20260905152458"
+    },
+    {
+      "name": "gate2a_pre_authorization_revision_boundaries",
+      "sql_md5": "6dae3c60c49d449deae9ad4e587f4a73",
+      "version": "20260905155228"
+    },
+    {
+      "name": "gate2a_structured_document_published_snapshot",
+      "sql_md5": "234a5a6e90da4869874f7aca560a2ebc",
+      "version": "20260905171619"
+    },
+    {
+      "name": "derive_development_site_readiness_from_governed_form",
+      "sql_md5": "9e2def5a1831e468d4352aac062451ec",
+      "version": "20260905172437"
+    },
+    {
+      "name": "fix_preauthorization_opportunity_edit_reassessment_table",
+      "sql_md5": "df8258cfc911ef42824b892a3d4ce63c",
+      "version": "20260905174702"
+    },
+    {
+      "name": "generalize_predevelopment_document_readiness",
+      "sql_md5": "4a87d636e01b88784f55ee2031592462",
+      "version": "20260905185421"
+    },
+    {
+      "name": "gate2a_cross_stage_controlled_commands",
+      "sql_md5": "a76520c7112bcf4ed1f78f2ccb28ec7d",
+      "version": "20260905195326"
+    },
+    {
+      "name": "gate2a_freeze_authorization_evidence_snapshot",
+      "sql_md5": "bee5025018222a06aa8be4abea600e3c",
+      "version": "20260905200249"
+    },
+    {
+      "name": "freeze_preauthorization_documents_after_authorization",
+      "sql_md5": "c0dac282bf47ed0b10a87c6dbcdca8a8",
+      "version": "20260906014302"
+    },
+    {
+      "name": "gate2a_preauthorization_disposition_commands",
+      "sql_md5": "385957b288abf7849c285c3cfd15fc95",
+      "version": "20260906020241"
+    },
+    {
+      "name": "gate2a_harden_preauthorization_disposition_audit",
+      "sql_md5": "3370b605c7078242b487bd93f339befc",
+      "version": "20260906021315"
+    },
+    {
+      "name": "harden_preauthorization_disposition_history",
+      "sql_md5": "0bd7757ef502233cd683c4fc0c1b0d88",
+      "version": "20260906022836"
+    },
+    {
+      "name": "flag_restored_preauthorization_for_reassessment",
+      "sql_md5": "2963a8c831637a9b31125232caa0262c",
+      "version": "20260906023816"
+    },
+    {
+      "name": "fix_restoration_reassessment_requirement_insert",
+      "sql_md5": "9b7df58bb40a419fe618d44daa2fd413",
+      "version": "20260906023843"
+    },
+    {
+      "name": "gate2a_enforce_restoration_reassessment_and_qualification_disposition_audit",
+      "sql_md5": "380b166c7672608a9cdf77b381254371",
+      "version": "20260906033813"
+    },
+    {
+      "name": "gate2a_enforce_governed_document_required_fields",
+      "sql_md5": "dff5510d8c1dadec55e9a27af33e8f89",
+      "version": "20260906035345"
+    },
+    {
+      "name": "gate2a_harden_document_validation_function_privileges",
+      "sql_md5": "6e27cfce4cf1842857984c76047a82a6",
+      "version": "20260906042416"
+    },
+    {
+      "name": "gate2a_contextualize_cross_stage_records",
+      "sql_md5": "323b006c97e54dc0f05e267bbd7e1c73",
+      "version": "20260906055853"
+    },
+    {
+      "name": "gate2a_harden_contextual_cross_stage_commands",
+      "sql_md5": "8807bc5e77e5fe13e37c73861c08506e",
+      "version": "20260906060026"
+    },
+    {
+      "name": "gate2a_expand_opportunity_operating_controls",
+      "sql_md5": "c6bdf91a9ce159f6cfdd40cf3d412cc3",
+      "version": "20260906063801"
+    },
+    {
+      "name": "authorization_correction_addendum",
+      "sql_md5": "72f5908b983b1baf02435d46e2ec9000",
+      "version": "20260906071856"
+    },
+    {
+      "name": "harden_authorization_amendment_command",
+      "sql_md5": "309ecb6579791fac89240c0c7441966e",
+      "version": "20260906071904"
+    },
+    {
+      "name": "gate2a_authorization_correction_addendum",
+      "sql_md5": "c4a9622a9031db14ebca234ca98bb3de",
+      "version": "20260906072503"
+    },
+    {
+      "name": "gate2a_fix_authorization_correction_audit",
+      "sql_md5": "9a3cd064b86d96e878f27e3d85268086",
+      "version": "20260906072514"
+    },
+    {
+      "name": "gate2a_unify_authorization_amendment_authority",
+      "sql_md5": "4d16d4d96af6356fe4d1d019a22b607c",
+      "version": "20260906073446"
+    },
+    {
+      "name": "gate2a_remove_legacy_authorization_amendment_overload",
+      "sql_md5": "7b6cd31de9bfb545f50a4e015c0bf0c5",
+      "version": "20260906073452"
+    },
+    {
+      "name": "gate2a_opportunity_canonical_actions",
+      "sql_md5": "76da93eb8f01a3c7120f7f89da847e52",
+      "version": "20260906074542"
+    },
+    {
+      "name": "gate2a_opportunity_canonical_actions",
+      "sql_md5": "b9880417c4941c52ba465ce695c353f9",
+      "version": "20260906075752"
+    },
+    {
+      "name": "gate2a_security_invoker_rpc_boundaries",
+      "sql_md5": "606928ac352d54bfe7f4b407652edda0",
+      "version": "20260906080322"
+    },
+    {
+      "name": "gate2a_restore_rpc_definer_internal_helpers",
+      "sql_md5": "f68055448fc8e8f35aa00d02a841ebe7",
+      "version": "20260906080337"
+    },
+    {
+      "name": "gate2a_private_rpc_boundaries",
+      "sql_md5": "1d0e588011a886c8c7632105a5bc8017",
+      "version": "20260906081544"
+    },
+    {
+      "name": "gate2a_opportunity_stage_scoped_actions",
+      "sql_md5": "d3d90a9d0f2acb68ec5ad11209fe8ab3",
+      "version": "20260906085826"
+    },
+    {
+      "name": "gate2a_restore_private_helper_execution",
+      "sql_md5": "ff0e58be496cff8201fa21419a30ebdc",
+      "version": "20260906092501"
+    },
+    {
+      "name": "gate2a_completed_action_satisfies_opportunity_next_step",
+      "sql_md5": "0157e066b21b0e91c6df3ef30ba00ff1",
+      "version": "20260906095137"
+    },
+    {
+      "name": "gate2a_restore_authorization_command_execution",
+      "sql_md5": "13dce34e2dacaaccaa81a8556357c0c9",
+      "version": "20260906103451"
+    },
+    {
+      "name": "gate2a_action_mutations_refresh_opportunity_readiness",
+      "sql_md5": "b8f1d05739f204c1cdbbb9a03229aa4a",
+      "version": "20260906121943"
+    },
+    {
+      "name": "protect_published_document_payload",
+      "sql_md5": "e0e12da5e36719d1cf8fcc0396a0f4bc",
+      "version": "20260910210233"
+    }
+  ]
+}
