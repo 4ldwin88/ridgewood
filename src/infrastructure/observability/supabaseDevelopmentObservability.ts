@@ -7,6 +7,7 @@ async function currentUserId(): Promise<string | null> { const { data } = await 
 
 export const developmentObservability: DevelopmentObservability = {
   async capture(event: DevelopmentTelemetryEvent) {
+    if (import.meta.env.VITE_DEV_TELEMETRY_ENABLED === 'false') return;
     try {
       const userId = await currentUserId();
       if (!userId) return;
