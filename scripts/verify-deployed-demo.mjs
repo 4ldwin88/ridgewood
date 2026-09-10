@@ -29,7 +29,7 @@ try {
     assert.ok(await page.getByText(`Ridgewood OS · ${manifest.version}`, { exact: true }).isVisible());
     const logo = page.getByRole('img', { name: 'Ridgewood', exact: true });
     assert.ok(await logo.evaluate(image => image.complete && image.naturalWidth > 0), 'Logo must render');
-    assert.equal(new URL(await logo.getAttribute('src'), url).pathname, '/ridgewood/assets/ridgewood-horizontal-light.svg');
+    assert.match(new URL(await logo.getAttribute('src'), url).pathname, /^\/ridgewood\/assets\/ridgewood-horizontal-light-[\w-]+\.svg$/);
     assert.ok(await page.getByRole('button', { name: 'Sign in', exact: true }).isVisible());
     assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth), 'Viewport overflows horizontally');
     assert.deepEqual(errors, [], 'Deployed page has asset or runtime errors');
