@@ -34,6 +34,10 @@ jobs:
           assert len([x for x in results[0] if x.startswith('ok ')]) == 12, results
           assert not any(x.startswith('not ok') for x in results[0]), results
           PY
+      - name: Verify overlapping commands and retries
+        run: |
+          python -m pip install 'psycopg[binary]==3.2.10'
+          python scripts/test-command-concurrency.py
       - name: Stop isolated containers
         if: always()
         run: supabase stop --no-backup
