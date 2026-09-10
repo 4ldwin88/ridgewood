@@ -31,7 +31,7 @@ try {
     assert.ok(await logo.evaluate(image => image.complete && image.naturalWidth > 0), 'Logo must render');
     assert.equal(new URL(await logo.getAttribute('src'), url).pathname, '/ridgewood/assets/ridgewood-horizontal-light.svg');
     assert.ok(await page.getByRole('button', { name: 'Sign in', exact: true }).isVisible());
-    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Viewport overflows horizontally');
+    assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth), 'Viewport overflows horizontally');
     assert.deepEqual(errors, [], 'Deployed page has asset or runtime errors');
     await page.close();
   }
