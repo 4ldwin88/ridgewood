@@ -35,6 +35,17 @@ jobs:
           assert len([x for x in results[0] if x.startswith('ok ')]) == 12, results
           assert not any(x.startswith('not ok') for x in results[0]), results
           PY
+      - name: Verify qualification reassessment
+        run: |
+          psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -At -f supabase/tests/database/qualification_reassessment_test.sql | tee /tmp/reassessment-results.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          results = [json.loads(line) for line in Path('/tmp/reassessment-results.txt').read_text().splitlines() if line.startswith('["1..13"')]
+          assert len(results) == 1, 'Missing reassessment test output'
+          assert len([x for x in results[0] if x.startswith('ok ')]) == 13, results
+          assert not any(x.startswith('not ok') or x.startswith('#') for x in results[0]), results
+          PY
       - name: Verify overlapping commands and retries
         run: |
           python -m pip install 'psycopg[binary]==3.2.10'
