@@ -2,6 +2,12 @@ import { test, expect, type Page } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 const name = 'Human acceptance rehearsal';
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.status !== testInfo.expectedStatus) {
+    // This suite uses only disposable synthetic identities/content, never hosted data.
+    console.log('Synthetic acceptance failure state:\n' + await page.locator('body').ariaSnapshot());
+  }
+});
 async function reopen(page: Page) {
   await page.reload();
   await page.getByRole('button', { name: new RegExp(name) }).click();
