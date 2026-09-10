@@ -76,6 +76,15 @@ race('overlapping revision requests leave one draft',revision,revision,(r,),{'re
 count=admin.execute("select count(*) from public.document_revisions where document_record_id=(select document_record_id from public.document_revisions where id=%s) and state='draft' and archived_at is null",(r,)).fetchone()[0]
 results.append({'case':'one active revision draft','passed':count==1})
 
+discarded = draft()
+call('select public.discard_project_state_document_draft(%s)', (discarded,))
+try:
+    call("select public.update_project_state_document_draft(%s,'{}')", (discarded,))
+    rejected = False
+except psycopg.Error as error:
+    rejected = error.diag.message_primary == 'draft_not_found_or_not_editable'
+results.append({'case':'discarded draft cannot accept a stale save','passed':rejected})
+
 # Prepare independent authorization fixtures from the existing behavioral test.
 auth_fixture=(root/'supabase/tests/database/project_state_authorization_success_replay_test.sql').read_text()
 auth_setup=auth_fixture[auth_fixture.index('insert into auth.users'):auth_fixture.index('select lives_ok(')]
@@ -83,7 +92,7 @@ with psycopg.connect(URL) as setup:
     setup.execute(auth_setup)
 uid='00000000-0000-4000-8000-0000000000c6'
 authorize="select public.authorize_project_state(%s,'Concurrency test',jsonb_build_object('verified',true,'userVerified',true,'verificationReference','concurrency-auth-ref','verifiedAt',now()::text))"
-race('duplicate authorization cannot authorize twice',authorize,authorize,('00000000-0000-4000-8000-000000000306',),{'project_authorization_not_allowed_from_stage:project_authorization_setup','verification_replay_detected'},uid)
+race('duplicate authorization cannot authorize twice',authorize,authorize,('00000000-0000-4000-8000-000000000306',),{'project_authorization_not_allowed','project_authorization_not_allowed_from_stage:project_authorization_setup','verification_replay_detected'},uid)
 count=admin.execute("select count(*) from public.authorization_records where project_state_id='00000000-0000-4000-8000-000000000306'").fetchone()[0]
 results.append({'case':'one authorization record','passed':count==1})
 admin.close()
