@@ -1,6 +1,7 @@
 -- Governed mutations must not be directly available through browser table writes.
 -- Draft creation/editing remains a separate capability; issued/published transitions and project authorization are command-only.
 
+-- Remove legacy owner-based policies that allow direct mutation paths inconsistent with workspace authority.
 drop policy if exists document_records_insert_own on public.document_records;
 drop policy if exists document_records_select_own on public.document_records;
 drop policy if exists document_records_update_own on public.document_records;
@@ -11,6 +12,7 @@ drop policy if exists authorization_insert on public.authorization_records;
 drop policy if exists authorization_select on public.authorization_records;
 drop policy if exists projects_select on public.projects;
 
+-- Browser clients can read governed records only within their workspace.
 create policy document_records_workspace_select on public.document_records
 for select to authenticated
 using (workspace_id is not null and public.is_workspace_member(workspace_id));
@@ -37,6 +39,7 @@ create policy projects_workspace_select on public.projects
 for select to authenticated
 using (workspace_id is not null and public.is_workspace_member(workspace_id));
 
+-- Audit visibility must also be tenant-scoped rather than global authenticated visibility.
 drop policy if exists audit_select on public.audit_events;
 create policy audit_workspace_select on public.audit_events
 for select to authenticated
@@ -56,8 +59,10 @@ using (
   ))
 );
 
+-- Revoke browser mutation privileges for governed issued/authorization/project tables.
 revoke insert, update, delete on public.authorization_records from authenticated, anon;
 revoke insert, update, delete on public.projects from authenticated, anon;
+-- Document mutations will be reintroduced only through narrowly governed draft/publish commands.
 revoke insert, update, delete on public.document_records from authenticated, anon;
 revoke insert, update, delete on public.document_revisions from authenticated, anon;
 

@@ -1,0 +1,1 @@
+drop policy if exists project_states_insert_workspace on public.project_states; create policy project_states_insert_workspace on public.project_states for insert to authenticated with check (public.is_workspace_member(workspace_id) and created_by=auth.uid() and owner_user_id=auth.uid());

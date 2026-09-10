@@ -1,15 +1,6 @@
--- Gate 2A human-QA reconciliation.
--- The deployed predevelopment record stores explanatory text in `notes`, not `summary`.
--- Keep the governed authorization transaction aligned with the live schema.
-
-create or replace function public.authorize_project_state(
-  project_state_input uuid,
-  authority_basis_input text,
-  verification_input jsonb
-)
+create or replace function public.authorize_project_state(project_state_input uuid, authority_basis_input text, verification_input jsonb)
 returns public.project_states
 language plpgsql
-security definer
 set search_path to 'public'
 as $function$
 declare
