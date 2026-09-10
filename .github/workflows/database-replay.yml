@@ -24,6 +24,7 @@ jobs:
           supabase migration up --local
       - name: Verify document lifecycle and immutability
         run: |
+          supabase test db supabase/tests/database/client_privileges_test.sql supabase/tests/database/project_state_command_boundary_test.sql supabase/tests/database/qualification_grants_test.sql
           supabase test db supabase/tests/database/published_document_payload_test.sql
           psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -At -f supabase/tests/database/governed_form_live_contract_test.sql | tee /tmp/form-contract-results.txt
           python - <<'PY'
