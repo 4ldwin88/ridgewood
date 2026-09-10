@@ -12,6 +12,11 @@ grant select on table public.authorization_amendments,
   public.project_state_stage_requirements to authenticated;
 grant insert, update on public.project_state_stage_requirements to authenticated;
 
+-- Trigger-only helper predates the private-function grant sweep. It needs no
+-- client EXECUTE privilege; its schema already denies anonymous USAGE.
+revoke all on function private.sync_predevelopment_readiness_from_document_revision()
+  from public, anon, authenticated;
+
 -- postgres owns all current application objects. Future migrations must grant
 -- access intentionally. Do not change defaults owned by Supabase platform roles.
 alter default privileges for role postgres in schema public
