@@ -1,9 +1,20 @@
 # Ridgewood Opportunity → Authorize human test
 
-**Status: NOT RUN. Release candidate and verified URL pending.** Automated
+**Human testing: NOT RUN. Deployed candidate verified and ready for 4ldwin’s test.** Automated
 rehearsals do not change this status. 4ldwin and Edward must record their own
 results before the demo is accepted. Use a designated synthetic project and test
 accounts, never an actual commitment or client record.
+
+## Verified candidate — 2026-09-10
+
+- URL: https://4ldwin88.github.io/ridgewood/
+- Displayed version: **v0.23**.
+- Deployed commit: `fc0d1cf26b8bded4448609ec7c865be71f15af38`.
+- Backend: `leikcvdfvovycjcjtflq`; workspace: **Ridgewood**.
+- Initial tester: 4ldwin's existing account, with active owner membership and current workspace executive authorization authority verified read-only.
+- Edward: separate account/workspace access remains pending; do not share the owner's login.
+- [Deployment and live desktop/mobile browser checks passed](https://github.com/4ldwin88/ridgewood/actions/runs/34538177379/attempts/2). This checks exact commit, sign-in rendering, assets and viewport fit; it does not certify the hosted authenticated workflow or human usability.
+- The owner added the exact release branch to the Pages environment allowlist after the first deployment was rejected. No application or backend change was needed for the successful retry.
 
 ## Before starting
 

@@ -23,3 +23,9 @@ A frozen frontend branch alone cannot freeze a shared database. Later lifecycle 
 Preserve the previous deployable commit before any release update. Restore its frontend content in a new release commit and rerun Pages verification if necessary; do not rewrite the database or delete test/decision records to roll back the UI. Before the first release-branch deployment, the prior prototype baseline is `37d7228612bf7f3bbe7dfa4d7cdb29c9957ef4e0`; this is a source rollback reference, not a claim that its old UI implements the new publication workflow.
 
 The existing Gate 2A MFA exception remains unchanged and visible in the test script. No new hosted migration or Edge Function deployment is part of this frontend release.
+
+## Deployment verified — 2026-09-10
+
+Candidate v0.23 is live at https://4ldwin88.github.io/ridgewood/ at commit `fc0d1cf26b8bded4448609ec7c865be71f15af38`. The exact commit and desktop/mobile sign-in, logo and viewport checks passed in [attempt 2](https://github.com/4ldwin88/ridgewood/actions/runs/34538177379/attempts/2). The initial rejection was confirmed by the owner's screenshot: release/edward-demo was not permitted by the github-pages environment. The owner added its exact branch rule; the failed jobs were then rerun successfully.
+
+The frontend deployment milestone is complete. Human tests remain NOT RUN. 4ldwin can begin with the existing account; Edward's independent test requires his own provisioned access. This documentation update belongs to the development branch and does not move either release branch or redeploy the tested candidate. No demo has been human-accepted yet.
