@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import './public.css';
+import './public-overrides.css';
 
 const projectTypes = [
   'Residential Development',
