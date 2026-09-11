@@ -38,9 +38,9 @@ try {
       assert.ok(await page.getByRole('link', { name: label, exact: true }).isVisible(), `${label} sticky tab must render`);
     }
     assert.ok(await page.getByText('Builder knowledge. Developer thinking.', { exact: true }).isVisible(), 'Home thesis must render');
-    assert.ok(await page.getByRole('heading', { name: /Building capability, applied with ownership/i }).isVisible(), 'Build section must render');
-    assert.ok(await page.getByRole('heading', { name: /Construction knowledge, moved upstream/i }).isVisible(), 'Develop section must render');
-    assert.ok(await page.getByRole('heading', { name: /Building more than projects/i }).isVisible(), 'Vision section must render');
+    assert.ok(await page.getByRole('heading', { name: 'From first scope to final handoff.', exact: true }).isVisible(), 'Build section must render');
+    assert.ok(await page.getByRole('heading', { name: 'Finding value before construction begins.', exact: true }).isVisible(), 'Develop section must render');
+    assert.ok(await page.getByRole('heading', { name: 'Building more than projects.', exact: true }).isVisible(), 'Vision section must render');
     assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth), 'Public viewport overflows horizontally');
 
     const portalUrl = new URL(url.href);
