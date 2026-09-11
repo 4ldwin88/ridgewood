@@ -20,3 +20,6 @@ input,select,textarea{font-weight:400}.stage-header>.status-pill{flex-shrink:0}.
 button{overflow-wrap:normal;word-break:normal}.record-link{overflow-wrap:anywhere}.workspace-modal{height:fit-content}.workspace-modal__header>button{flex-shrink:0;white-space:nowrap}.document-context>.status-pill{justify-self:start}.register-filters input::placeholder{font-size:12px}
 @media(max-width:760px){.register-toolbar{grid-template-columns:minmax(0,1fr);justify-content:stretch}.segmented-control button{white-space:nowrap}.form-actions button{flex:1 1 120px}.workspace-drawer__header .form-actions button{flex:0 0 auto}.qualification-decision .form-actions>button:first-child{flex-basis:100%}.stage-header>.status-pill{font-size:9px}.workspace-drawer__header h2{overflow-wrap:anywhere}}
 .capability-governance{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}.capability-governance .stage-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.capability-governance .stage-tool-grid button{font-size:12px;padding:10px}.capability-governance .document-context small{font-size:12px}
+
+.workspace-drawer__header>div:first-child{min-width:0}.workspace-drawer__header .form-actions{flex-shrink:0}
+@media(max-width:760px){.workspace-drawer__header{display:grid;grid-template-columns:minmax(0,1fr) auto}.workspace-drawer__header .form-actions{width:auto}}

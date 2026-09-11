@@ -8,6 +8,8 @@ async function capture(page:Page, key:string){
  for(const [device,width,height] of [['desktop',1440,1000],['mobile',390,844]] as const){
   await page.setViewportSize({width,height});
   await page.evaluate(()=>window.scrollTo(0,0));
+  const close=page.locator('.workspace-drawer__header button').filter({hasText:'Close'});
+  if(await close.count()) { const box=await close.boundingBox(); expect(box).not.toBeNull(); expect(box!.x+box!.width).toBeLessThanOrEqual(width); }
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
   const body=page.locator('.workspace-drawer__body');
   if(await body.count()) await body.evaluate(el=>{el.scrollTop=0});
@@ -211,8 +213,9 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await page.getByRole('button', { name: 'Archive project', exact: true }).click();
   await expect(page.getByText(name, { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Archived projects', exact: true }).click();
-  await capture(page,'14-archived');
   await expect(page.getByText(name, { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'View Pre-Authorization / Authorization Record' })).toBeVisible();
+  await capture(page,'14-archived');
   await page.getByRole('button', { name: 'View Pre-Authorization / Authorization Record' }).click();
   await expect(page.getByRole('heading', { name: 'Frozen authorization record' })).toBeVisible();
   await expect(page.getByText('Synthetic executive acceptance', { exact: true })).toBeVisible();
