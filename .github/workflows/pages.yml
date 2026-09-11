@@ -1,9 +1,9 @@
-name: Deploy Public Home V1 Candidate
+name: Deploy Ridgewood Public Site
 
 on:
   push:
     branches:
-      - public/home-v1
+      - release/edward-demo
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/public/home-v1'
+    if: github.ref == 'refs/heads/release/edward-demo'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,7 +37,7 @@ jobs:
           npm run typecheck
           npm test
           npm run lint
-      - name: Build public candidate
+      - name: Build public site
         env:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_lrUiFE9I4ryDIfXVlgujSg_yVeFBLRX
         run: |
@@ -64,7 +64,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
   smoke-test:
-    name: Verify deployed public candidate and portal
+    name: Verify deployed public site and portal
     runs-on: ubuntu-latest
     needs: deploy
     timeout-minutes: 10
