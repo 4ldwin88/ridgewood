@@ -30,11 +30,13 @@ try {
     publicUrl.searchParams.set('release', expectedSha);
     await page.goto(publicUrl.href, { waitUntil: 'networkidle' });
     await page.getByRole('heading', { name: /Built to deliver/i }).waitFor();
-    assert.ok(await page.getByText('Construction • Development', { exact: true }).first().isVisible());
-    const publicLogo = page.getByRole('img', { name: 'Ridgewood — Construction and Development', exact: true }).first();
-    assert.ok(await publicLogo.evaluate(image => image.complete && image.naturalWidth > 0), 'Public logo must render');
-    assert.equal(new URL(await publicLogo.getAttribute('src'), url).pathname, '/ridgewood/assets/ridgewood-horizontal-light.svg');
-    assert.ok(await page.getByRole('link', { name: 'Portal', exact: true }).first().isVisible());
+    const publicLogo = page.getByRole('img', { name: 'Ridgewood — Construction • Development', exact: true }).first();
+    assert.ok(await publicLogo.evaluate(image => image.complete && image.naturalWidth > 0), 'Public wordmark must render');
+    assert.match(new URL(await publicLogo.getAttribute('src'), url).pathname, /^\/ridgewood\/assets\/ridgewood-wordmark-primary-light-[\w-]+\.png$/);
+    assert.ok(await page.getByRole('link', { name: 'Open Ridgewood OS Portal', exact: true }).isVisible());
+    for (const label of ['Construction', 'Development', 'Work', 'About us', 'Contact us']) {
+      assert.ok(await page.getByRole('link', { name: label, exact: true }).isVisible(), `${label} sticky tab must render`);
+    }
     assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth), 'Public viewport overflows horizontally');
 
     const portalUrl = new URL(url.href);
@@ -44,15 +46,15 @@ try {
     await page.getByRole('heading', { name: 'Sign in', exact: true }).waitFor();
     assert.ok(await page.getByText(`Ridgewood OS · ${manifest.version}`, { exact: true }).isVisible());
     const portalLogo = page.getByRole('img', { name: 'Ridgewood', exact: true });
-    assert.ok(await portalLogo.evaluate(image => image.complete && image.naturalWidth > 0), 'Portal logo must render');
-    assert.match(new URL(await portalLogo.getAttribute('src'), url).pathname, /^\/ridgewood\/assets\/ridgewood-horizontal-light-[\w-]+\.svg$/);
+    assert.ok(await portalLogo.evaluate(image => image.complete && image.naturalWidth > 0), 'Portal wordmark must render');
+    assert.match(new URL(await portalLogo.getAttribute('src'), url).pathname, /^\/ridgewood\/assets\/ridgewood-wordmark-primary-light-[\w-]+\.png$/);
     assert.ok(await page.getByRole('button', { name: 'Sign in', exact: true }).isVisible());
     assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth), 'Portal viewport overflows horizontally');
 
     assert.deepEqual(errors, [], 'Deployed page has asset or runtime errors');
     await page.close();
   }
-  console.log(`Verified public home + portal at ${expectedSha}: desktop/mobile assets and route boundary. Human visual acceptance remains NOT RUN.`);
+  console.log(`Verified public home + portal at ${expectedSha}: desktop/mobile approved wordmark, sticky navigation and route boundary. Human visual acceptance remains NOT RUN.`);
 } finally {
   await browser.close();
 }
