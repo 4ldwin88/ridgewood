@@ -195,7 +195,7 @@
 /* v0.31: larger register photos and card-level management. */
 .project-register-card{position:relative;grid-template-columns:112px minmax(0,1fr)}
 .app-frame .project-register-card>.project-photo{width:112px;min-width:112px}
-.app-frame .project-register-card .project-photo>img,.app-frame .project-register-card .photo-placeholder{width:112px;height:112px}
+.app-frame .project-register-card .project-photo>img,.app-frame .project-register-card .project-photo>.photo-placeholder{width:112px;height:112px}
 .project-register-card__info{padding-right:44px}
 .app-frame .project-register-card .photo-menu{position:absolute;right:6px;top:6px;margin:0}
 .app-frame .project-register-card .photo-menu>summary{display:flex;align-items:center;justify-content:center;width:44px;min-width:44px;max-width:44px;height:44px;padding:0;font-size:26px;list-style:none;box-sizing:border-box}
