@@ -24,7 +24,10 @@ try {
     page.on('response', response => {
       if (response.url().startsWith(url.origin) && response.status() >= 400) errors.push(`${response.status()} ${response.url()}`);
     });
-    await page.goto(url.href + `?release=${expectedSha}`, { waitUntil: 'networkidle' });
+    const portalUrl = new URL(url.href);
+    portalUrl.searchParams.set('portal', '1');
+    portalUrl.searchParams.set('release', expectedSha);
+    await page.goto(portalUrl.href, { waitUntil: 'networkidle' });
     await page.getByRole('heading', { name: 'Sign in', exact: true }).waitFor();
     assert.ok(await page.getByText(`Ridgewood OS · ${manifest.version}`, { exact: true }).isVisible());
     const logo = page.getByRole('img', { name: 'Ridgewood', exact: true });
@@ -35,7 +38,7 @@ try {
     assert.deepEqual(errors, [], 'Deployed page has asset or runtime errors');
     await page.close();
   }
-  console.log(`Verified ${manifest.version} at ${expectedSha}: desktop/mobile sign-in and assets. Human acceptance remains NOT RUN.`);
+  console.log(`Verified ${manifest.version} at ${expectedSha}: desktop/mobile portal sign-in and assets. Human acceptance remains NOT RUN.`);
 } finally {
   await browser.close();
 }
