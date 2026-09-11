@@ -108,7 +108,7 @@
  .app-frame .demo-label { max-width:none; padding:5px 7px; font-size:10px; }
 }
 /* v0.28: compact work lists and consistent field relationships. */
-.app-frame .dev-notes-floating { position:fixed; left:20px; bottom:22px; right:auto; width:48px!important; min-width:48px!important; max-width:48px!important; height:48px!important; min-height:48px; padding:0!important; border-radius:50%; background:#b5121b; color:#fff; border:2px solid var(--surface); box-shadow:0 3px 14px #0004; font-size:28px; line-height:1; z-index:2147483647; }
+.app-frame .dev-notes-floating { position:fixed; left:20px; bottom:22px; right:auto; width:32px!important; min-width:32px!important; max-width:32px!important; height:32px!important; min-height:32px!important; padding:0!important; border-radius:50%; background:#000; color:#fff; border:1px solid #8a8a8a; box-shadow:0 2px 6px #0003; font-size:20px; line-height:1; z-index:2147483647; }
 .app-frame .dev-notes-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin-top:18px; }
 .app-frame .dev-notes-actions button { width:auto!important; height:auto!important; min-width:100px; min-height:44px; padding:10px 16px!important; white-space:normal; overflow-wrap:anywhere; }
 .app-frame .profile-drawer__nav button { height:auto; white-space:normal; }
@@ -129,7 +129,7 @@
 .app-frame :is(.choice-button.selected,.check-option.selected,.scale-button.selected)::after { content:none!important; display:none!important; }
 .app-frame .check-option input { position:absolute; opacity:0; width:1px; height:1px; }.app-frame .check-option { position:relative; }.app-frame .check-option:focus-within { outline:2px solid var(--brand); outline-offset:2px; }
 .app-frame .project-cards td { padding-top:12px; padding-bottom:12px; }
-.app-frame .project-cards .project-photo img,.app-frame .project-cards .photo-placeholder { height:64px; }.app-frame .project-cards .project-photo { width:64px; min-width:64px; }
+.app-frame .project-cards .project-photo img,.app-frame .project-cards .photo-placeholder { height:80px; }.app-frame .project-cards .project-photo { width:80px; min-width:80px; }
 @media(max-width:760px){
  .app-frame .dev-notes-floating { left:16px; bottom:calc(88px + env(safe-area-inset-bottom)); }
  .app-frame .workspace-drawer .dev-notes-floating { bottom:18px; }
@@ -140,3 +140,18 @@
 
 .app-frame .dev-notes-actions button { background:var(--surface-raised); color:var(--ink); border:1px solid var(--line); }
 .app-frame .dev-notes-actions button[type=submit] { background:#b5121b; color:#fff; border-color:#b5121b; }
+
+/* Photo-led mobile records; keep the name and operating details alongside the image. */
+.app-frame .dev-notes-floating::after { content:""; position:absolute; inset:-6px; border-radius:50%; }
+@media(max-width:760px) {
+ .app-frame .project-cards tr { position:relative; display:grid; grid-template-columns:minmax(0,1fr); padding:14px 14px 14px 108px; gap:9px; min-height:112px; }
+ .app-frame .project-cards td { padding:0; min-width:0; width:auto; }
+ .app-frame .project-cards td:first-child { min-height:0; grid-column:1; }
+ .app-frame .project-cards td:first-child>.project-photo { position:absolute; left:14px; top:14px; float:none; margin:0; }
+ .app-frame .project-cards td[data-label]:not(:first-child) { flex-direction:row; align-items:baseline; flex-wrap:wrap; gap:4px 8px; }
+ .app-frame .project-cards td[data-label]:not(:first-child)::before { width:auto; flex:none; font-size:12px; }
+ .app-frame .project-cards .record-actions { grid-column:1; padding-top:8px; }
+ .app-frame .project-cards .record-summary { margin:4px 0 0; }
+ .app-frame .project-cards .authorization-handoff { min-width:0; width:100%; }
+ .app-frame .project-cards .authorization-handoff>button { white-space:normal; width:100%; }
+}
