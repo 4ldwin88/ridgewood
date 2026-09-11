@@ -81,6 +81,15 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Advance to qualification' })).toBeDisabled();
   await expect(page.getByRole('button', { name: /^1.5 Attention/ })).toHaveAccessibleName('1.5 Attention — No attention needed');
+  await page.getByLabel(`Upload photo for ${name}`).setInputFiles('assets/ridgewood-wordmark-primary-light.png');
+  await expect(page.getByAltText(`${name} project photo`)).toBeVisible();
+  await page.reload();
+  await page.getByRole('button',{name,exact:true}).click();
+  await expect(page.getByAltText(`${name} project photo`)).toBeVisible();
+  await page.getByRole('button',{name:'Switch to dark mode'}).click();
+  await expect(page.locator('.app-frame')).toHaveAttribute('data-theme','dark');
+  await capture(page,'03-opportunity-dark');
+  await page.getByRole('button',{name:'Switch to light mode'}).click();
   await capture(page,'03-opportunity');
   await page.getByRole('button', { name: /^1.1 Actions/ }).click();
   const actions = page.getByRole('dialog');
@@ -178,6 +187,7 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
     form = page.getByRole('dialog');
     await expect(form).toHaveClass(/workspace-drawer/);
     await expect(form.locator('form.structured-form')).toBeVisible();
+    for(const preset of await form.locator('.preset-options').all()) await preset.getByRole('button').first().click();
     for (const field of await form.locator('form.structured-form textarea').all()) await field.fill('Synthetic reviewed basis');
     await capture(page,`domain-${domain.slice(0,3)}`);
     await form.getByRole('button', { name: 'Save draft', exact: true }).click();
