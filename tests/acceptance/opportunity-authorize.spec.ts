@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
 const name = 'QA rehearsal · v0.25';
@@ -13,7 +14,13 @@ async function capture(page:Page, key:string){
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
   const body=page.locator('.workspace-drawer__body');
   if(await body.count()) await body.evaluate(el=>{el.scrollTop=0});
-  await page.screenshot({path:`test-results/visual/${key}-${device}.png`,fullPage:false});
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  await page.screenshot({path:`test-results/visual/${key}-${device}.png`,fullPage:false,animations:'disabled'});
+  if(await close.count()) {
+   await expect(close).toBeInViewport({ratio:1});
+   const geometry=await page.locator('.workspace-drawer__header').evaluate(el=>({header:el.getBoundingClientRect().toJSON(),scrollTop:el.scrollTop,parentScroll:el.parentElement?.scrollTop,children:[...el.querySelectorAll('p,h2,button')].map(c=>({text:c.textContent,rect:c.getBoundingClientRect().toJSON(),visibility:getComputedStyle(c).visibility,opacity:getComputedStyle(c).opacity,display:getComputedStyle(c).display}))}));
+   mkdirSync('test-results/geometry',{recursive:true});writeFileSync(`test-results/geometry/${key}-${device}.json`,JSON.stringify(geometry));
+  }
   if(await body.count()){
    const extent=await body.evaluate(el=>el.scrollHeight-el.clientHeight);
    if(extent>200){
