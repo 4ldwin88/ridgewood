@@ -32,7 +32,7 @@ No new business readiness rule or source field is invented. Home/Network/More re
 2. Existing CI gates retained: dependency audit, migration history integrity, full disposable Supabase replay, permission/immutability/concurrency checks, real authenticated Opportunity → Authorize scenario.
 3. New gesture regression uses Chromium touch input, not synthetic DOM events: successful edge/header swipes, short/reverse/vertical gestures, dirty discard cancellation, busy guard, Escape and focus return. Intercepted synthetic form responses isolate interaction behavior; these tests do not prove hosted database persistence.
 4. Authenticated lifecycle screenshots cover desktop/mobile pipeline, intake, Opportunity, Actions, Risks, Qualification, seven Predevelopment domains, published document, authorization review/confirmation, Projects, frozen history and archive. Long drawers include top/middle/bottom captures. These use a real disposable backend with synthetic records, not mocked successful business responses.
-5. Agent visual review and hosted checks: pending at this checkpoint.
+5. Agent visual review completed for the authenticated disposable-backend workflow. Hosted verification is partial, as detailed below.
 6. Owner human acceptance: pending. Edward acceptance/access: pending; no invitation authorized or sent.
 
 ## Release and data boundaries
@@ -49,3 +49,13 @@ Candidate `1bae69c0d0c31f16a3bfc8795532e5dc10d2d5a9` passed both CI workflows:
 Agent reviewed the 92-image desktop/mobile contact sheets, with full-resolution inspection of key workflow states. The review found undersized mobile button groups, a stretched authorization confirmation, a wrapped Close label and a misleading initial View only label. These are repaired in the next candidate. An earlier screenshot helper failed because it tried to scroll the Qualification drawer during its transition; explicit state waits fixed it, without weakening product assertions. Snapshot capture now waits for record-loading states too.
 
 Hosted v0.24 baseline rehearsal (same backend, before frontend repair): synthetic project `b467700e-5d8c-4f1b-8ed4-9b80abfd75d0`, named `QA v0.25 · interface rehearsal`. Verified action save stays open, completing action refreshes readiness with no reload, qualification advancement, site draft save, reload and retained selection. The browser became unavailable at the native publication confirmation; success was not assumed. That hosted rehearsal is incomplete and the synthetic record needs archiving when browser access resumes. No existing user record was modified.
+
+## Final candidate evidence
+
+Final candidate `b8a220051f4cc438e6703de61f11cd3dac4de1e0` passed [Validate](https://github.com/4ldwin88/ridgewood/actions/runs/34568667135) and [Database replay plus authenticated lifecycle](https://github.com/4ldwin88/ridgewood/actions/runs/34568667165). The tests cover readiness refresh, forms remaining open, published-document immutability, authorization permissions and lost-response recovery, and archive/history retention.
+
+The [final artifact](https://github.com/4ldwin88/ridgewood/actions/runs/34568667165/artifacts/10187004236) contains 90 authenticated desktop/mobile screenshots and 34 post-capture drawer geometry records (30-day retention). Agent review covered the whole workflow in contact sheets and key full-resolution views. Enlarged header crops verified controls across Qualification and all seven domains; the geometry confirms visible, opaque 44px Close controls within the viewport and zero frame scroll. This is agent visual inspection and automated browser verification, not physical-device or owner human acceptance.
+
+PR #5 merged at `40d9d6d37695d2a66b304d9c2e3120e77247dc2b`; its Git tree exactly matches the tested candidate. `release/v0.25-rc1` preserves that commit, and `release/v0.24-rc1` preserves the prior candidate. Release branch: `release/edward-demo`. Deployment workflow: https://github.com/4ldwin88/ridgewood/actions/runs/34568936079 . Deployment and exact-commit desktop/mobile sign-in, logo and viewport checks all passed. Live app: https://4ldwin88.github.io/ridgewood/ . This post-deployment check does not sign in or certify the hosted business workflow.
+
+Human acceptance remains **PENDING**; v0.24 remains **FAIL**. Full hosted v0.25 rehearsal, physical-device swipes and cleanup of the named hosted synthetic record remain incomplete because browser control became unavailable. Do not describe the demo as accepted or ready for Edward.
