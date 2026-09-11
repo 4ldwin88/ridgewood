@@ -197,3 +197,25 @@
 .app-frame .lifecycle-progress { margin:16px 0; }
 @media(max-width:1100px) and (min-width:761px) { .app-frame .register-filters { flex-basis:100%; } .app-frame .register-filters .search-field { flex:1; } }
 @media(max-width:760px) { .app-frame .register-filters .search-field,.app-frame .register-filters select { width:100%; } }
+
+/* Reduce stacked context spacing so mobile users reach stage tools sooner. */
+@media(max-width:760px) {
+  .app-frame .workspace:has(.opportunity-workspace) { padding-top:12px; }
+  .app-frame .workspace:has(.opportunity-workspace) .page-heading { align-items:center; gap:8px; margin-bottom:8px; }
+  .app-frame .workspace:has(.opportunity-workspace) .page-heading h1 { font-size:14px; }
+  .app-frame .workspace:has(.opportunity-workspace) .demo-label { max-width:none; padding:5px 7px; font-size:10px; }
+  .app-frame .opportunity-workspace { gap:12px; }
+  .app-frame .opportunity-workspace>.section-heading { margin-bottom:0; }
+  .app-frame .opportunity-hero { padding:14px 16px; gap:10px; }
+  .app-frame .opportunity-hero h2 { font-size:22px; }
+  .app-frame .project-meta { padding-top:10px; gap:16px; }
+  .app-frame .project-meta>span { gap:2px; }
+  .app-frame .project-meta strong { margin-top:0; }
+  .app-frame .lifecycle-progress { margin:4px 0; gap:8px; }
+  .app-frame .opportunity-workspace>.guidance { margin:0; padding:10px 12px; }
+  .app-frame .app-stage-workspace .stage-header { min-height:64px; padding:10px 8px; }
+  .app-frame .stage-header strong { font-size:13px; }
+  .app-frame .stage-header small { margin-top:3px; }
+  .app-frame .app-stage-workspace .stage-content { margin-top:0; padding:16px; }
+  .app-frame .stage-content-heading { padding-bottom:14px; margin-bottom:12px; }
+}

@@ -25,13 +25,15 @@ All existing lifecycle commands, permissions, schemas, publications and readines
 - Fixture entrypoints live only in `tests/fixtures/app`; production does not import them. Fixture network writes fail; they do not simulate successful database persistence or authenticate into a hosted backend.
 - Live v0.25 hosted baseline: existing tester session verified; fresh synthetic record `469b4c44-ae7f-4f4f-824f-859dbb755cdb`, named `QA v0.26 · hosted baseline`, created. Saved action `Validate synthetic pursuit` remained visible in the open drawer. Setting it Done updated Opportunity readiness without reload and enabled advancement into Qualification. Reloading the live app confirmed the same record remained in Qualification.
 
-## Not yet verified / blocked
+## Protected verification and human handoff
 
-- New candidate authenticated persistence and complete Opportunity → Authorize regression have NOT run.
-- The secure preview authentication request returned `locator_invalid` twice before submitting credentials. No direct credential-entry fallback was used.
-- Git push was rejected by automatic approval review, including after confirming repository ownership and admin permissions through the GitHub connector. Explicit user approval is required before pushing the candidate or opening its PR. Local commits are available for review. Do not bypass the rejection with GitHub write tools.
-- Protected CI (full disposable database replay, authenticated Opportunity → Authorize, archive/history and touch gestures) must run on this exact candidate after approval. Existing historical CI passes do not count for this candidate.
-- No release branch has moved; no deployment, hosted migration, Auth/Edge change, bulk archive, database reset, or invitation occurred. Human acceptance is pending.
+User approved branch/PR publication and then requested deployment for their own test before any lifecycle extension. [PR #11](https://github.com/4ldwin88/ridgewood/pull/11) targets the demo release branch.
+
+The initial candidate `10815dcf278df639a43f9fa84296ad4b1ae23a71` passed [Validate](https://github.com/4ldwin88/ridgewood/actions/runs/34629138614) and [Database replay](https://github.com/4ldwin88/ridgewood/actions/runs/34629138612), including authenticated Opportunity → Authorization and archive behavior. Its captured desktop/mobile screens were inspected. A final CSS-only refinement reduces stacked mobile context spacing while retaining stage and status information; protected checks must also pass on that final candidate.
+
+The earlier command-line push lacked credentials after approval; the connected GitHub app published the exact reviewed tree instead. The secure local preview authentication request had returned `locator_invalid` before credential submission; disposable CI provided the authenticated candidate evidence.
+
+Human acceptance remains pending. No hosted migrations, Auth/Edge changes, invitations, or database resets are included. Later lifecycle implementation is explicitly on hold until the user tests the deployed candidate. The previous release `49624b9aa2a68fe55bbd36473dd58112fde39942` remains the frontend rollback reference.
 
 ## Remaining delivery implementation sequence
 
