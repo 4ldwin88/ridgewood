@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthPortal } from '../features/auth/AuthPortal';
 import { supabase } from '../infrastructure/auth/supabaseClient';
+import { PublicHome } from '../public/PublicHome';
 import { AppShell, APP_VERSION } from './shell/AppShell';
 
-export function App() {
+function wantsPortal() {
+  if (import.meta.env.MODE === 'acceptance') return true;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('portal') === '1';
+}
+
+function PortalApp() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,12 +24,23 @@ export function App() {
       setSession(data.session);
       setLoading(false);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, next) => { setSession(next); setLoading(false); });
-    return () => { active = false; data.subscription.unsubscribe(); };
+    const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
 
   if (loading) return <main className="center-state"><p>Loading Ridgewood OS…</p><span>{APP_VERSION}</span></main>;
   if (error) return <main className="center-state"><h1>Unable to start Ridgewood OS</h1><p>{error}</p><span>{APP_VERSION}</span></main>;
   if (!session) return <AuthPortal />;
   return <AppShell session={session} />;
+}
+
+export function App() {
+  if (!wantsPortal()) return <PublicHome />;
+  return <PortalApp />;
 }
