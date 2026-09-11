@@ -191,3 +191,19 @@
 .app-frame .photo-menu>summary{color:var(--ink)}.app-frame .organization-controls>button{color:var(--muted)}
 .app-frame[data-theme=dark] .stage-tool-launcher{background:var(--surface-raised);border-color:var(--line);color:var(--ink)}
 .app-frame[data-theme=dark] legend{color:var(--ink)}
+
+/* v0.31: larger register photos and card-level management. */
+.project-register-card{position:relative;grid-template-columns:112px minmax(0,1fr)}
+.app-frame .project-register-card>.project-photo{width:112px;min-width:112px}
+.app-frame .project-register-card .project-photo>img,.app-frame .project-register-card .project-photo>.photo-placeholder{width:112px;height:112px}
+.project-register-card__info{padding-right:44px}
+.app-frame .project-register-card .photo-menu{position:absolute;right:6px;top:6px;margin:0}
+.app-frame .project-register-card .photo-menu>summary{display:flex;align-items:center;justify-content:center;width:44px;min-width:44px;max-width:44px;height:44px;padding:0;font-size:26px;list-style:none;box-sizing:border-box}
+.app-frame .project-register-card .photo-menu>summary::-webkit-details-marker{display:none}
+.app-frame .project-register-card .photo-menu .row-menu__items{left:auto;right:0}
+.document-viewer{min-width:0}
+.document-viewer__toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+.document-viewer__toolbar .document-print{margin-left:auto}
+.document-viewer__viewport{overflow:auto;max-height:75vh;touch-action:pan-x pan-y pinch-zoom;border:1px solid var(--line)}
+.document-viewer__viewport .published-document{margin:0;min-width:100%;width:100%;box-sizing:border-box}
+@media print{.document-viewer__toolbar{display:none!important}.document-viewer__viewport{overflow:visible;max-height:none;border:0}.document-viewer__viewport .published-document{zoom:1!important}}

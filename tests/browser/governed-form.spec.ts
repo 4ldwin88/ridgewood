@@ -60,12 +60,16 @@ test('drawer protects edits and displays immutable snapshot through revision wor
   const document = page.getByRole('article', { name: 'Published document revision 1' });
   await expect(document.getByText('Owned', { exact: true })).toBeVisible();
   await expect(document.getByText('Client controlled', { exact: true })).toHaveCount(0);
+  const viewer = page.getByRole('region', { name: 'Read-only document viewer' });
+  await viewer.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  await expect(document).toHaveCSS('zoom', '1.25');
   const popupPromise = page.waitForEvent('popup');
-  await document.getByRole('button', { name: 'Print / Save as PDF' }).click();
+  await viewer.getByRole('button', { name: 'Print / Save as PDF' }).click();
   const printable = await popupPromise;
   await expect(printable.locator('article')).toHaveCount(1);
   await expect(printable.getByText('Owned', { exact: true })).toBeVisible();
   await expect(printable.getByRole('button')).toHaveCount(0);
+  await expect(printable.locator('article')).toHaveCSS('zoom', '1');
   const pdfPath = test.info().outputPath('published-revision.pdf');
   await printable.pdf({path:pdfPath,preferCSSPageSize:true});
   execFileSync('pdftotext', [pdfPath, pdfPath+'.txt']);
