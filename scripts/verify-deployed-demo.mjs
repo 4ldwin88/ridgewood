@@ -34,9 +34,13 @@ try {
     assert.ok(await publicLogo.evaluate(image => image.complete && image.naturalWidth > 0), 'Public wordmark must render');
     assert.match(new URL(await publicLogo.getAttribute('src'), url).pathname, /^\/ridgewood\/assets\/ridgewood-wordmark-primary-light-[\w-]+\.png$/);
     assert.ok(await page.getByRole('link', { name: 'Open Ridgewood OS Portal', exact: true }).isVisible());
-    for (const label of ['Construction', 'Development', 'Work', 'About us', 'Contact us']) {
+    for (const label of ['Home', 'Build', 'Develop', 'Vision', 'Work', 'About', 'Contact']) {
       assert.ok(await page.getByRole('link', { name: label, exact: true }).isVisible(), `${label} sticky tab must render`);
     }
+    assert.ok(await page.getByText('Builder knowledge. Developer thinking.', { exact: true }).isVisible(), 'Home thesis must render');
+    assert.ok(await page.getByRole('heading', { name: /Building capability, applied with ownership/i }).isVisible(), 'Build section must render');
+    assert.ok(await page.getByRole('heading', { name: /Construction knowledge, moved upstream/i }).isVisible(), 'Develop section must render');
+    assert.ok(await page.getByRole('heading', { name: /Building more than projects/i }).isVisible(), 'Vision section must render');
     assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth), 'Public viewport overflows horizontally');
 
     const portalUrl = new URL(url.href);
@@ -54,7 +58,7 @@ try {
     assert.deepEqual(errors, [], 'Deployed page has asset or runtime errors');
     await page.close();
   }
-  console.log(`Verified public home + portal at ${expectedSha}: desktop/mobile approved wordmark, sticky navigation and route boundary. Human visual acceptance remains NOT RUN.`);
+  console.log(`Verified public home + portal at ${expectedSha}: desktop/mobile approved wordmark, new story navigation and route boundary. Human visual acceptance remains NOT RUN.`);
 } finally {
   await browser.close();
 }
