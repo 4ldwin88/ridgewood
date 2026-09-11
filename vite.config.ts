@@ -17,6 +17,7 @@ function preserveBrandAssets() {
 }
 
 export default defineConfig(({ command, isPreview }) => ({
+  server: { host: '0.0.0.0', allowedHosts: ['terminal.local'] },
   // Production builds are deployed beneath /ridgewood/ on GitHub Pages.
   // Vite's serve command stays rooted at / for local development.
   base: command === 'build' || isPreview ? '/ridgewood/' : '/',

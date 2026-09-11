@@ -3,4 +3,5 @@ import ReactDOM from 'react-dom/client';
 import { App } from './app/App';
 import './styles/global.css';
 import './styles.css';
+import './styles/os-app.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

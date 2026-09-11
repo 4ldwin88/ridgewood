@@ -7,11 +7,12 @@ import { developmentObservability } from '../../infrastructure/observability/sup
 import { DevNotesButton } from '../../modules/development/DevNotesButton';
 import { BusinessWorkspace } from '../../modules/business/BusinessWorkspace';
 import { ProjectsWorkspace } from '../../modules/projects/ProjectsWorkspace';
+import { WorkspaceDrawer } from '../../modules/business/WorkspaceDrawer';
 
 type Page = 'Home' | 'Business' | 'Projects' | 'Network' | 'More';
 const pages: Page[] = ['Home', 'Projects', 'Business', 'Network', 'More'];
 const navIcons: Record<Page, string> = {Home:'M3 10 12 3l9 7v10H3V10Zm6 10v-7h6v7',Projects:'M3 7h18v14H3V7Zm4 0V3h10v4M3 12h18',Business:'M4 20V10h4v10M10 20V4h4v16M16 20v-7h4v7',Network:'M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21v-3a6 6 0 0 1 12 0v3m0-8a6 6 0 0 1 8 5v3',More:'M4 5h16M4 12h16M4 19h16'};
-export const APP_VERSION = 'v0.25';
+export const APP_VERSION = 'v0.26';
 const feedbackEnabled = import.meta.env.VITE_DEV_FEEDBACK_ENABLED !== 'false';
 
 function ProfileIcon() {
@@ -40,14 +41,13 @@ export function AppShell({ session }: { session: Session }) {
     </header>
 
     <a className="skip-link" href="#main-workspace">Skip to workspace</a>
-    <nav className="primary-nav" aria-label="Primary">{pages.map((item) => <button key={item} className={page === item ? 'active' : ''} aria-current={page === item ? 'page' : undefined} onClick={() => setPage(item)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={navIcons[item]}/></svg>{item}</button>)}</nav>
+    <nav className="primary-nav" aria-label="Primary"><div className="nav-workspace"><span className="workspace-monogram" aria-hidden="true">R</span><span>Ridgewood<small>Company workspace</small></span></div><p className="nav-section-label">Workspace</p>{pages.map((item) => <button key={item} className={page === item ? 'active' : ''} aria-current={page === item ? 'page' : undefined} onClick={() => setPage(item)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={navIcons[item]}/></svg><span>{item}</span></button>)}<div className="nav-footnote"><span>Internal workspace</span><small>Construction • Development</small></div></nav>
 
     <main id="main-workspace" className="workspace"><div className="page-heading"><div><p className="eyebrow">Ridgewood workspace</p><h1>{pageTitle}</h1></div><span className="demo-label">Demo · awaiting acceptance</span></div>{content}</main>
     <footer><span>{session.user.email}</span><span>Ridgewood OS · {APP_VERSION}</span></footer>
 
-    {profileOpen ? <div className="profile-drawer-backdrop" onClick={() => setProfileOpen(false)}>
-      <aside className="profile-drawer" role="dialog" aria-modal="true" aria-label="Profile and app menu" onClick={(event) => event.stopPropagation()}>
-        <div className="profile-drawer__header"><div><p className="eyebrow">Account</p><h2>{session.user.email}</h2></div><button type="button" onClick={() => setProfileOpen(false)} aria-label="Close profile menu">×</button></div>
+    {profileOpen ? <WorkspaceDrawer title="Profile and app menu" contextKey="profile" onClose={() => setProfileOpen(false)} closeLabel="Close profile menu">
+        <div className="profile-drawer__header"><div><p className="eyebrow">Account</p><h2>{session.user.email}</h2></div></div>
         <nav className="profile-drawer__nav" aria-label="Profile menu">
           <a href={base} onClick={() => setProfileOpen(false)}>Return to main page</a>
           <button type="button" disabled title="Profile editing is not available in this demo">Edit profile</button>
@@ -55,8 +55,7 @@ export function AppShell({ session }: { session: Session }) {
           <button type="button" disabled title="Help is not available in this demo">Help & support</button>
           <button className="profile-drawer__logout" type="button" onClick={signOut} disabled={signingOut}>{signingOut ? 'Logging out…' : 'Log out'}</button>
         </nav>
-      </aside>
-    </div> : null}
+    </WorkspaceDrawer> : null}
   </div>;
 }
 
