@@ -99,7 +99,7 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   const actions = page.getByRole('dialog');
   await expect(actions.getByLabel('Custom action')).toHaveCount(0);
   await actions.getByRole('button',{name:'Add action',exact:true}).click();
-  await actions.getByLabel('Action',{exact:true}).selectOption('__custom');
+  await actions.getByRole('combobox',{name:'Action',exact:true}).selectOption('__custom');
   await actions.getByLabel('Custom action').fill('Review synthetic opportunity');
   await expect(actions).toHaveClass(/workspace-drawer/);
   acceptDialogs = false;
