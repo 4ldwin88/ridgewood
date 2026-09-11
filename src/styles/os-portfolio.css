@@ -155,3 +155,10 @@
  .app-frame .project-cards .authorization-handoff { min-width:0; width:100%; }
  .app-frame .project-cards .authorization-handoff>button { white-space:normal; width:100%; }
 }
+
+@media(min-width:761px) {
+ .app-frame .project-cards td:first-child { position:relative; padding-left:114px; height:106px; min-width:285px; }
+ .app-frame .project-cards td:first-child>.project-photo { position:absolute; left:20px; top:13px; float:none; margin:0; }
+ .app-frame .project-cards td:first-child>.record-link { display:block; white-space:normal; overflow-wrap:anywhere; text-align:left; }
+ .app-frame .projects-table.project-cards td:first-child { height:164px; }
+}
