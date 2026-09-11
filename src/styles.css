@@ -23,3 +23,6 @@ button{overflow-wrap:normal;word-break:normal}.record-link{overflow-wrap:anywher
 
 .workspace-drawer__header>div:first-child{min-width:0}.workspace-drawer__header .form-actions{flex-shrink:0}
 @media(max-width:760px){.workspace-drawer__header{display:grid;grid-template-columns:minmax(0,1fr) auto}.workspace-drawer__header .form-actions{width:auto}}
+
+/* Keep focus scrolling inside the body; the drawer frame must never scroll. */
+.workspace-drawer{overflow:clip}

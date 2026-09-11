@@ -9,7 +9,7 @@ async function capture(page:Page, key:string){
   await page.setViewportSize({width,height});
   await page.evaluate(()=>window.scrollTo(0,0));
   const close=page.locator('.workspace-drawer__header button').filter({hasText:'Close'});
-  if(await close.count()) { const box=await close.boundingBox(); expect(box).not.toBeNull(); expect(box!.x+box!.width).toBeLessThanOrEqual(width); }
+  if(await close.count()) { const box=await close.boundingBox(); expect(box).not.toBeNull(); expect(box!.x+box!.width).toBeLessThanOrEqual(width); expect(box!.y).toBeGreaterThanOrEqual(0); }
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
   const body=page.locator('.workspace-drawer__body');
   if(await body.count()) await body.evaluate(el=>{el.scrollTop=0});
