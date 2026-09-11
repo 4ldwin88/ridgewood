@@ -68,8 +68,8 @@ test('a failed domain action save retains its pending title', async ({page})=>{
  await page.getByRole('button',{name:'Open site review'}).click();
  await page.getByRole('button',{name:'Actions (0)',exact:true}).click();
  const child=page.getByRole('dialog',{name:'3.1 Development & Site · Actions',exact:true});
- await child.getByLabel(/Action/).fill('Keep this pending action');
+ await child.getByRole('textbox', {name: 'Action · Required', exact: true}).fill('Keep this pending action');
  await child.getByRole('button',{name:'Add action',exact:true}).click();
  await expect(child.getByText('Synthetic save rejected',{exact:true})).toBeVisible();
- await expect(child.getByLabel(/Action/)).toHaveValue('Keep this pending action');
+ await expect(child.getByRole('textbox', {name: 'Action · Required', exact: true})).toHaveValue('Keep this pending action');
 });
