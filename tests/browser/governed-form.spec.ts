@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 
 test('drawer protects edits and displays immutable snapshot through revision workflow', async ({ page }) => {
@@ -58,6 +60,22 @@ test('drawer protects edits and displays immutable snapshot through revision wor
   const document = page.getByRole('article', { name: 'Published document revision 1' });
   await expect(document.getByText('Owned', { exact: true })).toBeVisible();
   await expect(document.getByText('Client controlled', { exact: true })).toHaveCount(0);
+  const popupPromise = page.waitForEvent('popup');
+  await document.getByRole('button', { name: 'Print / Save as PDF' }).click();
+  const printable = await popupPromise;
+  await expect(printable.locator('article')).toHaveCount(1);
+  await expect(printable.getByText('Owned', { exact: true })).toBeVisible();
+  await expect(printable.getByRole('button')).toHaveCount(0);
+  const pdfPath = test.info().outputPath('published-revision.pdf');
+  await printable.pdf({path:pdfPath,preferCSSPageSize:true});
+  execFileSync('pdftotext', [pdfPath, pdfPath+'.txt']);
+  const pages = readFileSync(pdfPath+'.txt','utf8').split('\f');
+  if (!pages.at(-1)?.trim()) pages.pop();
+  expect(pages.length).toBeGreaterThan(0);
+  for (const text of pages) expect(text.trim().length).toBeGreaterThan(20);
+  expect(pages.join(' ')).toContain('Synthetic project');
+  await printable.close();
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(drawer).toHaveCSS('width', '374px');
 });

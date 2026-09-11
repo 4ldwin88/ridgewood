@@ -13,7 +13,7 @@ import { WorkspaceDrawer } from '../../modules/business/WorkspaceDrawer';
 type Page = 'Home' | 'Business' | 'Projects' | 'Network' | 'More';
 const pages: Page[] = ['Home', 'Business', 'Projects', 'Network', 'More'];
 const navIcons: Record<Page, string> = {Home:'M3 10 12 3l9 7v10H3V10Zm6 10v-7h6v7',Projects:'M3 7h18v14H3V7Zm4 0V3h10v4M3 12h18',Business:'M4 20V10h4v10M10 20V4h4v16M16 20v-7h4v7',Network:'M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21v-3a6 6 0 0 1 12 0v3m0-8a6 6 0 0 1 8 5v3',More:'M4 5h16M4 12h16M4 19h16'};
-export const APP_VERSION = 'v0.29';
+export const APP_VERSION = 'v0.30';
 const feedbackEnabled = import.meta.env.VITE_DEV_FEEDBACK_ENABLED !== 'false';
 
 function ProfileIcon() {

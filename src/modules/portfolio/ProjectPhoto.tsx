@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import type { ProjectState } from '../../domain/project-state/projectState';
 import { supabase } from '../../infrastructure/auth/supabaseClient';
 
 const bucket='ridgewood-project-photos';
-export function ProjectPhoto({project,editable=false}:{project:ProjectState;editable?:boolean}) {
+export function ProjectPhoto({project,editable=false,menuActions}:{project:ProjectState;editable?:boolean;menuActions?:ReactNode}) {
   const [url,setUrl]=useState<string>(),[busy,setBusy]=useState(false),[error,setError]=useState<string>();
   const [revision,setRevision]=useState(0);
   useEffect(()=>{let active=true;let objectUrl:string|undefined;
@@ -29,7 +29,7 @@ export function ProjectPhoto({project,editable=false}:{project:ProjectState;edit
   }
   return <div className={`project-photo${editable?' is-editable':''}`}>
     {url?<img src={url} alt={`${project.name} project photo`}/>:<div className="photo-placeholder" aria-label="No project photo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M4 21V4h10v17M14 10h6v11M2 21h20M7 7h4M7 11h4M7 15h4"/></svg></div>}
-    {editable?<label className="photo-upload">{busy?'Uploading…':url?'Change photo':'Add photo'}<input aria-label={`Upload photo for ${project.name}`} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}}/></label>:null}
+    {menuActions ? <details className="row-menu photo-menu"><summary aria-label={`Manage ${project.name}`}>Manage <span aria-hidden="true">⌄</span></summary><div className="row-menu__items">{editable?<label className="photo-upload">{busy?'Uploading…':url?'Change photo':'Add photo'}<input aria-label={`Upload photo for ${project.name}`} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}}/></label>:null}{menuActions}</div></details> : editable?<label className="photo-upload">{busy?'Uploading…':url?'Change photo':'Add photo'}<input aria-label={`Upload photo for ${project.name}`} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}}/></label>:null}
     {error?<small role="alert">{error}</small>:null}
   </div>;
 }
