@@ -1,3 +1,4 @@
+import { useDrawerSavedClose } from './WorkspaceDrawer';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createProjectStateDocumentDraft,
@@ -19,6 +20,7 @@ export type GovernedDocumentDefinition = {
 const message = (error: unknown) => error instanceof Error ? error.message : 'The governed document command failed.';
 
 export function useGovernedProjectStateDocument(projectStateId: string, definition: GovernedDocumentDefinition) {
+  const finish=useDrawerSavedClose();
   const [record, setRecord] = useState<ProjectStateDocumentRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export function useGovernedProjectStateDocument(projectStateId: string, definiti
 
   async function save(data: Record<string, unknown>) {
     setBusy('save'); setError(null); setFeedback(null);
-    try { await persist(data); await reload(); setFeedback('Saved'); }
+    try { await persist(data); await reload(); setFeedback('Saved'); await finish?.(); }
     catch (e) { setError(`Draft could not be saved: ${message(e)}`); throw e; }
     finally { setBusy(null); }
   }
@@ -65,7 +67,7 @@ export function useGovernedProjectStateDocument(projectStateId: string, definiti
       const revisionId = await persist(data);
       await publishProjectStateDocumentRevision(revisionId, changeNote);
       await reload();
-      setFeedback('Published');
+      setFeedback('Published'); await finish?.();
     } catch (e) { setError(`Publish failed: ${message(e)}`); throw e; }
     finally { setBusy(null); }
   }
