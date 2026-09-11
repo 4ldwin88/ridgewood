@@ -242,7 +242,7 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'verify-result']);
   await page.getByRole('dialog').getByRole('button', { name: /^Close / }).click();
   await page.getByRole('button', { name: '← Projects', exact: true }).click();
-  await page.getByText('Manage', { exact: true }).click();
+  await page.getByLabel(`Manage ${name}`, { exact: true }).click();
   await page.getByRole('button', { name: 'Archive project', exact: true }).click();
   await expect(page.getByText(name, { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Archived projects', exact: true }).click();

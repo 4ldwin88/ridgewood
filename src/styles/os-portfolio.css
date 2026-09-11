@@ -190,3 +190,4 @@
 
 .app-frame .photo-menu>summary{color:var(--ink)}.app-frame .organization-controls>button{color:var(--muted)}
 .app-frame[data-theme=dark] .stage-tool-launcher{background:var(--surface-raised);border-color:var(--line);color:var(--ink)}
+.app-frame[data-theme=dark] legend{color:var(--ink)}
