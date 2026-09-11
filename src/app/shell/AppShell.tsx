@@ -1,4 +1,5 @@
 import ridgewoodWordmark from '../../../assets/ridgewood-wordmark-primary-light.png';
+import './profile-menu.css';
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../infrastructure/auth/supabaseClient';
