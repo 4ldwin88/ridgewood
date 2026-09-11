@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import ridgewoodWordmark from '../../assets/ridgewood-wordmark-primary-light.png';
 import './public.css';
 import './public-overrides.css';
 
@@ -28,7 +29,7 @@ export function PublicHome() {
       <header className="public-header">
         <div className="public-header__top public-container">
           <a className="public-brand" href="#top" aria-label="Ridgewood home">
-            <img src={`${base}assets/ridgewood-wordmark-primary-light.png`} alt="Ridgewood — Construction • Development" />
+            <img src={ridgewoodWordmark} alt="Ridgewood — Construction • Development" />
           </a>
           <a className="public-portal-icon" href={portalHref} aria-label="Open Ridgewood OS Portal"><PortalIcon /></a>
         </div>
@@ -98,7 +99,7 @@ export function PublicHome() {
         </section>
       </main>
 
-      <footer className="public-footer"><div className="public-container public-footer__grid"><img className="public-footer__brand" src={`${base}assets/ridgewood-wordmark-primary-light.png`} alt="Ridgewood — Construction • Development"/><p>© {new Date().getFullYear()} Ridgewood.</p></div></footer>
+      <footer className="public-footer"><div className="public-container public-footer__grid"><img className="public-footer__brand" src={ridgewoodWordmark} alt="Ridgewood — Construction • Development"/><p>© {new Date().getFullYear()} Ridgewood.</p></div></footer>
     </div>
   );
 }
