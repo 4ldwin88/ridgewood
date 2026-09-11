@@ -13,7 +13,7 @@ import { WorkspaceDrawer } from '../../modules/business/WorkspaceDrawer';
 type Page = 'Home' | 'Business' | 'Projects' | 'Network' | 'More';
 const pages: Page[] = ['Home', 'Business', 'Projects', 'Network', 'More'];
 const navIcons: Record<Page, string> = {Home:'M3 10 12 3l9 7v10H3V10Zm6 10v-7h6v7',Projects:'M3 7h18v14H3V7Zm4 0V3h10v4M3 12h18',Business:'M4 20V10h4v10M10 20V4h4v16M16 20v-7h4v7',Network:'M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21v-3a6 6 0 0 1 12 0v3m0-8a6 6 0 0 1 8 5v3',More:'M4 5h16M4 12h16M4 19h16'};
-export const APP_VERSION = 'v0.27';
+export const APP_VERSION = 'v0.28';
 const feedbackEnabled = import.meta.env.VITE_DEV_FEEDBACK_ENABLED !== 'false';
 
 function ProfileIcon() {
@@ -38,12 +38,13 @@ export function AppShell({ session }: { session: Session }) {
     <header className="topbar">
       <img className="topbar-wordmark" src={ridgewoodWordmark} alt="Ridgewood — Construction • Development"/>
       <div className="top-actions">
-        <span className="version">{APP_VERSION}</span><button type="button" className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} onClick={() => setTheme(v => v === 'light' ? 'dark' : 'light')}><span aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span></button>
-        {feedbackEnabled ? <DevNotesButton observability={developmentObservability} pagePath={pagePath} pageTitle={page}/> : null}
+        <span className="version">{APP_VERSION}</span>
+
         <button className="profile-menu-button" type="button" aria-label="Open profile menu" aria-expanded={profileOpen} onClick={() => setProfileOpen(true)}><ProfileIcon /></button>
       </div>
     </header>
 
+        {feedbackEnabled ? <DevNotesButton observability={developmentObservability} pagePath={pagePath} pageTitle={page}/> : null}
     <a className="skip-link" href="#main-workspace">Skip to workspace</a>
     <nav className="primary-nav" aria-label="Primary"><div className="nav-workspace"><span className="workspace-monogram" aria-hidden="true">R</span><span>Ridgewood<small>Company workspace</small></span></div><p className="nav-section-label">Workspace</p>{pages.map((item) => <button key={item} className={page === item ? 'active' : ''} aria-current={page === item ? 'page' : undefined} onClick={() => { setSelectedProject(undefined); setPage(item); }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={navIcons[item]}/></svg><span>{item}</span></button>)}<div className="nav-footnote"><span>Internal workspace</span><small>Construction • Development</small></div></nav>
 
@@ -52,7 +53,7 @@ export function AppShell({ session }: { session: Session }) {
 
     {profileOpen ? <WorkspaceDrawer title="Profile and app menu" contextKey="profile" onClose={() => setProfileOpen(false)} closeLabel="Close profile menu">
         <div className="profile-drawer__header"><div><p className="eyebrow">Account</p><h2>{session.user.email}</h2></div></div>
-        <nav className="profile-drawer__nav" aria-label="Profile menu">
+        <nav className="profile-drawer__nav" aria-label="Profile menu"><button type="button" onClick={()=>setTheme(v=>v==='light'?'dark':'light')}>{theme==='light'?'Switch to dark mode':'Switch to light mode'}</button>
           <a href={base} onClick={() => setProfileOpen(false)}>Return to main page</a>
           <button type="button" disabled title="Profile editing is not available in this demo">Edit profile</button>
           <button type="button" disabled title="Settings are not available in this demo">Settings</button>

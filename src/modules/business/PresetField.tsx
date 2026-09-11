@@ -1,3 +1,4 @@
+import { AutoTextarea } from './AutoTextarea';
 import { useId, useState } from 'react';
 
 /** Presets persist their actual answer, preserving existing published document contracts. */
@@ -7,12 +8,12 @@ export function PresetField({ label, value, onChange, options, name, required=fa
   const id=useId();
   const [custom,setCustom]=useState(Boolean(value&&!options.includes(value)));
   const isCustom=custom||Boolean(value&&!options.includes(value));
-  return <div className="preset-field"><span id={id} className="preset-label">{label} <small>{required?'Required':'Optional'}</small></span>
+  return <div className="preset-field"><span id={id} className="preset-label">{label} <small className={required?'required-field':'optional-field'}>{required?'(Required)':'(Optional)'}</small></span>
     <div className="preset-options" role="group" aria-labelledby={id}>
       {options.map(option=><button key={option} type="button" disabled={disabled} aria-pressed={!isCustom&&value===option} onClick={()=>{setCustom(false);onChange(option);}}>{option}</button>)}
       {allowCustom?<button type="button" disabled={disabled} aria-pressed={isCustom} onClick={()=>{setCustom(true);onChange(options.includes(value)?'':value);}}>Custom</button>:null}
     </div>
-    {isCustom ? <label className="custom-answer"><span>Custom {label.toLowerCase()}</span>{multiline?<textarea name={name} rows={3} value={value} required={required} disabled={disabled} onChange={e=>onChange(e.target.value)}/>:<input name={name} value={value} required={required} disabled={disabled} onChange={e=>onChange(e.target.value)}/>}</label>:<input type="hidden" name={name} value={value}/>}
+    {isCustom ? <label className="custom-answer"><span>Custom {label.toLowerCase()}</span>{multiline?<AutoTextarea name={name} rows={3} value={value} required={required} disabled={disabled} onChange={e=>onChange(e.target.value)}/>:<input name={name} value={value} required={required} disabled={disabled} onChange={e=>onChange(e.target.value)}/>}</label>:<input type="hidden" name={name} value={value}/>}
   </div>;
 }
 

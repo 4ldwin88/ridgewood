@@ -3,6 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 type WorkState = { dirty: boolean; busy: boolean };
 type DrawerEvent = 'opened' | 'closed' | 'close_blocked' | 'discard_confirmed';
 const WorkContext = createContext<((id: string, state: WorkState | null) => void) | null>(null);
+const SavedCloseContext=createContext<(()=>Promise<void>)|null>(null);
+export function useDrawerSavedClose(){return useContext(SavedCloseContext);}
 const CloseContext = createContext<(() => void) | null>(null);
 export function useDrawerClose() { return useContext(CloseContext); }
 const positions = new Map<string, number>();
@@ -36,6 +38,8 @@ export function WorkspaceDrawer({ title, contextKey, onClose, onEvent, children,
     work.current = next;
     setState(next);
   }, []);
+
+  const savedClose=useCallback(async()=>{await new Promise(resolve=>setTimeout(resolve,250));callbacks.current.onClose();},[]);
 
   function close() {
     if (work.current.busy || callbacks.current.busy) { callbacks.current.onEvent?.('close_blocked'); return; }
@@ -114,7 +118,8 @@ export function WorkspaceDrawer({ title, contextKey, onClose, onEvent, children,
         work.current = next; setState(next);
       }
     }}>
-      <CloseContext.Provider value={close}><WorkContext.Provider value={reportWork}>{children}</WorkContext.Provider></CloseContext.Provider>
+      <CloseContext.Provider value={close}><SavedCloseContext.Provider value={savedClose}><WorkContext.Provider value={reportWork}>{children}</WorkContext.Provider></SavedCloseContext.Provider></CloseContext.Provider>
     </div>
+    {import.meta.env.VITE_DEV_FEEDBACK_ENABLED!=='false'&&title!=='Development note'?<button className="dev-notes-trigger dev-notes-floating" type="button" aria-label="Open development notes" onClick={()=>window.dispatchEvent(new CustomEvent('ridgewood:dev-note',{detail:title}))}>+</button>:null}
   </dialog>;
 }
