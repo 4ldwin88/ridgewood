@@ -162,3 +162,32 @@
  .app-frame .project-cards td:first-child>.record-link { display:block; white-space:normal; overflow-wrap:anywhere; text-align:left; }
  .app-frame .projects-table.project-cards td:first-child { height:164px; }
 }
+
+/* Register controls: photo and management stay together at every viewport. */
+.project-register{display:grid;gap:12px;padding:12px}
+.project-register-card{display:grid;grid-template-columns:80px minmax(0,1fr);gap:12px 16px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.app-frame .project-register-card>.project-photo{position:static;width:80px;height:auto;min-width:80px;overflow:visible;align-self:start}
+.app-frame .project-register-card .project-photo>img,.app-frame .project-register-card .photo-placeholder{width:80px;height:80px;object-fit:cover;border-radius:8px}
+.project-register-card__info{min-width:0}.project-register-card__info .record-link{display:block;white-space:normal;text-align:left;overflow-wrap:anywhere}.project-register-card__info .record-summary{display:block;margin-top:5px}
+.project-register-card__meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:12px;font-size:12px}.project-register-card__meta strong{margin-left:5px}
+.photo-menu{margin-top:6px}.photo-menu>summary{font-size:11px;padding:5px 2px;text-align:center}.photo-menu .row-menu__items{left:0;right:auto;min-width:175px;z-index:30}.photo-menu .photo-upload{position:relative;display:block;width:100%;padding:10px;text-align:left;font-size:13px}
+.card-stage-progress{grid-column:1/-1;margin-top:4px}.card-stage-progress>div:first-child{display:flex;justify-content:space-between;gap:10px;font-size:12px}.card-stage-progress small{white-space:nowrap}.card-stage-progress__track{display:flex;gap:3px;height:5px;margin-top:7px}.card-stage-progress__track span{flex:1;background:var(--line);border-radius:3px}.card-stage-progress__track .reached{background:#b5121b}
+.project-detail-heading{display:flex;gap:20px;align-items:center;margin:20px 0}.project-detail-heading h2{margin:0}.authorization-handoff{margin-top:24px}
+.pipeline-split{display:flex;overflow:hidden;height:16px;border-radius:8px;background:var(--line);margin:18px 0}.pipeline-split>span{height:100%}.split-color-0{background:#b5121b}.split-color-1{background:#ca7d1e}.split-color-2{background:#3e8195}.split-color-3{background:#49834a}.pipeline-legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.pipeline-legend>div{display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:12px}.pipeline-legend i{width:8px;height:8px;border-radius:50%}.pipeline-legend strong{flex-basis:100%;padding-left:13px}.pipeline-legend small{font-weight:400}.summary-placeholder{margin:18px 0 0;border-top:1px solid var(--line);padding-top:12px;font-size:12px}.summary-placeholder span{display:block;margin-top:4px}
+.app-frame .app-stage-workspace{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.app-frame .app-stage-workspace>.stage-section{display:contents}
+.app-frame .app-stage-workspace .stage-header{grid-column:var(--stage-row);grid-row:1;min-height:66px;padding:10px 3px;display:flex;justify-content:center;text-align:center;width:100%;margin:0}
+.app-frame .app-stage-workspace .stage-header strong{font-size:12px;white-space:normal}.app-frame .app-stage-workspace .stage-header small{font-size:10px}.app-frame .app-stage-workspace .stage-number,.app-frame .app-stage-workspace .stage-nav-arrow{display:none}
+.app-frame .app-stage-workspace .stage-content{grid-column:1/-1;grid-row:2;min-width:0;width:auto}
+/* Requirement badges remain alongside the title, never below the field. */
+.app-frame :is(.required-field,.required-label,.required-marker,.optional-field,.optional-marker,.field-requirement){position:static!important;display:inline!important;float:none!important;margin:0 0 0 5px!important;font-size:11px!important;font-weight:500!important;white-space:nowrap;vertical-align:baseline}
+.app-frame :is(.required-field,.required-label,.required-marker,.field-requirement.required){color:#b5121b!important}
+.app-frame :is(.optional-field,.optional-marker,.field-requirement:not(.required)){color:#737373!important}
+.app-frame[data-theme="dark"] :is(.required-field,.required-label,.required-marker,.field-requirement.required){color:#ff8c98!important}
+.app-frame[data-theme="dark"] :is(.optional-field,.optional-marker,.field-requirement:not(.required)){color:#aaa!important}
+@media(max-width:480px){.project-register{padding:6px}.project-register-card{padding:12px;gap:12px}.pipeline-legend{gap:6px}.pipeline-legend>div{font-size:10px}.app-frame .app-stage-workspace{gap:4px}.app-frame .app-stage-workspace .stage-header strong{font-size:11px}}
+.organization-controls{text-align:right}.organization-controls>button{font-size:12px}.organization-list>div{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding:12px 0}.organization-list small{display:block;margin-top:4px;color:#737373}
+
+.app-frame .photo-menu>summary{color:var(--ink)}.app-frame .organization-controls>button{color:var(--muted)}
+.app-frame[data-theme=dark] .stage-tool-launcher{background:var(--surface-raised);border-color:var(--line);color:var(--ink)}
+.app-frame[data-theme=dark] legend{color:var(--ink)}
