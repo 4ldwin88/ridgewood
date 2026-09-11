@@ -18,7 +18,7 @@ with psycopg.connect(DB) as db:
         changed = db.execute("update public.user_permission_overrides set effect=%s where permission_key='project.authorize' and user_id=(select id from auth.users where email=%s)", (effect, EMAIL))
         assert changed.rowcount == 1, 'Expected one synthetic permission override'
     elif command == 'verify-result':
-        project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Human acceptance rehearsal'", (EMAIL,)).fetchall()
+        project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='QA rehearsal · v0.25'", (EMAIL,)).fetchall()
         assert len(project) == 1 and project[0][1] == 'project_authorization_setup', project
         assert db.execute('select count(*) from public.authorization_records where project_state_id=%s', (project[0][0],)).fetchone()[0] == 1
         assert db.execute("select count(*) from public.document_revisions r join public.document_records d on d.id=r.document_record_id where d.project_state_id=%s and r.state='published' and r.published_source_snapshot is not null", (project[0][0],)).fetchone()[0] == 7

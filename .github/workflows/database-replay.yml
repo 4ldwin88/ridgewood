@@ -62,6 +62,13 @@ jobs:
           python scripts/local-acceptance-fixtures.py setup
           supabase functions serve project-authorization > /tmp/ridgewood-edge.log 2>&1 &
           npx playwright test --config playwright.acceptance.config.ts
+      - name: Preserve authenticated visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v025-authenticated-visual-review
+          path: test-results/
+          retention-days: 30
       - name: Stop isolated containers
         if: always()
         run: supabase stop --no-backup
