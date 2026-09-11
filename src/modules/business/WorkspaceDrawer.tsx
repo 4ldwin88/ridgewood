@@ -1,8 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, useId, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, useId, type PointerEvent, type ReactNode } from 'react';
 
 type WorkState = { dirty: boolean; busy: boolean };
 type DrawerEvent = 'opened' | 'closed' | 'close_blocked' | 'discard_confirmed';
 const WorkContext = createContext<((id: string, state: WorkState | null) => void) | null>(null);
+const CloseContext = createContext<(() => void) | null>(null);
+export function useDrawerClose() { return useContext(CloseContext); }
 const positions = new Map<string, number>();
 
 export function useDrawerWorkState(dirty: boolean, busy: boolean) {
@@ -22,7 +24,9 @@ export function WorkspaceDrawer({ title, contextKey, onClose, onEvent, children,
   const work = useRef<WorkState>({ dirty: false, busy: false });
   const [state, setState] = useState<WorkState>(work.current);
   const [expanded, setExpanded] = useState(false);
-  const gesture = useRef<{ x: number; y: number } | null>(null);
+  const gesture = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const suppressClick = useRef(false);
   useLayoutEffect(() => { callbacks.current = { onClose, onEvent, busy }; }, [onClose, onEvent, busy]);
   const workStates = useRef(new Map<string, WorkState>());
   const reportWork = useCallback((id: string, value: WorkState | null) => {
@@ -67,32 +71,50 @@ export function WorkspaceDrawer({ title, contextKey, onClose, onEvent, children,
     };
   }, [contextKey]);
 
-  return <dialog ref={dialog} className={`workspace-drawer${expanded ? ' workspace-drawer--expanded' : ''}`}
+  function startGesture(event: PointerEvent<HTMLElement>) {
+    if (!event.isPrimary || event.button !== 0 || work.current.busy || callbacks.current.busy) return;
+    if ((event.target as HTMLElement).closest('button') && !event.currentTarget.classList.contains('workspace-drawer__edge')) return;
+    gesture.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  function moveGesture(event: PointerEvent<HTMLElement>) {
+    const start = gesture.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    const dx = event.clientX-start.x, dy = Math.abs(event.clientY-start.y);
+    if (dy > 30 && dy > Math.abs(dx)) { gesture.current=null; setDragX(0); return; }
+    setDragX(Math.max(0,dx));
+  }
+  function endGesture(event: PointerEvent<HTMLElement>) {
+    const start = gesture.current;
+    gesture.current=null; setDragX(0);
+    if (!start || start.pointerId !== event.pointerId) return;
+    const dx=event.clientX-start.x, dy=Math.abs(event.clientY-start.y);
+    suppressClick.current=Math.abs(dx)>10||dy>10;
+    if (dx>=64 && dx>dy*1.5) close();
+  }
+  function cancelGesture(){ gesture.current=null; setDragX(0); }
+  const gestureHandlers={onPointerDown:startGesture,onPointerMove:moveGesture,onPointerUp:endGesture,onPointerCancel:cancelGesture,onLostPointerCapture:cancelGesture};
+
+  return <dialog ref={dialog} className={`workspace-drawer${expanded ? ' workspace-drawer--expanded' : ''}${dragX ? ' is-dragging' : ''}`}
+    style={{transform:dragX?`translateX(${dragX}px)`:undefined}}
     aria-label={title} aria-busy={state.busy || busy} onCancel={event => { event.preventDefault(); close(); }}>
-    <header className="workspace-drawer__header">
-      <div><p className="eyebrow">Project workspace</p><h2>{title}</h2></div>
+    <header className="workspace-drawer__header" {...gestureHandlers}>
+      <div><p className="eyebrow">Project workspace</p><h2>{title}</h2><small className="drawer-state" role="status">{state.busy||busy?'Saving…':state.dirty?'Unsaved changes':'Swipe header right to close'}</small></div>
       <div className="form-actions">
-        <button type="button" onClick={() => setExpanded(value => !value)} aria-pressed={expanded}>{expanded ? 'Restore width' : 'Expand'}</button>
-        <button type="button" onClick={close} disabled={state.busy || busy} aria-label={closeLabel}>Close</button>
+        <button className="drawer-expand" type="button" onClick={() => setExpanded(value => !value)} aria-pressed={expanded}>{expanded ? 'Restore width' : 'Expand'}</button>
+        <button type="button" onClick={close} disabled={state.busy || busy} aria-label={closeLabel}>Close <span aria-hidden="true">×</span></button>
       </div>
     </header>
     <button type="button" className="workspace-drawer__edge" aria-label="Swipe right to close form" disabled={state.busy || busy}
-      onClick={event => { if (event.detail === 0) close(); }}
-      onPointerDown={event => { gesture.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); }}
-      onPointerCancel={() => { gesture.current = null; }}
-      onPointerUp={event => {
-        const start = gesture.current; gesture.current = null;
-        if (start && event.clientX - start.x > 70 && Math.abs(event.clientY - start.y) < 45) close();
-      }}>›</button>
+      {...gestureHandlers}
+      onClick={() => { if (!suppressClick.current) close(); suppressClick.current=false; }}><span aria-hidden="true">›</span></button>
     <div className="workspace-drawer__body" ref={body} onInputCapture={() => {
-      // Forms with explicit work-state reporting own their saved baseline.
-      // Other input surfaces conservatively protect typed work from dismissal.
       if (workStates.current.size === 0) {
         const next = { ...work.current, dirty: true };
         work.current = next; setState(next);
       }
     }}>
-      <WorkContext.Provider value={reportWork}>{children}</WorkContext.Provider>
+      <CloseContext.Provider value={close}><WorkContext.Provider value={reportWork}>{children}</WorkContext.Provider></CloseContext.Provider>
     </div>
   </dialog>;
 }

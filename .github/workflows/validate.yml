@@ -69,6 +69,12 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Preserve gesture failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drawer-gesture-failure
+          path: test-results/
       - name: Verify production Pages build
         env:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_lrUiFE9I4ryDIfXVlgujSg_yVeFBLRX
