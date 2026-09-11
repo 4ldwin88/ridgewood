@@ -33,7 +33,7 @@ try {
     assert.ok(await page.getByText('Construction • Development', { exact: true }).first().isVisible());
     const publicLogo = page.getByRole('img', { name: 'Ridgewood — Construction and Development', exact: true }).first();
     assert.ok(await publicLogo.evaluate(image => image.complete && image.naturalWidth > 0), 'Public logo must render');
-    assert.match(new URL(await publicLogo.getAttribute('src'), url).pathname, /^\/ridgewood\/assets\/ridgewood-horizontal-light-[\w-]+\.svg$/);
+    assert.equal(new URL(await publicLogo.getAttribute('src'), url).pathname, '/ridgewood/assets/ridgewood-horizontal-light.svg');
     assert.ok(await page.getByRole('link', { name: 'Portal', exact: true }).first().isVisible());
     assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth), 'Public viewport overflows horizontally');
 
