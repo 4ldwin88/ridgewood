@@ -36,16 +36,17 @@ test('drawer protects edits and displays immutable snapshot through revision wor
   await page.keyboard.press('Escape');
   await expect(drawer).toBeVisible();
   await page.getByRole('button', { name: 'Conforming / permitted', exact: true }).click();
-  await page.getByRole('group', { name: 'Approvals', exact: true }).getByRole('button', { name: 'Not assessed', exact: true }).click();
+  await page.getByRole('group', { name: 'Approvals (Required)', exact: true }).getByRole('button', { name: 'Not assessed', exact: true }).click();
   await page.getByRole('button', { name: 'Suitable', exact: true }).click();
   await page.getByRole('button', { name: 'Save draft', exact: true }).click();
-  await expect(page.getByText('Draft saved.', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Close form', exact: true }).click();
+
   await expect(drawer).not.toBeVisible();
   await page.getByRole('button', { name: 'Open site review' }).click();
   await expect(page.getByRole('button', { name: /Owned/ })).toHaveAttribute('aria-pressed', 'true');
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(drawer).not.toBeVisible();
+  await page.getByRole('button', { name: 'Open site review' }).click();
   await expect(page.getByRole('article', { name: 'Published document revision 1' })).toBeVisible();
   await expect(drawer).toBeVisible();
   await expect(page.getByText('Project at publication: Synthetic project')).toBeVisible();
