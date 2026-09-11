@@ -6,10 +6,13 @@ import type { ProjectState } from '../../../src/domain/project-state/projectStat
 import '../../../src/styles/global.css';
 import '../../../src/styles.css';
 import '../../../src/styles/os-app.css';
+import '../../../src/styles/os-portfolio.css';
 const originalFetch=window.fetch.bind(window);
 window.fetch=async(input,init)=>{
  const url=new URL(input instanceof Request?input.url:String(input),location.href);
  if(url.origin===location.origin)return originalFetch(input,init);
+ if(url.pathname.includes('/storage/v1/object/list/'))return new Response('[]',{headers:{'content-type':'application/json'}});
+ if(url.pathname.includes('/storage/v1/'))return new Response(JSON.stringify({statusCode:'404',error:'not_found',message:'No photo in isolated fixture'}),{status:404,headers:{'content-type':'application/json'}});
  const method=init?.method??(input instanceof Request?input.method:'GET');
  if(method==='GET'||url.pathname.endsWith('/ensure_project_state_predevelopment_domains'))return new Response('[]',{headers:{'content-type':'application/json'}});
  throw new Error('Isolated visual fixture: writes are disabled.');
@@ -24,6 +27,8 @@ const items:ProjectState[]=[
  {id:'visual-2',name:'Foundry Studios · Synthetic',location:'Example commercial interior',sector:'Commercial',priority:'medium',stage:'opportunity',status:'active',commercialStage:'opportunity',createdAt:'2026-09-11T10:00:00Z',updatedAt:'2026-09-11T12:00:00Z'},
  {id:'visual-3',name:'Maple Court · Synthetic',location:'Example residential development',sector:'Residential',priority:'medium',stage:'qualification',status:'active',commercialStage:'qualification',probability:40,createdAt:'2026-09-11T10:00:00Z',updatedAt:'2026-09-11T12:00:00Z'},
 ];
+repository.listPortfolio=async()=>items;
+repository.get=async(id)=>items.find(p=>p.id===id)!;
 repository.list=async(view)=>view&&view!=='pipeline'?[]:items;
 repository.organizations=async()=>[];
 repository.workspaceMembers=async()=>[{userId:user.id,label:'Test owner'}];
