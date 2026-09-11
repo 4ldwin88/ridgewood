@@ -55,6 +55,7 @@ export function StageToolLauncher({
       <span className={`status-pill stage-tool-launcher__status status-${state}`}>
         {workStateLabel[state]}
       </span>
+      <span className="tool-open-arrow" aria-hidden="true">↗</span>
     </button>
   );
 }

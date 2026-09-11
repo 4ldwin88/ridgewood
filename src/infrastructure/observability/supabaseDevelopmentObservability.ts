@@ -2,12 +2,13 @@ import { APP_VERSION } from '../../app/shell/AppShell';
 import type { DevelopmentObservability, DevelopmentNoteInput, DevelopmentTelemetryEvent } from '../../application/ports/developmentObservability';
 import { supabase } from '../auth/supabaseClient';
 
-const sessionId = crypto.randomUUID();
+// Optional telemetry must not prevent startup in environments without this API.
+const sessionId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : null;
 async function currentUserId(): Promise<string | null> { const { data } = await supabase.auth.getUser(); return data.user?.id ?? null; }
 
 export const developmentObservability: DevelopmentObservability = {
   async capture(event: DevelopmentTelemetryEvent) {
-    if (import.meta.env.VITE_DEV_TELEMETRY_ENABLED === 'false') return;
+    if (import.meta.env.VITE_DEV_TELEMETRY_ENABLED === 'false' || !sessionId) return;
     try {
       const userId = await currentUserId();
       if (!userId) return;
