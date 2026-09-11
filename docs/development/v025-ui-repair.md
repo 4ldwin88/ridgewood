@@ -38,3 +38,14 @@ No new business readiness rule or source field is invented. Home/Network/More re
 ## Release and data boundaries
 
 The release branch remains unchanged until candidate gates and visual review complete. Follow `demo-release.md`; preserve the previous release and verify the exact deployed commit. Existing records must be retained; archive synthetic hosted verification records individually. No database reset, hosted migration, Auth/Edge change, EL8 work, or deployment-protection weakening is included.
+
+## Review checkpoint
+
+Candidate `1bae69c0d0c31f16a3bfc8795532e5dc10d2d5a9` passed both CI workflows:
+
+- Frontend, production preview and touch regression: https://github.com/4ldwin88/ridgewood/actions/runs/34567183954
+- Database replay and authenticated lifecycle: https://github.com/4ldwin88/ridgewood/actions/runs/34567183898
+
+Agent reviewed the 92-image desktop/mobile contact sheets, with full-resolution inspection of key workflow states. The review found undersized mobile button groups, a stretched authorization confirmation, a wrapped Close label and a misleading initial View only label. These are repaired in the next candidate. An earlier screenshot helper failed because it tried to scroll the Qualification drawer during its transition; explicit state waits fixed it, without weakening product assertions. Snapshot capture now waits for record-loading states too.
+
+Hosted v0.24 baseline rehearsal (same backend, before frontend repair): synthetic project `b467700e-5d8c-4f1b-8ed4-9b80abfd75d0`, named `QA v0.25 · interface rehearsal`. Verified action save stays open, completing action refreshes readiness with no reload, qualification advancement, site draft save, reload and retained selection. The browser became unavailable at the native publication confirmation; success was not assumed. That hosted rehearsal is incomplete and the synthetic record needs archiving when browser access resumes. No existing user record was modified.

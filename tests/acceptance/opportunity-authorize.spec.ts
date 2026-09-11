@@ -3,10 +3,11 @@ import { execFileSync } from 'node:child_process';
 
 const name = 'QA rehearsal · v0.25';
 async function capture(page:Page, key:string){
- await expect(page.getByText(/^Loading/)).toHaveCount(0);
+ await expect(page.getByText(/(^Loading|record loading)/)).toHaveCount(0);
  await expect(page.locator('.workspace-drawer[aria-busy="true"]')).toHaveCount(0);
  for(const [device,width,height] of [['desktop',1440,1000],['mobile',390,844]] as const){
   await page.setViewportSize({width,height});
+  await page.evaluate(()=>window.scrollTo(0,0));
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
   const body=page.locator('.workspace-drawer__body');
   if(await body.count()) await body.evaluate(el=>{el.scrollTop=0});

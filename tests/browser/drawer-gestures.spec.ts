@@ -60,3 +60,16 @@ test('edge and header swipes close; short, reverse and vertical gestures do not;
   await swipe(page, '.workspace-drawer__header', 180);
   await expect(drawer).not.toBeVisible();
 });
+
+
+test('a failed domain action save retains its pending title', async ({page})=>{
+ await page.route('**/*.supabase.co/**',route=>route.request().method()==='POST'?route.fulfill({status:500,json:{message:'Synthetic save rejected'}}):route.fulfill({status:200,json:[]}));
+ await page.goto('/tests/fixtures/forms/index.html');
+ await page.getByRole('button',{name:'Open site review'}).click();
+ await page.getByRole('button',{name:'Actions (0)',exact:true}).click();
+ const child=page.getByRole('dialog',{name:'3.1 Development & Site · Actions',exact:true});
+ await child.getByLabel(/Action/).fill('Keep this pending action');
+ await child.getByRole('button',{name:'Add action',exact:true}).click();
+ await expect(child.getByText('Synthetic save rejected',{exact:true})).toBeVisible();
+ await expect(child.getByLabel(/Action/)).toHaveValue('Keep this pending action');
+});
