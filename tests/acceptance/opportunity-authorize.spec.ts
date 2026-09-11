@@ -3,12 +3,14 @@ import { execFileSync } from 'node:child_process';
 
 const name = 'QA rehearsal · v0.25';
 async function capture(page:Page, key:string){
+ await expect(page.getByText(/^Loading/)).toHaveCount(0);
+ await expect(page.locator('.workspace-drawer[aria-busy="true"]')).toHaveCount(0);
  for(const [device,width,height] of [['desktop',1440,1000],['mobile',390,844]] as const){
   await page.setViewportSize({width,height});
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
   const body=page.locator('.workspace-drawer__body');
   if(await body.count()) await body.evaluate(el=>{el.scrollTop=0});
-  await page.screenshot({path:`test-results/visual/${key}-${device}.png`,fullPage:true});
+  await page.screenshot({path:`test-results/visual/${key}-${device}.png`,fullPage:false});
   if(await body.count()){
    const extent=await body.evaluate(el=>el.scrollHeight-el.clientHeight);
    if(extent>200){
@@ -115,6 +117,20 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await expect(risks.getByRole('button', { name: /^Close / })).toBeEnabled();
   await risks.getByRole('button', { name: /^Close / }).click();
   await page.setViewportSize({ width: 1280, height: 900 });
+  await page.getByRole('button',{name:'Edit Opportunity',exact:true}).click();
+  const basics=page.getByRole('dialog');
+  await basics.getByLabel('Summary / opportunity thesis').fill('Revised synthetic opportunity basis');
+  await basics.getByRole('button',{name:'Save',exact:true}).click();
+  await expect(page.getByText('Opportunity saved.',{exact:true})).toBeVisible();
+  await expect(basics).toBeVisible();
+  await capture(page,'05b-saved-opportunity');
+  await basics.getByRole('button',{name:/^Close Edit opportunity/}).click();
+  await expect(basics).not.toBeVisible();
+  for(const [tool,key] of [[/^1.3 Decisions/,'decisions'],[/^1.4 Evidence/,'evidence'],[/^1.5 Attention/,'attention']] as const){
+   await page.getByRole('button',{name:tool}).click();
+   await capture(page,`05c-${key}`);
+   await page.getByRole('dialog').getByRole('button',{name:/^Close /}).click();
+  }
   await page.getByRole('button', { name: 'Advance to qualification' }).click();
   await page.getByRole('button', { name: /^Qualification Review/ }).click();
   await expect(page.getByRole('dialog')).toHaveClass(/workspace-drawer/);
@@ -126,6 +142,8 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   }
   await capture(page,'06-qualification');
   await page.getByRole('button', { name: 'Continue to Predevelopment' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:/^3.1 Development & Site/})).toBeVisible();
   await capture(page,'07-predevelopment');
   await page.getByRole('button', { name: /^3.1 Development & Site/ }).click();
   let form = page.getByRole('dialog');
@@ -160,6 +178,7 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
     await form.getByRole('button', { name: /^Close / }).click();
   }
   await page.getByRole('button', { name: 'Enter authorization', exact: true }).click();
+  await expect(page.getByText('Authorization package',{exact:true})).toBeVisible();
   await capture(page,'10-authorization');
   await page.getByRole('button', { name: 'Authorize Project', exact: true }).click();
   await capture(page,'11-confirmation');
