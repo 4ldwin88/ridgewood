@@ -6,6 +6,7 @@ import { PublicHome } from '../public/PublicHome';
 import { AppShell, APP_VERSION } from './shell/AppShell';
 
 function wantsPortal() {
+  if (import.meta.env.MODE === 'acceptance') return true;
   const params = new URLSearchParams(window.location.search);
   return params.get('portal') === '1';
 }
