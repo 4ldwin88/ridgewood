@@ -45,7 +45,7 @@ try {
     await page.goto(portalUrl.href, { waitUntil: 'networkidle' });
     await page.getByRole('heading', { name: 'Sign in', exact: true }).waitFor();
     assert.ok(await page.getByText(`Ridgewood OS · ${manifest.version}`, { exact: true }).isVisible());
-    const portalLogo = page.getByRole('img', { name: 'Ridgewood — Construction • Development', exact: true });
+    const portalLogo = page.getByRole('img', { name: 'Ridgewood', exact: true });
     assert.ok(await portalLogo.evaluate(image => image.complete && image.naturalWidth > 0), 'Portal wordmark must render');
     assert.match(new URL(await portalLogo.getAttribute('src'), url).pathname, /^\/ridgewood\/assets\/ridgewood-wordmark-primary-light-[\w-]+\.png$/);
     assert.ok(await page.getByRole('button', { name: 'Sign in', exact: true }).isVisible());
