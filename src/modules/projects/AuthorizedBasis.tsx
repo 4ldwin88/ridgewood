@@ -25,7 +25,7 @@ function FrozenDocument({ value }: { value: unknown }) {
 
 export function AuthorizedBasis({ projectStateId, authorizationRecordId }: { projectStateId: string; authorizationRecordId?: string }) {
   const [open, setOpen] = useState(false);
-  return <div className="authorization-handoff"><button className="secondary-button" onClick={() => setOpen(true)}>5.1 Authorized Basis</button>{open && <WorkspaceModal title="5.1 Authorized Basis" onClose={() => setOpen(false)}><BasisContent key={`${projectStateId}:${authorizationRecordId ?? ''}`} projectStateId={projectStateId} authorizationRecordId={authorizationRecordId} /></WorkspaceModal>}</div>;
+  return <div className="authorization-handoff" onCancel={event => event.stopPropagation()}><button className="secondary-button" onClick={() => setOpen(true)}>5.1 Authorized Basis</button>{open && <WorkspaceModal title="5.1 Authorized Basis" onClose={() => setOpen(false)}><BasisContent key={`${projectStateId}:${authorizationRecordId ?? ''}`} projectStateId={projectStateId} authorizationRecordId={authorizationRecordId} /></WorkspaceModal>}</div>;
 }
 function BasisContent({ projectStateId, authorizationRecordId }: { projectStateId: string; authorizationRecordId?: string }) {
   const [record, setRecord] = useState<AuthorizationRecordSummary | null>(null);

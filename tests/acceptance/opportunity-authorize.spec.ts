@@ -245,6 +245,12 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await page.getByRole('button', { name: 'Project Authorization & Setup', exact: true }).click();
   const setup = page.getByRole('dialog', { name: 'Project Authorization & Setup' });
   await expect(setup.getByText(/Saved version 0/)).toBeVisible();
+  await setup.getByRole('button', { name: '5.1 Authorized Basis', exact: true }).click();
+  const basis = page.getByRole('dialog', { name: '5.1 Authorized Basis', exact: true });
+  await expect(basis.getByRole('heading', { name: '5.1.1 Frozen mandate' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(basis).toHaveCount(0);
+  await expect(setup).toBeVisible();
   await setup.locator('summary').first().click();
   await setup.getByLabel(/Reviewed basis and responsibilities/).first().fill('Synthetic legal client; approved delivery name retained');
   await setup.getByLabel(/Controlling document/).first().fill('fixture:reviewed-contract');
