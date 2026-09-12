@@ -51,7 +51,9 @@ savepoint positive_gate;
 reset role;
 insert into public.user_permission_overrides(workspace_id,user_id,permission_key,effect) values ('00000000-0000-4000-8000-00000000f010','00000000-0000-4000-8000-00000000f001','project.gate01.decide','grant');
 set local role authenticated;
-select public.save_project_setup('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f048',current_setting('test.setup_evidence')::jsonb);
+select public.save_project_setup('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f048',(select jsonb_agg(case when e->>'requirement'='contract_review' then e||'{"details":"Forged checklist override"}'::jsonb else e end) from jsonb_array_elements(current_setting('test.setup_evidence')::jsonb) e));
+select is((select e->>'details' from public.project_setup_versions s cross join lateral jsonb_array_elements(s.evidence) e where s.version=2 and e->>'requirement'='contract_review'),'Reviewed synthetic basis','Setup cannot overwrite the contract-owned alias');
+
 select throws_ok($$select public.decide_project_gate01('00000000-0000-4000-8000-00000000f020',2,'00000000-0000-4000-8000-00000000f047',null,'go','Separate gate review','[]')$$,'P0001','owner_authority_unresolved','contract owner does not grant separate gate authority');
 reset role;
 insert into public.project_gate01_authorities(id,workspace_id,user_id,basis,owner_approval_reference,effective_from) values ('00000000-0000-4000-8000-00000000f046','00000000-0000-4000-8000-00000000f010','00000000-0000-4000-8000-00000000f001','confirmed_owner','Synthetic separate gate authority',now()-interval '1 day');

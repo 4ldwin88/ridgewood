@@ -47,7 +47,7 @@ export function ContractDecision({state,blocked,onRecorded,onWorkChange}:{state:
      ['commercialTermsReviewed','I reviewed the stated value or fee, payment terms and commercial obligations.'],
      ['effectivenessReviewed','I verified applicable effectiveness and expiry requirements against the agreement.'],
      ['noMaterialBlockers','No unresolved material contractual, legal, insurance or client-authorization blocker prevents this approval.'],
-    ] as const).map(([key,label])=><label key={key}><input type="checkbox" checked={confirmations[key]} onChange={e=>{setConfirmations(c=>({...c,[key]:e.target.checked}));work(true);}}/>{label}</label>)}</div>}
+    ] as const).map(([key,label])=><label key={key}><input type="checkbox" checked={confirmations[key]} onChange={e=>{setConfirmations(c=>({...c,[key]:e.target.checked}));work(true);}}/>{label}<span className="setup-required">Required</span></label>)}</div>}
    </fieldset>
    <button disabled={blocked||busy||!authorityId||!outcome||!rationale.trim()||!pendingRequest||(!request.current&&!access?.strongSession)} onClick={()=>void submit()}>{busy?'Recording…':request.current?'Retry contract decision':'Record contract decision'}</button>
   </>}

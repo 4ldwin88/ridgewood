@@ -246,3 +246,27 @@ begin
  insert into public.audit_events(project_state_id,event_type,actor_user_id,payload,occurred_at) values(p.id,'gate01_decision_recorded',auth.uid(),jsonb_build_object('gate','gate_01','decisionId',d.id,'disposition',disposition_input,'advanced',advancing),now());
  return d;
 end $$;
+
+-- Ignore read-only contract aliases on Setup saves. Preserve earlier legacy facts
+-- (including material flags) instead of allowing a second writable contract owner.
+alter function private.save_project_setup_command(uuid,integer,uuid,jsonb) rename to save_project_setup_before_contract_review;
+revoke all on function private.save_project_setup_before_contract_review(uuid,integer,uuid,jsonb) from public,anon,authenticated;
+create function private.save_project_setup_command(project_state_input uuid,expected_version_input integer,request_id_input uuid,evidence_input jsonb)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare result jsonb; prior jsonb; historical jsonb; normalized jsonb;
+begin
+ perform private.read_project_setup_before_contract(project_state_input);
+ perform 1 from public.project_states where id=project_state_input for update;
+ result:=private.read_project_setup_before_contract(project_state_input);
+ select evidence into prior from public.project_setup_versions where project_state_id=project_state_input and request_id=request_id_input;
+ if not exists(select 1 from public.project_contract_versions where project_state_id=project_state_input) or prior=evidence_input then
+  return private.save_project_setup_before_contract_review(project_state_input,expected_version_input,request_id_input,evidence_input);
+ end if;
+ if evidence_input is null or jsonb_typeof(evidence_input)<>'array' then raise exception 'invalid_setup_evidence'; end if;
+ historical:=coalesce(prior,result->'evidence');
+ select coalesce(jsonb_agg(e),'[]') into normalized from jsonb_array_elements(evidence_input) e where e->>'requirement' not in ('contracting_party','contract_review','commercial_terms','contractual_risks');
+ normalized:=normalized||(select jsonb_agg(e) from jsonb_array_elements(historical) e where e->>'requirement' in ('contracting_party','contract_review','commercial_terms','contractual_risks'));
+ return private.save_project_setup_before_contract_review(project_state_input,expected_version_input,request_id_input,normalized);
+end $$;
+revoke all on function private.save_project_setup_command(uuid,integer,uuid,jsonb) from public,anon;
+grant execute on function private.save_project_setup_command(uuid,integer,uuid,jsonb) to authenticated;

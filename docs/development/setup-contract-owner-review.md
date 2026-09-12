@@ -36,6 +36,7 @@ with decisions and invalidate current readiness while preserving historical revi
 Subsequent Hold/Reject or a newer preparation also removes current approval.
 
 The four contractual Setup checks project from the canonical current decision.
+Setup saves ignore read-only contract aliases and preserve earlier material flags.
 Other Setup facts retain their existing owner. Gate 01 still requires its own
 permission, authority, complete conditions and explicit conditional limits; its
 snapshot captures the projected contract decision and frozen upstream authorization.
