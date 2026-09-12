@@ -52,6 +52,7 @@ test('scope preserves identity, references, uncertain saves and review requests'
  await expect(drawer.getByRole('list',{name:'Scope review requests'})).toContainText('Superseded');
  execFileSync('python',['scripts/local-acceptance-fixtures.py','scope-verify']);
  await drawer.getByRole('button',{name:'Request scope review',exact:true}).click();
+ await expect(drawer.getByRole('status',{name:'Scope save status'})).toContainText('Review requested for scope version 3');
  execFileSync('python',['scripts/local-acceptance-fixtures.py','scope-owner-setup']);
  const session=JSON.parse(execFileSync('node',['scripts/local-review-session.mjs','scope-contract'],{encoding:'utf8'}));
  await page.evaluate(session=>{

@@ -32,8 +32,8 @@ export function ScopeDecision({state,blocked,onRecorded,onWorkChange}:{state:Sco
  const canPrepare=Boolean(access?.hasPermission&&access.ownerAuthorities.length);
  const pendingRequest=state.requests?.some(r=>r.version===state.version);
  return <section className="setup-gate-review">
-  <h4>5.2.3 Authorized scope decision</h4>
-  <p>Current basis: {state.status.replaceAll('_',' ')}. Approval applies only to the reviewed scope version. Signing, spending and Gate 01 are separate commands.</p>
+  <h4>5.3.3 Authorized scope decision</h4>
+  <p>Current basis: {state.status.replaceAll('_',' ')}. Approval establishes the initial scope baseline against the current contract decision. Signing, spending, changed work and Gate 01 remain separate.</p>
   {state.approvalBlockers.length>0&&<ul>{state.approvalBlockers.map(reason=><li key={reason}>{reason}</li>)}</ul>}
   {!canPrepare&&<p>No confirmed owner authority and review permission are available to your account. A role, membership or Project Lead assignment does not grant approval.</p>}
   {canPrepare&&<>

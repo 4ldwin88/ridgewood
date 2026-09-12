@@ -79,4 +79,6 @@ select throws_ok($$select public.decide_project_scope_review('00000000-0000-4000
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f002","role":"authenticated"}',true);
 select is((select count(*)::text from public.project_scope_baselines),'0','outsider cannot read baseline');
 select throws_ok($$select public.decide_project_scope_review('00000000-0000-4000-8000-00000000f020',3,0,'00000000-0000-4000-8000-000000000004','00000000-0000-4000-8000-00000000f080','approved','Synthetic exact scope review','{"withinAuthorizedBasis":true,"boundariesReviewed":true,"noUnresolvedScopeBlockers":true}')$$,'P0001','project_state_not_found_or_access_denied','outsider cannot review');
+select throws_ok($$delete from public.project_scope_baselines$$,'42501',null,'client cannot delete baseline');
+select throws_ok($$delete from public.project_scope_review_decisions$$,'42501',null,'client cannot delete decision extension');
 select * from finish(); rollback;

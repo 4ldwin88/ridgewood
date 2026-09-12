@@ -1,14 +1,25 @@
 // Genuine TOTP ceremony for the disposable synthetic account only.
 // Session output is consumed in memory by acceptance tests, never logged/artifacted.
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHmac, randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 const status=JSON.parse(readFileSync('/tmp/ridgewood-local-status.json','utf8'));
 if(status.API_URL!=='http://127.0.0.1:54321')throw new Error('Refusing non-local authentication');
 const client=createClient(status.API_URL,status.ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 function checked(result){if(result.error)throw new Error(`Synthetic authentication ceremony failed (${result.error.code??'unknown'}; ${result.error.status??'unknown'})`);return result.data;}
-checked(await client.auth.signInWithPassword({email:'edward-demo@example.invalid',password:'Synthetic-local-only-2026!'}));
-const factor=checked(await client.auth.mfa.enroll({factorType:'totp',friendlyName:`Disposable review ${randomUUID()}`}));
+const signedIn=checked(await client.auth.signInWithPassword({email:'edward-demo@example.invalid',password:'Synthetic-local-only-2026!'}));
+// Reuse the test authenticator, not an expired assurance claim. This file is local
+// to the disposable runner, mode 0600, outside every artifact/upload path.
+const factorPath='/tmp/ridgewood-synthetic-factor.json';
+let factor;
+if(existsSync(factorPath)){
+ const saved=JSON.parse(readFileSync(factorPath,'utf8'));
+ if(saved.api!==status.API_URL||saved.userId!==signedIn.user.id)throw new Error('Synthetic authenticator belongs to another fixture');
+ factor=saved.factor;
+}else{
+ factor=checked(await client.auth.mfa.enroll({factorType:'totp',friendlyName:'Disposable review authenticator'}));
+ writeFileSync(factorPath,JSON.stringify({api:status.API_URL,userId:signedIn.user.id,factor}),{mode:0o600,flag:'wx'});
+}
 const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 const bits=[...factor.totp.secret.toUpperCase().replace(/=+$/,'')].map(c=>alphabet.indexOf(c).toString(2).padStart(5,'0')).join('');
 const secret=Buffer.from(bits.match(/.{8}/g).map(b=>parseInt(b,2)));
