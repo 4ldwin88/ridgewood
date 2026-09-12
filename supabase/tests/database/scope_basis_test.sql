@@ -40,10 +40,14 @@ select throws_ok($$select public.decide_project_gate01('00000000-0000-4000-8000-
 select is(public.save_project_scope('00000000-0000-4000-8000-00000000f020',2,'00000000-0000-4000-8000-000000000007',current_setting('test.scope_items')::jsonb)->'requests'->0->>'status','superseded','new preparation supersedes request');
 select is(public.read_project_scope('00000000-0000-4000-8000-00000000f020')->>'authorizationRecordId','00000000-0000-4000-8000-00000000f030','frozen upstream identity retained');
 select is((select references_snapshot->'revisions'->0->'published_source_snapshot'->>'programSummary' from public.project_scope_versions where version=2),'Frozen synthetic requirement','selected source payload frozen');
+select public.save_project_setup('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-000000000009',(select jsonb_agg(jsonb_build_object('requirement',k,'state','satisfied','details','Forged generic checklist scope','evidenceReference','fake:approval','accountableUserId','00000000-0000-4000-8000-00000000f001','materialBlocker',false)) from unnest(array['contracting_party','contract_review','scope','commercial_terms','contractual_risks','permits','leadership','budget_basis','delivery_folder','access','communications','controls']) k));
+select is((select e->>'state' from public.project_setup_versions s cross join lateral jsonb_array_elements(s.evidence) e where e->>'requirement'='scope'),'unresolved','Setup API cannot overwrite scope-owned evidence');
+select public.save_project_scope('00000000-0000-4000-8000-00000000f020',3,'00000000-0000-4000-8000-00000000000a',jsonb_set(current_setting('test.scope_items')::jsonb,'{0,partyId}','""'));
+select throws_ok($$select public.request_project_scope_review('00000000-0000-4000-8000-00000000f020',4,'00000000-0000-4000-8000-00000000000b')$$,'P0001','incomplete_scope_review_basis','an interface cannot submit without its responsible party');
 reset role;
 select throws_ok($$update public.project_scope_versions set items='[]'$$,'P0001','setup_history_is_immutable','scope history cannot change');
 update public.project_states set archived_at=now() where id='00000000-0000-4000-8000-00000000f020'; set local role authenticated;
-select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',3,'00000000-0000-4000-8000-000000000008',current_setting('test.scope_items')::jsonb)$$,'P0001','scope_edit_not_allowed','archived scope cannot change');
+select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',4,'00000000-0000-4000-8000-000000000008',current_setting('test.scope_items')::jsonb)$$,'P0001','scope_edit_not_allowed','archived scope cannot change');
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f002","role":"authenticated"}',true);
 select is((select count(*)::integer from public.project_scope_versions),0,'outsider cannot read history');
 select throws_ok($$select public.read_project_scope('00000000-0000-4000-8000-00000000f020')$$,'P0001','project_state_not_found_or_access_denied','outsider RPC denied');
