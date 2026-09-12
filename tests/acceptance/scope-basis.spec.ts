@@ -1,0 +1,54 @@
+import { test, expect } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+
+test('scope preserves identity, references, uncertain saves and review requests',async({page})=>{
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','scope-setup']);
+ await page.goto('/?portal=1');
+ await page.getByLabel('Email').fill('edward-demo@example.invalid');
+ await page.getByLabel('Password').fill('Synthetic-local-only-2026!');
+ await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await page.getByRole('button',{name:'Projects',exact:true}).click();
+ await page.getByRole('button',{name:'Scope basis rehearsal',exact:true}).click();
+ await page.getByRole('button',{name:'Project Authorization & Setup',exact:true}).click();
+ const open=()=>page.getByRole('button',{name:'5.3 Scope, Exclusions & Interfaces',exact:true}).click();
+ await open();const drawer=page.getByRole('dialog',{name:'5.3 Scope, Exclusions & Interfaces',exact:true});
+ await drawer.getByRole('button',{name:'Add scope component',exact:true}).click();
+ await drawer.getByRole('button',{name:'Save scope preparation',exact:true}).click();
+ await expect(drawer.getByRole('status',{name:'Scope save status'})).toContainText('Saved scope version 1');
+ await drawer.getByRole('button',{name:'Request scope review',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Complete the saved scope requirements');
+ await drawer.getByLabel(/Scope description/).fill('Supply and install lobby flooring');
+ await drawer.getByLabel(/Classification/).selectOption('interface');
+ await drawer.getByLabel(/Responsible party/).selectOption({label:'Synthetic flooring partner'});
+ await drawer.getByLabel(/Governing source/).selectOption({label:'Synthetic scope specification · revision 1'});
+ await drawer.getByLabel(/Acceptance specification/).selectOption({label:'Synthetic scope specification · revision 1'});
+ await drawer.getByLabel(/Related program requirement/).selectOption({label:'Synthetic scope specification · revision 1'});
+ let lost=false;
+ await page.route('**/rest/v1/rpc/save_project_scope',async route=>{if(!lost){lost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ await drawer.getByRole('button',{name:'Save scope preparation',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Retry preserves the exact request');
+ await expect(drawer.getByLabel(/Scope description/)).toBeDisabled();
+ await drawer.getByRole('button',{name:'Retry scope save',exact:true}).click();
+ await expect(drawer.getByRole('status',{name:'Scope save status'})).toContainText('Saved scope version 2');
+ let requestLost=false;
+ await page.route('**/rest/v1/rpc/request_project_scope_review',async route=>{if(!requestLost){requestLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ await drawer.getByRole('button',{name:'Request scope review',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Retry preserves the exact request');
+ await drawer.getByRole('button',{name:'Retry scope review request',exact:true}).click();
+ await expect(drawer.getByRole('list',{name:'Scope review requests'})).toContainText('Version 2 · Pending');
+ await page.keyboard.press('Escape');await open();
+ await expect(drawer.getByLabel(/Scope description/)).toHaveValue('Supply and install lobby flooring');
+ await expect(drawer.getByLabel(/Classification/)).toHaveValue('interface');
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  await drawer.getByRole('heading',{name:'Scope component 1',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/scope-basis-${width}.png`});
+  await drawer.getByRole('heading',{name:'5.3.2 Request scope review',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/scope-review-${width}.png`});
+ }
+ await drawer.getByLabel(/Scope description/).fill('Coordinate lobby flooring interface');
+ await expect(drawer.getByRole('button',{name:'Request scope review',exact:true})).toBeDisabled();
+ await drawer.getByRole('button',{name:'Save scope preparation',exact:true}).click();
+ await expect(drawer.getByRole('list',{name:'Scope review requests'})).toContainText('Superseded');
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','scope-verify']);
+});

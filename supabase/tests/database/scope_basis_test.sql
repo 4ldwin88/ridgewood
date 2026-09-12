@@ -1,0 +1,51 @@
+begin;
+select no_plan();
+insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
+('00000000-0000-4000-8000-00000000f001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-editor@example.invalid',now(),now()),
+('00000000-0000-4000-8000-00000000f002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-outsider@example.invalid',now(),now());
+insert into public.workspaces(id,name,created_by) values ('00000000-0000-4000-8000-00000000f010','Setup contract','00000000-0000-4000-8000-00000000f001');
+insert into public.workspace_memberships(workspace_id,user_id,technical_role,status) values ('00000000-0000-4000-8000-00000000f010','00000000-0000-4000-8000-00000000f001','owner','active');
+insert into public.project_states(id,workspace_id,name,stage,commercial_stage,status,priority,created_by,owner_user_id) values ('00000000-0000-4000-8000-00000000f020','00000000-0000-4000-8000-00000000f010','Setup fixture','project_authorization_setup','project_authorization_setup','active','medium','00000000-0000-4000-8000-00000000f001','00000000-0000-4000-8000-00000000f001');
+insert into public.authorization_records(id,project_state_id,outcome,actor_user_id) values ('00000000-0000-4000-8000-00000000f030','00000000-0000-4000-8000-00000000f020','approved','00000000-0000-4000-8000-00000000f001');
+
+
+insert into public.organizations(id,workspace_id,name,created_by) values ('00000000-0000-4000-8000-00000000f070','00000000-0000-4000-8000-00000000f010','Synthetic scope party','00000000-0000-4000-8000-00000000f001');
+insert into public.document_records(id,project_state_id,package_key,category_key,document_type,title,owner_user_id) values ('00000000-0000-4000-8000-00000000f080','00000000-0000-4000-8000-00000000f020','predevelopment','product_program','predevelopment_product_program','Synthetic program','00000000-0000-4000-8000-00000000f001');
+insert into public.document_revisions(id,document_record_id,revision_number,state,created_by,published_by,published_at,source_data,published_source_snapshot) values ('00000000-0000-4000-8000-00000000f081','00000000-0000-4000-8000-00000000f080',1,'published','00000000-0000-4000-8000-00000000f001','00000000-0000-4000-8000-00000000f001',now(),'{"programSummary":"Frozen synthetic requirement"}','{"programSummary":"Frozen synthetic requirement"}');
+insert into public.project_states(id,workspace_id,name,stage,commercial_stage,status,priority,created_by,owner_user_id) select '00000000-0000-4000-8000-00000000f021',workspace_id,'Other scope project',stage,commercial_stage,status,priority,created_by,owner_user_id from public.project_states where id='00000000-0000-4000-8000-00000000f020';
+insert into public.scope_items(id,project_state_id,created_by) values ('00000000-0000-4000-8000-00000000f099','00000000-0000-4000-8000-00000000f021','00000000-0000-4000-8000-00000000f001');
+select set_config('test.scope_items','[{"id":"00000000-0000-4000-8000-00000000f090","description":"","classification":"","partyId":"","sourceRevisionId":"","criterionRevisionId":"","acceptanceCriteria":"","programRevisionId":""}]',true);
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f001","role":"authenticated"}',true);
+select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-000000000001',current_setting('test.scope_items')::jsonb)$$,'P0001','missing_setup_edit_permission','membership alone cannot edit scope');
+reset role; insert into public.user_permission_overrides(workspace_id,user_id,permission_key,effect) values ('00000000-0000-4000-8000-00000000f010','00000000-0000-4000-8000-00000000f001','project.setup.edit','grant'); set local role authenticated;
+select is(public.save_project_scope('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-000000000001',current_setting('test.scope_items')::jsonb)->>'version','1','incomplete draft saves');
+select throws_ok($$select public.request_project_scope_review('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-000000000002')$$,'P0001','incomplete_scope_review_basis','incomplete draft cannot submit');
+select is(public.save_project_scope('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-000000000001',current_setting('test.scope_items')::jsonb)->>'savedVersion','1','lost response recovers original version');
+select is((select count(*)::integer from public.project_scope_versions),1,'retry does not duplicate');
+select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-000000000003',current_setting('test.scope_items')::jsonb)$$,'P0001','scope_version_conflict','stale editor cannot overwrite');
+select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-000000000003',jsonb_set(current_setting('test.scope_items')::jsonb,'{0,classification}','"complete"'))$$,'P0001','invalid_scope_classification','unsupported classification rejected');
+select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-000000000003',jsonb_set(current_setting('test.scope_items')::jsonb,'{0,sourceRevisionId}','"00000000-0000-4000-8000-00000000ffff"'))$$,'P0001','invalid_scope_source','unavailable or foreign source rejected');
+select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-000000000003',current_setting('test.scope_items')::jsonb||current_setting('test.scope_items')::jsonb)$$,'P0001','duplicate_scope_item','duplicate item identity rejected');
+select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-000000000003',jsonb_set(current_setting('test.scope_items')::jsonb,'{0,id}','"00000000-0000-4000-8000-00000000f099"'))$$,'P0001','scope_item_wrong_project','scope identity from another project cannot be reused');
+select set_config('test.scope_items',jsonb_set(current_setting('test.scope_items')::jsonb,'{0}',(current_setting('test.scope_items')::jsonb->0)||'{"description":"Supply flooring","classification":"interface","partyId":"00000000-0000-4000-8000-00000000f070","sourceRevisionId":"00000000-0000-4000-8000-00000000f081","criterionRevisionId":"00000000-0000-4000-8000-00000000f081"}')::text,true);
+select is(public.save_project_scope('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-000000000003',current_setting('test.scope_items')::jsonb)->>'version','2','typed interface saves with source and party');
+select is((select count(*)::integer from public.scope_items where project_state_id='00000000-0000-4000-8000-00000000f020'),1,'same item identity survives versions');
+select is(public.request_project_scope_review('00000000-0000-4000-8000-00000000f020',2,'00000000-0000-4000-8000-000000000004')->>'submittedVersion','2','complete basis submits without approval');
+select is(public.request_project_scope_review('00000000-0000-4000-8000-00000000f020',2,'00000000-0000-4000-8000-000000000004')->>'submittedVersion','2','review request recovers exactly once');
+select is((select count(*)::integer from public.project_scope_review_requests),1,'one review request');
+select throws_ok($$select public.request_project_scope_review('00000000-0000-4000-8000-00000000f020',2,'00000000-0000-4000-8000-000000000005')$$,'P0001','scope_review_already_requested','new request cannot duplicate version review');
+select ok(public.read_project_setup('00000000-0000-4000-8000-00000000f020')->'unmet' ? 'scope','scope preparation is not readiness');
+select throws_ok($$select public.decide_project_gate01('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-000000000006',null,'go','Synthetic','[]')$$,'P0001','scope_authorized_baseline_required','legacy checklist cannot bypass scope approval');
+select is(public.save_project_scope('00000000-0000-4000-8000-00000000f020',2,'00000000-0000-4000-8000-000000000007',current_setting('test.scope_items')::jsonb)->'requests'->0->>'status','superseded','new preparation supersedes request');
+select is(public.read_project_scope('00000000-0000-4000-8000-00000000f020')->>'authorizationRecordId','00000000-0000-4000-8000-00000000f030','frozen upstream identity retained');
+select is((select references_snapshot->'revisions'->0->'published_source_snapshot'->>'programSummary' from public.project_scope_versions where version=2),'Frozen synthetic requirement','selected source payload frozen');
+reset role;
+select throws_ok($$update public.project_scope_versions set items='[]'$$,'P0001','setup_history_is_immutable','scope history cannot change');
+update public.project_states set archived_at=now() where id='00000000-0000-4000-8000-00000000f020'; set local role authenticated;
+select throws_ok($$select public.save_project_scope('00000000-0000-4000-8000-00000000f020',3,'00000000-0000-4000-8000-000000000008',current_setting('test.scope_items')::jsonb)$$,'P0001','scope_edit_not_allowed','archived scope cannot change');
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f002","role":"authenticated"}',true);
+select is((select count(*)::integer from public.project_scope_versions),0,'outsider cannot read history');
+select throws_ok($$select public.read_project_scope('00000000-0000-4000-8000-00000000f020')$$,'P0001','project_state_not_found_or_access_denied','outsider RPC denied');
+select * from finish();
+rollback;

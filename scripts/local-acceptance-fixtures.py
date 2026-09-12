@@ -57,6 +57,21 @@ with psycopg.connect(DB) as db:
         assert len(rows)==1 and rows[0][0]==2 and rows[0][1]=='approved' and rows[0][2]['aal']=='aal2', rows
         assert project[1]=='project_authorization_setup'
         assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project[0],)).fetchone()[0]==0
+    elif command == 'scope-setup':
+        owner, workspace = db.execute("select m.user_id,m.workspace_id from public.workspace_memberships m join auth.users u on u.id=m.user_id where u.email=%s", (EMAIL,)).fetchone()
+        project, document = str(uuid.uuid4()), str(uuid.uuid4())
+        db.execute("insert into public.project_states(id,workspace_id,name,stage,commercial_stage,status,priority,created_by,owner_user_id) values(%s,%s,'Scope basis rehearsal','project_authorization_setup','project_authorization_setup','active','medium',%s,%s)", (project,workspace,owner,owner))
+        db.execute("insert into public.authorization_records(project_state_id,outcome,actor_user_id) values(%s,'approved',%s)", (project,owner))
+        db.execute("insert into public.organizations(workspace_id,name,created_by) values(%s,'Synthetic flooring partner',%s)", (workspace,owner))
+        db.execute("insert into public.document_records(id,project_state_id,package_key,category_key,document_type,title,owner_user_id) values(%s,%s,'predevelopment','product_program','predevelopment_product_program','Synthetic scope specification',%s)", (document,project,owner))
+        db.execute("insert into public.document_revisions(document_record_id,revision_number,state,created_by,published_by,published_at,source_data,published_source_snapshot) values(%s,1,'published',%s,%s,now(),%s::jsonb,%s::jsonb)", (document,owner,owner,json.dumps({'programSummary':'Preserve the lobby access route'}),json.dumps({'programSummary':'Preserve the lobby access route'})))
+    elif command == 'scope-verify':
+        project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Scope basis rehearsal'", (EMAIL,)).fetchone()
+        versions = db.execute("select version,items,authorization_record_id from public.project_scope_versions where project_state_id=%s order by version", (project[0],)).fetchall()
+        assert len(versions)==3 and len({v[1][0]['id'] for v in versions})==1 and len({v[2] for v in versions})==1
+        requests = db.execute("select v.version from public.project_scope_review_requests r join public.project_scope_versions v on v.id=r.scope_version_id where r.project_state_id=%s", (project[0],)).fetchall()
+        assert requests==[(2,)] and project[1]=='project_authorization_setup'
+        assert db.execute("select count(*) from public.scope_items where project_state_id=%s", (project[0],)).fetchone()[0]==1
     elif command == 'setup':
         status = json.loads(Path('/tmp/ridgewood-local-status.json').read_text())
         assert status['API_URL'] == API, 'Refusing non-local API'
