@@ -35,6 +35,7 @@ test('contract preparation survives lost response and reopens from the real back
  await expect(drawer.getByLabel('Synthetic legal client')).toBeChecked();
  for(const width of [390,1280]){
   await page.setViewportSize({width,height:844});
+  await expect(drawer.getByLabel('Synthetic legal client')).toHaveCSS('width','20px');
   await expect(drawer.getByRole('button',{name:'Close 5.2 Contract & Commercial Review',exact:true})).toBeInViewport();
   await page.screenshot({path:`test-results/contract-preparation-${width}.png`});
  }

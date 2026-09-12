@@ -224,3 +224,5 @@
 .contract-review textarea{min-height:96px}.contract-review input::placeholder,.contract-review textarea::placeholder{color:#858585;opacity:1}
 .contract-review .optional-label{color:#858585;font-size:12px;font-weight:400}
 .contract-review .contract-choices label{display:flex;gap:10px;align-items:center;min-height:44px;margin:4px 0}
+.app-frame .contract-review .contract-choices input[type=checkbox]{width:20px;min-width:20px;max-width:20px;height:20px;min-height:20px;flex:0 0 20px;margin:0;padding:0}
+.contract-review label>small{font-weight:400;font-size:12px}
