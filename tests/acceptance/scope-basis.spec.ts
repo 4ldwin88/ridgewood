@@ -94,7 +94,7 @@ test('scope preserves identity, references, uncertain saves and review requests'
  await drawer.getByLabel(/Scope description/).fill('Proposed additional flooring area');
  await drawer.getByRole('button',{name:'Save scope preparation',exact:true}).click();
  await expect(drawer.getByText(/A later preparation is a proposed change/)).toBeVisible();
- await expect(drawer.getByRole('option',{name:'Approve the initial scope baseline',exact:true})).toBeDisabled();
+ await expect(drawer.getByRole('option',{name:'Approve the initial scope baseline',exact:true})).toHaveJSProperty('disabled',true);
  await drawer.getByText('Original approved baseline · version 3',{exact:true}).click();
  await expect(drawer.getByText('interface · Coordinate lobby flooring interface',{exact:true}).first()).toBeVisible();
  execFileSync('python',['scripts/local-acceptance-fixtures.py','scope-owner-verify']);
