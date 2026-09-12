@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 
 test('drawer protects edits and displays immutable snapshot through revision workflow', async ({ page }) => {
@@ -36,16 +38,17 @@ test('drawer protects edits and displays immutable snapshot through revision wor
   await page.keyboard.press('Escape');
   await expect(drawer).toBeVisible();
   await page.getByRole('button', { name: 'Conforming / permitted', exact: true }).click();
-  await page.getByRole('group', { name: 'Approvals', exact: true }).getByRole('button', { name: 'Not assessed', exact: true }).click();
+  await page.getByRole('group', { name: 'Approvals (Required)', exact: true }).getByRole('button', { name: 'Not assessed', exact: true }).click();
   await page.getByRole('button', { name: 'Suitable', exact: true }).click();
   await page.getByRole('button', { name: 'Save draft', exact: true }).click();
-  await expect(page.getByText('Draft saved.', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Close form', exact: true }).click();
+
   await expect(drawer).not.toBeVisible();
   await page.getByRole('button', { name: 'Open site review' }).click();
   await expect(page.getByRole('button', { name: /Owned/ })).toHaveAttribute('aria-pressed', 'true');
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(drawer).not.toBeVisible();
+  await page.getByRole('button', { name: 'Open site review' }).click();
   await expect(page.getByRole('article', { name: 'Published document revision 1' })).toBeVisible();
   await expect(drawer).toBeVisible();
   await expect(page.getByText('Project at publication: Synthetic project')).toBeVisible();
@@ -57,6 +60,26 @@ test('drawer protects edits and displays immutable snapshot through revision wor
   const document = page.getByRole('article', { name: 'Published document revision 1' });
   await expect(document.getByText('Owned', { exact: true })).toBeVisible();
   await expect(document.getByText('Client controlled', { exact: true })).toHaveCount(0);
+  const viewer = page.getByRole('region', { name: 'Read-only document viewer' });
+  await viewer.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  await expect(document).toHaveCSS('zoom', '1.25');
+  const popupPromise = page.waitForEvent('popup');
+  await viewer.getByRole('button', { name: 'Print / Save as PDF' }).click();
+  const printable = await popupPromise;
+  await expect(printable.locator('article')).toHaveCount(1);
+  await expect(printable.getByText('Owned', { exact: true })).toBeVisible();
+  await expect(printable.getByRole('button')).toHaveCount(0);
+  await expect(printable.locator('article')).toHaveCSS('zoom', '1');
+  const pdfPath = test.info().outputPath('published-revision.pdf');
+  await printable.pdf({path:pdfPath,preferCSSPageSize:true});
+  execFileSync('pdftotext', [pdfPath, pdfPath+'.txt']);
+  const pages = readFileSync(pdfPath+'.txt','utf8').split('\f');
+  if (!pages.at(-1)?.trim()) pages.pop();
+  expect(pages.length).toBeGreaterThan(0);
+  for (const text of pages) expect(text.trim().length).toBeGreaterThan(20);
+  expect(pages.join(' ')).toContain('Synthetic project');
+  await printable.close();
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(drawer).toHaveCSS('width', '374px');
 });

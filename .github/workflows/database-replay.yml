@@ -22,9 +22,12 @@ jobs:
           psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -f supabase/platform/replay-prerequisites.sql
           mv /tmp/ridgewood-recovered-migrations supabase/migrations
           supabase migration up --local
+      - name: Verify Setup and Gate 01 contracts on disposable backend
+        run: |
+          supabase test db supabase/tests/database/setup_persistence_test.sql
       - name: Verify document lifecycle and immutability
         run: |
-          supabase test db supabase/tests/database/client_privileges_test.sql supabase/tests/database/project_state_command_boundary_test.sql supabase/tests/database/qualification_grants_test.sql
+          supabase test db supabase/tests/database/client_privileges_test.sql supabase/tests/database/project_state_command_boundary_test.sql supabase/tests/database/qualification_grants_test.sql supabase/tests/database/project_photo_access_test.sql supabase/tests/database/organization_retirement_test.sql
           supabase test db supabase/tests/database/published_document_payload_test.sql
           psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -At -f supabase/tests/database/governed_form_live_contract_test.sql | tee /tmp/form-contract-results.txt
           python - <<'PY'
@@ -50,6 +53,7 @@ jobs:
         run: |
           python -m pip install 'psycopg[binary]==3.2.10'
           python scripts/test-command-concurrency.py
+          python scripts/test-setup-concurrency.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22

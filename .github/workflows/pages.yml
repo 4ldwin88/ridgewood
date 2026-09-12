@@ -1,4 +1,4 @@
-name: Deploy Gate 2A Prototype
+name: Deploy Ridgewood Public Site
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
           npm run typecheck
           npm test
           npm run lint
-      - name: Build prototype
+      - name: Build public site
         env:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_lrUiFE9I4ryDIfXVlgujSg_yVeFBLRX
         run: |
@@ -64,7 +64,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
   smoke-test:
-    name: Verify deployed candidate in browser
+    name: Verify deployed public site and portal
     runs-on: ubuntu-latest
     needs: deploy
     timeout-minutes: 10
@@ -76,7 +76,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
-      - name: Verify release identity, sign-in and responsive assets
+      - name: Verify release identity, public home, portal sign-in and responsive assets
         env:
           PAGE_URL: ${{ needs.deploy.outputs.page_url }}
           EXPECTED_SHA: ${{ github.sha }}

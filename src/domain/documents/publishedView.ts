@@ -4,7 +4,7 @@ export const SITE_FIELDS = [
   ['siteIdentity', 'Site / location'], ['siteControl', 'Site control'],
   ['planningStatus', 'Planning / zoning'], ['approvalStatus', 'Approvals'],
   ['constraints', 'Known constraints'], ['servicing', 'Servicing reviewed / available'],
-  ['accessStatus', 'Site access'], ['dueDiligence', 'Due diligence completed'],
+  ['accessStatus', 'Site access'], ['accessConstraints', 'Site access constraints'], ['dueDiligence', 'Due diligence completed'],
   ['overallReadiness', 'Overall development readiness (assessment only)'],
   ['notes', 'Exceptions / blockers / project-specific notes'],
 ] as const;

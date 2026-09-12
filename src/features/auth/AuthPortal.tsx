@@ -1,4 +1,4 @@
-import ridgewoodLogo from '../../../assets/ridgewood-horizontal-light.svg';
+import ridgewoodLogo from '../../../assets/ridgewood-wordmark-primary-light.png';
 import { FormEvent, useState } from 'react';
 import { APP_VERSION } from '../../app/shell/AppShell';
 import { isTestingSignupEnabled } from '../../infrastructure/auth/authMode';
