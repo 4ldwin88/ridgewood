@@ -35,6 +35,7 @@ begin
  select * into a from public.project_change_versions where id=v.assessment_id;
  select * into latest from public.project_change_proposal_decisions where proposal_id=v.id order by sequence desc limit 1;
  select d.outcome into outcome from public.decisions d where d.id=latest.decision_id;
+ if p.stage<>'project_authorization_setup' or p.status<>'active' or p.archived_at is not null then reasons:=array_append(reasons,'The project does not currently permit Setup proposal release.'); end if;
  foreach k in array array['recipientPartyId','clientAmount','feeTreatment','commercialTerms','proposalRevisionId'] loop
   if nullif(btrim(v.data->>k),'') is null then reasons:=array_append(reasons,'Complete '||k||' in the saved proposal.'); end if;
  end loop;
@@ -44,7 +45,7 @@ begin
  if not coalesce((private.read_project_contract_command(p.id)->'data'->'partyIds') ? (v.data->>'recipientPartyId'),false) then reasons:=array_append(reasons,'The recipient must be a party to the current reviewed contract; verify its client role.'); end if;
  if not exists(select 1 from public.document_revisions r join public.document_records d on d.id=r.document_record_id where r.id::text=v.data->>'proposalRevisionId' and d.project_state_id=p.id and r.state='published' and r.published_source_snapshot is not null and r.published_source_snapshot=v.source_snapshot->'payload') then reasons:=array_append(reasons,'The exact proposal publication must remain current.'); end if;
  if nullif(v.data->>'validUntil','') is not null and (v.data->>'validUntil')::date<current_date then reasons:=array_append(reasons,'The stated proposal validity date has passed.'); end if;
- return jsonb_build_object('projectStateId',p.id,'changeId',change_id_input,'assessment',c,'basis',coalesce(a.data,c->'data'),'version',coalesce(v.version,0),'data',v.data,'sourceSnapshot',v.source_snapshot,'blockers',reasons,'sequence',coalesce(latest.sequence,0),
+ return jsonb_build_object('projectStateId',p.id,'changeId',change_id_input,'assessment',c,'basisVersion',coalesce(a.version,(c->>'version')::integer),'basis',coalesce(a.data,c->'data'),'version',coalesce(v.version,0),'data',v.data,'sourceSnapshot',v.source_snapshot,'blockers',reasons,'sequence',coalesce(latest.sequence,0),
  'releaseAuthorized',coalesce(outcome='approved' and cardinality(reasons)=0 and latest.assessment_decisions=private.change_internal_decision_ids(a.id),false),'clientAccepted',false,'workAuthorized',false,'canEdit',c->'canEdit',
  'reviewAccess',jsonb_build_object('hasPermission',public.has_app_permission(p.workspace_id,'project.change.proposal.release'),'strongSession',private.contract_strong_session(),'ownerAuthorities',c->'reviewAccess'->'ownerAuthorities'),
  'parties',(select coalesce(jsonb_agg(jsonb_build_object('id',o.id,'label',o.name,'retired',o.is_retired) order by o.name),'[]') from public.organizations o where o.workspace_id=p.workspace_id),
@@ -82,6 +83,8 @@ begin
   select jsonb_build_object('documentId',d.id,'revisionId',r.id,'title',d.title,'revisionNumber',r.revision_number,'documentType',d.document_type,'category',d.category_key,'publishedAt',r.published_at,'publishedBy',r.published_by,'payload',r.published_source_snapshot) into snapshot from public.document_revisions r join public.document_records d on d.id=r.document_record_id where r.id::text=data_input->>'proposalRevisionId' and d.project_state_id=p.id and r.state='published' and r.published_source_snapshot is not null;
   if snapshot is null then raise exception 'invalid_proposal_publication'; end if;
  end if;
+ perform 1 from public.organizations where id::text=data_input->>'recipientPartyId' for share;
+ snapshot:=coalesce(snapshot,'{}')||jsonb_build_object('recipient',(select jsonb_build_object('id',o.id,'label',o.name) from public.organizations o where o.id::text=data_input->>'recipientPartyId' and o.workspace_id=p.workspace_id));
  insert into public.project_change_proposal_versions(project_state_id,change_id,assessment_id,version,request_id,data,source_snapshot,actor_user_id) values(p.id,change_id_input,a.id,expected_version_input+1,request_id_input,data_input,coalesce(snapshot,'{}'),auth.uid());
  insert into public.audit_events(project_state_id,event_type,actor_user_id,payload,occurred_at) values(p.id,'change_proposal_saved',auth.uid(),jsonb_build_object('changeId',change_id_input,'version',expected_version_input+1),now());
  return private.read_change_proposal_command(p.id,change_id_input)||jsonb_build_object('savedVersion',expected_version_input+1);

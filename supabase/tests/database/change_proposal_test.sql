@@ -111,6 +111,11 @@ select is((public.read_change_proposal('00000000-0000-4000-8000-00000000f020',cu
 reset role; update public.document_revisions set state='superseded' where id='00000000-0000-4000-8000-00000000fa08'; set local role authenticated;
 select is((public.read_change_proposal('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid)->>'releaseAuthorized')::text,'false','superseded proposal invalidates current release');
 select throws_ok($$select public.decide_change_proposal('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid,2,2,gen_random_uuid(),'00000000-0000-4000-8000-00000000f080','approved','Verify exact synthetic client proposal',true)$$,'P0001','proposal_release_basis_unresolved','stale publication prevents new release');
+
+select public.save_project_change('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid,2,gen_random_uuid(),current_setting('test.change_data')::jsonb||'{"currency":"CAD"}');
+select is(public.read_change_proposal('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid)->'basis'->>'currency','USD','old proposal retains original currency after new assessment');
+select is(public.read_change_proposal('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid)->>'basisVersion','2','proposal does not silently adopt latest assessment');
+select throws_ok($$select public.save_change_proposal('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid,2,2,gen_random_uuid(),current_setting('test.proposal')::jsonb)$$,'P0001','change_version_conflict','stale proposal save cannot silently rebase');
 select is(((select count(*) from public.project_scope_baselines))::text,'1','proposal cannot replace original baseline');
 select is((public.read_project_scope('00000000-0000-4000-8000-00000000f020')->>'approvalVerified')::text,'false','unresolved change still blocks scope readiness');
 reset role;
@@ -120,6 +125,7 @@ select throws_ok($$update public.decisions set rationale='changed' where decisio
 update public.project_states set archived_at=now() where id='00000000-0000-4000-8000-00000000f020'; set local role authenticated;
 select public.decide_change_proposal('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid,2,0,'00000000-0000-4000-8000-00000000ff02','00000000-0000-4000-8000-00000000f080','approved','Verify exact synthetic client proposal',true);
 select is(((select count(*) from public.project_change_proposal_decisions))::text,'2','exact retry after archive creates no new decision');
+select is(public.read_change_proposal('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid)->>'releaseAuthorized','false','archived project has no current release authorization');
 select throws_ok($$select public.save_change_proposal('00000000-0000-4000-8000-00000000f020',current_setting('test.change_id')::uuid,2,2,gen_random_uuid(),current_setting('test.proposal')::jsonb)$$,'P0001','change_proposal_not_applicable','archive blocks new proposal');
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f002","role":"authenticated"}',true);
 select is(((select count(*) from public.project_change_proposal_versions))::text,'0','outsider cannot read project_change_proposal_versions');

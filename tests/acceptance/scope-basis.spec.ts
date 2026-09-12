@@ -279,6 +279,21 @@ test('scope preserves identity, references, uncertain saves and review requests'
  }
  execFileSync('python',['scripts/local-acceptance-fixtures.py','proposal-verify']);
  await page.keyboard.press('Escape');
+ await change.getByLabel(/Impact currency/).fill('CAD');
+ await change.getByRole('button',{name:'Save change assessment',exact:true}).click();
+ await expect(change.getByRole('status',{name:'Change assessment status'})).toContainText('version 3');
+ await change.getByRole('button',{name:'5.3.6 Client Change Proposal',exact:true}).click();
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveValue('-200.00');
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveAccessibleName(/USD/);
+ await expect(proposal.getByLabel('Proposal release state',{exact:true})).toContainText('Current proposal release is not authorized.');
+ page.once('dialog',dialog=>dialog.accept());
+ await proposal.getByRole('button',{name:'Prepare proposal against current assessment',exact:true}).click();
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveValue('');
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveAccessibleName(/CAD/);
+ await proposal.getByRole('button',{name:'Save client proposal',exact:true}).click();
+ await expect(proposal.getByRole('status',{name:'Client proposal status'})).toContainText('version 3');
+ await page.keyboard.press('Escape');
+
  await page.keyboard.press('Escape');
  await expect(drawer.getByText(/A later preparation is a proposed change/)).toBeVisible();
  await expect(drawer.getByRole('option',{name:'Approve the initial scope baseline',exact:true})).toHaveJSProperty('disabled',true);

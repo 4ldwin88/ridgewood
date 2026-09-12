@@ -96,7 +96,7 @@ with psycopg.connect(DB) as db:
         assert len(baseline)==1 and baseline[0][0]==3 and baseline[0][1][0]['description']=='Coordinate lobby flooring interface'
         assert db.execute("select max(version) from public.project_scope_versions where project_state_id=%s", (project[0],)).fetchone()[0]==4
         changes = db.execute("select version,data from public.project_change_versions where project_state_id=%s order by version", (project[0],)).fetchall()
-        assert len(changes)==2 and changes[1][1]['costAmount']=='-250.00' and changes[1][1]['timeDays']=='0', changes
+        assert len(changes)==3 and changes[1][1]['costAmount']=='-250.00' and changes[1][1]['timeDays']=='0' and changes[2][1]['currency']=='CAD', changes
         decisions = db.execute("select r.dimension,d.outcome,r.verification_snapshot from public.project_change_dimension_decisions r join public.decisions d on d.id=r.decision_id where r.project_state_id=%s", (project[0],)).fetchall()
         assert len(decisions)==3 and {d[0] for d in decisions}=={'scope','cost','time'} and all(d[1]=='approved' and d[2]['aal']=='aal2' for d in decisions), decisions
         assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project[0],)).fetchone()[0]==0

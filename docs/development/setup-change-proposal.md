@@ -27,7 +27,9 @@ gate, role and document-control authorities. No delegation thresholds are added.
 markup/fee treatment, offer-specific commercial terms, optional fixed validity
 and exact published proposal reference. Scope, internal cost, currency, time and
 assessment assumptions remain references to one immutable assessment version.
-No second editable scope/time or budget total is introduced.
+No second editable scope/time or budget total is introduced. Moving an old proposal
+to a newer assessment is explicit and clears client price and offer terms, so a
+new currency/basis cannot be adopted silently. Recipient display history is frozen.
 
 Drafts save/reopen independently of release. Server checks exact assessment and
 proposal versions, signed money precision, finite calendar dates, project-scoped
