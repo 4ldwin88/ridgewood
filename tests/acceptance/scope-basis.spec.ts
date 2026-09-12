@@ -91,6 +91,72 @@ test('scope preserves identity, references, uncertain saves and review requests'
   await drawer.getByRole('heading',{name:'Scope decision history',exact:true}).scrollIntoViewIfNeeded();
   await page.screenshot({path:`test-results/scope-owner-history-${width}.png`});
  }
+ // Clarification and change intake use the same saved scope identity.
+ await drawer.getByText('Capture a scope question',{exact:true}).click();
+ await drawer.getByRole('button',{name:'Save scope question',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Complete the question');
+ const question='Does the finish schedule already include the lobby threshold?';
+ async function fillQuestion(text:string){
+  await drawer.getByLabel(/Question component/).selectOption({label:'Coordinate lobby flooring interface'});
+  await drawer.getByLabel(/^Scope question Required/).fill(text);
+  await drawer.getByLabel(/Date identified/).fill(new Date().toISOString().slice(0,10));
+  await drawer.getByLabel(/Question owner/).selectOption({index:1});
+  await drawer.getByLabel(/Question source/).selectOption({label:'Synthetic scope specification · revision 1'});
+ }
+ await fillQuestion(question);
+ await expect(drawer.getByRole('button',{name:'Save scope preparation',exact:true})).toBeDisabled();
+ page.once('dialog',dialog=>dialog.dismiss());await page.keyboard.press('Escape');await expect(drawer).toBeVisible();
+ let queryLost=false;
+ await page.route('**/rest/v1/rpc/capture_project_scope_query',async route=>{if(!queryLost){queryLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ await drawer.getByRole('button',{name:'Save scope question',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Retry preserves the exact request');
+ await drawer.getByRole('button',{name:'Retry scope question',exact:true}).click();
+ await expect(drawer.getByRole('status',{name:'Scope question status'})).toContainText('Scope question saved');
+ await page.keyboard.press('Escape');await open();
+ const queryHistory=drawer.getByRole('list',{name:'Scope question history'});
+ await expect(queryHistory.getByText(question,{exact:true})).toHaveCount(1);
+ await expect(drawer.getByText(/Current basis: review required/)).toBeVisible();
+ await drawer.getByText('Respond to a saved question',{exact:true}).click();
+ await drawer.getByLabel(/Open scope question/).selectOption({index:1});
+ await drawer.getByLabel(/Response disposition/).selectOption('clarification');
+ await drawer.getByLabel(/^Scope response Required/).fill('The current finish schedule already includes this threshold; no requirement or obligation changes.');
+ await drawer.getByLabel(/Clarification authority/).selectOption({label:'Synthetic confirmed business owner'});
+ await drawer.getByLabel(/I verified this answer changes no approved scope/).check();
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  await drawer.getByRole('button',{name:'Record scope response',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/scope-clarification-${width}.png`});
+ }
+ let responseLost=false;
+ await page.route('**/rest/v1/rpc/respond_project_scope_query',async route=>{if(!responseLost){responseLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ page.once('dialog',dialog=>dialog.accept());
+ await drawer.getByRole('button',{name:'Record scope response',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Retry preserves the exact request');
+ await drawer.getByRole('button',{name:'Retry scope response',exact:true}).click();
+ await expect(drawer.getByRole('status',{name:'Scope question status'})).toContainText('Clarification recorded');
+ await expect(drawer.getByText(/Current basis: approved/)).toBeVisible();
+ await page.keyboard.press('Escape');await open();
+ await expect(queryHistory).toContainText('Clarification recorded');
+ await drawer.getByText('Capture a scope question',{exact:true}).click();
+ await fillQuestion('Could the additional threshold require changed work?');
+ await drawer.getByRole('button',{name:'Save scope question',exact:true}).click();
+ await expect(drawer.getByRole('status',{name:'Scope question status'})).toContainText('Scope question saved');
+ await drawer.getByText('Respond to a saved question',{exact:true}).click();
+ await drawer.getByLabel(/Open scope question/).selectOption({index:1});
+ await drawer.getByLabel(/Response disposition/).selectOption('potential_change');
+ await drawer.getByLabel(/^Scope response Required/).fill('Additional work may affect price and time. Obtain impact assessment and authorization before proceeding.');
+ page.once('dialog',dialog=>dialog.accept());
+ await drawer.getByRole('button',{name:'Record scope response',exact:true}).click();
+ await expect(drawer.getByRole('status',{name:'Scope question status'})).toContainText('Potential change captured');
+ await page.keyboard.press('Escape');await open();
+ await expect(queryHistory).toContainText('Change reference:');
+ await expect(queryHistory.getByText(/Change reference:/)).toHaveCount(1);
+ await expect(drawer.getByText(/Current basis: review required/)).toBeVisible();
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  await queryHistory.getByText(/Change reference:/).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/scope-change-intake-${width}.png`});
+ }
  await drawer.getByLabel(/Scope description/).fill('Proposed additional flooring area');
  await drawer.getByRole('button',{name:'Save scope preparation',exact:true}).click();
  await expect(drawer.getByText(/A later preparation is a proposed change/)).toBeVisible();
