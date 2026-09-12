@@ -29,11 +29,21 @@ $$;
 
 create function private.setup_unmet(evidence_input jsonb, workspace_input uuid)
 returns jsonb language plpgsql stable security invoker set search_path='' as $$
-declare k text; e jsonb; reasons jsonb:='[]';
+declare k text; e jsonb; reasons jsonb:='[]'; role_key text; roles_ok boolean;
 begin
   foreach k in array private.setup_requirement_keys() loop
     select value into e from jsonb_array_elements(evidence_input) where value->>'requirement'=k;
-    if e is null or coalesce(e->>'materialBlocker','false')='true'
+    roles_ok:=true;
+    if k='leadership' then
+      foreach role_key in array array['project_lead','coordination_document_control','commercial_finance','oversight'] loop
+        if not exists(select 1 from public.workspace_memberships m where m.workspace_id=workspace_input and m.user_id::text=e->'roleAssignments'->>role_key and m.status='active') then roles_ok:=false; end if;
+      end loop;
+      if coalesce(e->>'fieldLeadership','')='required' then
+        if not exists(select 1 from public.workspace_memberships m where m.workspace_id=workspace_input and m.user_id::text=e->'roleAssignments'->>'field_lead' and m.status='active') then roles_ok:=false; end if;
+      elsif coalesce(e->>'fieldLeadership','')<>'not_applicable' or nullif(btrim(e->>'fieldLeadershipReason'),'') is null then roles_ok:=false;
+      end if;
+    end if;
+    if not roles_ok or e is null or coalesce(e->>'materialBlocker','false')='true'
       or nullif(btrim(e->>'details'),'') is null or nullif(btrim(e->>'evidenceReference'),'') is null
       or not exists(select 1 from public.workspace_memberships m where m.workspace_id=workspace_input and m.user_id::text=e->>'accountableUserId' and m.status='active')
       or not(coalesce(e->>'state','')='satisfied' or (k='permits' and e->>'state'='not_applicable' and nullif(btrim(e->>'notApplicableReason'),'') is not null))
@@ -176,17 +186,17 @@ begin
    if not a.permits_conditional_go or jsonb_array_length(obligations_input)=0 then raise exception 'conditional_go_not_permitted'; end if;
    for k in select jsonb_array_elements_text(unmet) loop
      if k not in ('communications','controls') then raise exception 'nonconditional_requirement:%',k; end if;
-     if not exists(select 1 from jsonb_array_elements(obligations_input) o where o->>'requirement'=k) then raise exception 'missing_conditional_obligation:%',k; end if;
+     if not exists(select 1 from jsonb_array_elements(obligations_input) obligation_row where obligation_row->>'requirement'=k) then raise exception 'missing_conditional_obligation:%',k; end if;
    end loop;
    if (select count(distinct value->>'requirement') from jsonb_array_elements(obligations_input))<>jsonb_array_length(obligations_input) then raise exception 'duplicate_conditional_obligation'; end if;
    for o in select value from jsonb_array_elements(obligations_input) loop
      if coalesce(o->>'requirement','') not in ('communications','controls') or not(coalesce(o->>'requirement','')=any(a.conditional_requirements)) then raise exception 'invalid_obligation_scope'; end if;
      foreach k in array array['description','reasonToAdvance','permittedLimits','ownerUserId','consequence'] loop
-       if nullif(btrim(o->>k),'') is null then raise exception 'incomplete_conditional_obligation'; end if;
+       if jsonb_typeof(o->k) is distinct from 'string' or nullif(btrim(o->>k),'') is null then raise exception 'incomplete_conditional_obligation'; end if;
      end loop;
      if not exists(select 1 from public.workspace_memberships m where m.workspace_id=p.workspace_id and m.user_id::text=o->>'ownerUserId' and m.status='active') then raise exception 'invalid_obligation_owner'; end if;
      if nullif(btrim(o->>'dueDate'),'') is null and nullif(btrim(o->>'dueTrigger'),'') is null then raise exception 'obligation_due_required'; end if;
-     if nullif(btrim(o->>'dueDate'),'') is not null and (o->>'dueDate')::timestamptz<=now() then raise exception 'obligation_overdue'; end if;
+     if nullif(btrim(o->>'dueDate'),'') is not null and (not isfinite((o->>'dueDate')::timestamptz) or (o->>'dueDate')::timestamptz<=now()) then raise exception 'obligation_overdue'; end if;
    end loop;
  end if;
  insert into public.project_gate01_decisions(project_state_id,setup_version_id,request_id,disposition,rationale,authority_id,authority_snapshot,evidence_snapshot,obligations,actor_user_id)

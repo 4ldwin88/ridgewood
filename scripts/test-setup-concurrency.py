@@ -17,7 +17,7 @@ with psycopg.connect(DB, autocommit=True) as db:
     db.execute("insert into public.authorization_records(id,project_state_id,outcome,actor_user_id) values(%s,%s,'approved',%s)", (authorization,project,owner))
     db.execute("insert into public.project_gate01_authorities(id,workspace_id,user_id,basis,owner_approval_reference,effective_from) values(%s,%s,%s,'confirmed_owner','Synthetic owner record',now()-interval '1 day')", (authority,workspace,owner))
     keys = db.execute('select private.setup_requirement_keys()').fetchone()[0]
-    evidence = [dict(requirement=k,state='satisfied',details='Reviewed synthetic basis',evidenceReference='fixture:approved',accountableUserId=str(owner),materialBlocker=False) for k in keys]
+    evidence = [dict(requirement=k,state='satisfied',details='Reviewed synthetic basis',evidenceReference='fixture:approved',accountableUserId=str(owner),materialBlocker=False,roleAssignments={r:str(owner) for r in ['project_lead','coordination_document_control','commercial_finance','oversight']},fieldLeadership='not_applicable',fieldLeadershipReason='Synthetic coordination only') for k in keys]
 
 barrier = Barrier(2)
 def command(kind, request):

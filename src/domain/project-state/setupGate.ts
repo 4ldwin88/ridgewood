@@ -26,6 +26,9 @@ export interface SetupEvidence {
   accountableUserId: string;
   materialBlocker: boolean;
   notApplicableReason?: string;
+  roleAssignments?: Record<string, string>;
+  fieldLeadership?: 'required' | 'not_applicable';
+  fieldLeadershipReason?: string;
 }
 export interface ConditionalObligation {
   requirement: SetupRequirementKey;
@@ -101,7 +104,10 @@ export function evaluateSetupGate(input: SetupGateInput) {
     if (rows.length !== 1) { unmet.push(requirement.key); continue; }
     const row = rows[0];
     const hasBasis = present(row.details) && present(row.accountableUserId) && present(row.evidenceReference);
-    const satisfied = !row.materialBlocker && hasBasis &&
+    const roleCoverage = requirement.key !== 'leadership' ||
+      (['project_lead', 'coordination_document_control', 'commercial_finance', 'oversight'].every(key => present(row.roleAssignments?.[key])) &&
+      (row.fieldLeadership === 'required' ? present(row.roleAssignments?.field_lead) : row.fieldLeadership === 'not_applicable' && present(row.fieldLeadershipReason)));
+    const satisfied = !row.materialBlocker && hasBasis && roleCoverage &&
       (row.state === 'satisfied' || (row.state === 'not_applicable' && requirement.optional && present(row.notApplicableReason)));
     if (!satisfied) unmet.push(requirement.key);
   }

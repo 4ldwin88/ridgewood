@@ -6,7 +6,7 @@ function ready(): SetupGateInput {
     projectStateId: 'project-1', workspaceId: 'workspace-1', actorUserId: 'owner-1', activeMember: true,
     hasDecisionPermission: true, stage: 'project_authorization_setup', archived: false, activeProject: true,
     upstreamAuthorizationId: 'frozen-authorization-1', disposition: 'go', rationale: 'Reviewed evidence', now: '2026-09-12T00:00:00Z',
-    evidence: setupRequirements.map(r => ({ requirement: r.key, state: 'satisfied', details: 'Reviewed basis', evidenceReference: 'record:1', accountableUserId: 'lead-1', materialBlocker: false })),
+    evidence: setupRequirements.map(r => ({ requirement: r.key, state: 'satisfied', details: 'Reviewed basis', evidenceReference: 'record:1', accountableUserId: 'lead-1', materialBlocker: false, roleAssignments: { project_lead: 'lead-1', coordination_document_control: 'lead-1', commercial_finance: 'lead-1', oversight: 'lead-1' }, fieldLeadership: 'not_applicable', fieldLeadershipReason: 'No field activity yet' })),
     obligations: [], authority: [{ id: 'authority-1', userId: 'owner-1', workspaceId: 'workspace-1', category: 'project.gate01.decide', basis: 'confirmed_owner', ownerApprovalReference: 'owner-identity-record:1', effectiveFrom: '2026-09-01T00:00:00Z', permitsConditionalGo: false, conditionalRequirements: [] }],
   };
 }
@@ -80,6 +80,10 @@ describe('Gate 01 decision contract', () => {
     input.authority[0].permitsConditionalGo = true; input.authority[0].conditionalRequirements = ['contract_review'];
     input.evidence.find(e => e.requirement === 'contract_review')!.state = 'unresolved';
     expect(evaluateSetupGate(input).blockers).toContain('nonconditional_requirement:contract_review');
+  });
+  it('requires explicit leadership coverage, including field applicability', () => {
+    const input = ready(); input.evidence.find(e => e.requirement === 'leadership')!.roleAssignments = {};
+    expect(evaluateSetupGate(input).unmet).toContain('leadership');
   });
   it('rejects an overdue obligation', () => {
     const input = ready(); input.disposition = 'conditional_go'; input.obligations = [{ ...obligation(), dueDate: input.now }];

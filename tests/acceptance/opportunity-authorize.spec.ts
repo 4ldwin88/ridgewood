@@ -277,6 +277,9 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
     await section.getByLabel(/Accountable person/).selectOption({ index: 1 });
     await section.getByLabel(/Assessment/).selectOption('satisfied');
   }
+  for (const role of ['project lead', 'coordination document control', 'commercial finance', 'oversight']) await setup.getByLabel(new RegExp(role+' Required coverage')).selectOption({ index: 1 });
+  await setup.getByLabel('Field leadership applicability', { exact: true }).selectOption('not_applicable');
+  await setup.getByLabel('Field leadership applicability reason', { exact: true }).fill('No field activity in this synthetic Setup');
   await setup.getByRole('button', { name: 'Save Setup', exact: true }).click();
   await expect(setup.locator('.setup-workspace > [role="status"]')).toContainText('Saved version 2');
   await setup.getByLabel('Approval authority').selectOption({ index: 1 });
