@@ -40,6 +40,12 @@ function ScopeEditor({projectStateId,onSaved}:{projectStateId:string;onSaved:()=
  return <section className="stage-tool-surface contract-review scope-basis">
  <h4>5.3.1 Scope basis and interfaces</h4><p>Describe controlled delivery components here. Other tools reference these scope items. Proposed assignments and exclusions do not change a contract or approved baseline.</p>
  <p>Frozen authorization: {state.authorizationRecordId??'Missing — recover authorization first'}. Initial baseline: {state.baseline?`version ${state.baseline.version}`:'Not established'}. Current readiness: {state.approvalVerified?'approved':'review required'}.</p>
+ <aside aria-label="Scope readiness">
+ <strong>{state.approvalVerified?'Current scope is approved.':'Current scope is not currently approved.'}</strong>
+ <p>5.3 confirms the execution boundary and interface responsibilities. Saving a preparation or proposing a change does not authorize changed work. Scope approval is one input to Gate 01; it does not advance the project.</p>
+ {!state.approvalVerified&&state.approvalBlockers.length>0&&<ul>{state.approvalBlockers.map(reason=><li key={reason}>{reason}</li>)}</ul>}
+ {state.queries.some(query=>query.response?.outcome==='potential_change')&&<p>A linked potential change remains unresolved. Its assessment or proposal release cannot replace the original baseline or clear scope readiness. Continue from the existing change record under 5.3.4 Clarifications and potential changes.</p>}
+ </aside>
  {!state.canEdit&&<p>This scope preparation is read-only for your access or the current project stage.</p>}
  {items.map((item,index)=><article className="setup-section" key={item.id}><h4>Scope component {index+1}</h4><fieldset disabled={locked}>
  <label>Scope description {required}<textarea maxLength={500} value={item.description} placeholder="Example: Supply and install lobby flooring" onChange={e=>change(item.id,{description:e.target.value})}/><small>One delivery component; retain upstream program requirements in their source.</small></label>
