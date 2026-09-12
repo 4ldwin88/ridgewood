@@ -208,3 +208,14 @@ end $$;
 create function public.decide_project_gate01(project_state_input uuid,version_input integer,request_id_input uuid,authority_id_input uuid,disposition_input text,rationale_input text,obligations_input jsonb) returns public.project_gate01_decisions language sql security invoker set search_path='' as $$ select private.decide_project_gate01_command(project_state_input,version_input,request_id_input,authority_id_input,disposition_input,rationale_input,obligations_input) $$;
 revoke all on function private.decide_project_gate01_command(uuid,integer,uuid,uuid,text,text,jsonb),public.decide_project_gate01(uuid,integer,uuid,uuid,text,text,jsonb) from public,anon;
 grant execute on function private.decide_project_gate01_command(uuid,integer,uuid,uuid,text,text,jsonb),public.decide_project_gate01(uuid,integer,uuid,uuid,text,text,jsonb) to authenticated;
+
+-- Compatibility read for old clients: retain historical rows without reseeding
+-- the obsolete Gate 02 Setup checklist. New Setup uses versioned evidence above.
+create or replace function public.ensure_project_authorization_setup_requirements(project_state_input uuid)
+returns setof public.project_state_stage_requirements language plpgsql security invoker set search_path='' as $$
+begin
+ if auth.uid() is null then raise exception 'authentication_required'; end if;
+ if not exists(select 1 from public.project_states p where p.id=project_state_input and public.is_workspace_member(p.workspace_id)) then raise exception 'project_state_not_found_or_access_denied'; end if;
+ return query select r.* from public.project_state_stage_requirements r where r.project_state_id=project_state_input and r.stage='project_authorization_setup' order by r.requirement_key;
+end $$;
+comment on function public.ensure_project_authorization_setup_requirements(uuid) is 'Legacy read compatibility only. Gate 01 Setup is governed by project_setup_versions and project_gate01_decisions. No Gate 02 requirements are created or rewritten.';

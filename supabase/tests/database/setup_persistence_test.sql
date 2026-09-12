@@ -1,5 +1,5 @@
 begin;
-select plan(28);
+select plan(29);
 insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
 ('00000000-0000-4000-8000-00000000f001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-editor@example.invalid',now(),now()),
 ('00000000-0000-4000-8000-00000000f002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-outsider@example.invalid',now(),now());
@@ -11,6 +11,7 @@ select set_config('test.setup_evidence',(select jsonb_agg(jsonb_build_object('re
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f001","role":"authenticated"}',true);
 select is((public.read_project_setup('00000000-0000-4000-8000-00000000f020')->>'version')::integer,0,'new Setup starts unsaved');
+select is((select count(*)::integer from public.ensure_project_authorization_setup_requirements('00000000-0000-4000-8000-00000000f020')),0,'legacy initializer does not create obsolete Gate 02 Setup requirements');
 select throws_ok($$select public.save_project_setup('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-00000000f040',current_setting('test.setup_evidence')::jsonb)$$,'P0001','missing_setup_edit_permission','technical owner role alone does not grant editing');
 reset role;
 insert into public.user_permission_overrides(workspace_id,user_id,permission_key,effect) values ('00000000-0000-4000-8000-00000000f010','00000000-0000-4000-8000-00000000f001','project.setup.edit','grant');
