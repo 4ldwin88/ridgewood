@@ -6,6 +6,7 @@ export interface SetupState {
   version: number;
   contractPreparationVersion?: number;
   scopePreparationVersion?: number;
+  obligationPlanVersion?: number;
   savedVersion?: number;
   authorizationRecordId: string | null;
   evidence: SetupEvidence[];

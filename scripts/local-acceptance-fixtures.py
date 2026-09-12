@@ -57,6 +57,23 @@ with psycopg.connect(DB) as db:
         assert len(rows)==1 and rows[0][0]==2 and rows[0][1]=='approved' and rows[0][2]['aal']=='aal2', rows
         assert project[1]=='project_authorization_setup'
         assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project[0],)).fetchone()[0]==0
+    elif command == 'obligation-setup':
+        owner, workspace = db.execute("select m.user_id,m.workspace_id from public.workspace_memberships m join auth.users u on u.id=m.user_id where u.email=%s", (EMAIL,)).fetchone()
+        project, document = str(uuid.uuid4()), str(uuid.uuid4())
+        db.execute("insert into public.project_states(id,workspace_id,name,stage,commercial_stage,status,priority,created_by,owner_user_id) values(%s,%s,'Obligation planning rehearsal','predevelopment','predevelopment','active','medium',%s,%s)", (project,workspace,owner,owner))
+        db.execute("insert into public.organizations(workspace_id,name,created_by) values(%s,'Synthetic flooring partner',%s)", (workspace,owner))
+        db.execute("insert into public.document_records(id,project_state_id,package_key,category_key,document_type,title,owner_user_id) values(%s,%s,'predevelopment','product_program','predevelopment_product_program','Synthetic permit requirement',%s)", (document,project,owner))
+        db.execute("insert into public.document_revisions(document_record_id,revision_number,state,created_by,published_by,published_at,source_data,published_source_snapshot) values(%s,1,'published',%s,%s,now(),%s::jsonb,%s::jsonb)", (document,owner,owner,json.dumps({'programSummary':'Obtain building permit before excavation'}),json.dumps({'programSummary':'Obtain building permit before excavation'})))
+        db.execute("insert into public.authorization_records(project_state_id,outcome,actor_user_id) values(%s,'approved',%s)", (project,owner))
+        db.execute("update public.project_states set stage='project_authorization_setup',commercial_stage='project_authorization_setup' where id=%s", (project,))
+    elif command == 'obligation-verify':
+        project = db.execute("select id,stage from public.project_states where name='Obligation planning rehearsal'").fetchone()
+        rows = db.execute("select version,items from public.project_obligation_plan_versions where project_state_id=%s order by version", (project[0],)).fetchall()
+        assert len(rows)==2 and len({r[1][0]['id'] for r in rows})==1, rows
+        assert rows[0][1][0]['requirement']=='' and rows[1][1][0]['requirement']=='Obtain building permit before excavation'
+        assert db.execute("select count(*) from public.project_obligations where project_state_id=%s", (project[0],)).fetchone()[0]==1
+        assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project[0],)).fetchone()[0]==0
+        assert project[1]=='project_authorization_setup'
     elif command == 'scope-setup':
         owner, workspace = db.execute("select m.user_id,m.workspace_id from public.workspace_memberships m join auth.users u on u.id=m.user_id where u.email=%s", (EMAIL,)).fetchone()
         project, document = str(uuid.uuid4()), str(uuid.uuid4())
