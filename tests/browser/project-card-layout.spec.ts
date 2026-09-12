@@ -39,7 +39,7 @@ for (const width of [390, 1280]) {
       await card.scrollIntoViewIfNeeded();
       const box = (await card.boundingBox())!;
       // Whitespace away from title and management controls must activate the title button.
-      await page.mouse.click(box.x + 8, box.y + box.height - 8);
+      await card.click({ position: { x: 8, y: box.height - 8 } });
       await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
       await page.getByRole('button', { name: `← ${section}`, exact: true }).click();
       await card.locator('.record-link').focus();
