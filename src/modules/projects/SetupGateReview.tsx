@@ -1,3 +1,4 @@
+import { createRequestId } from '../../infrastructure/project-state/requestId';
 import { useDrawerWorkState } from '../business/WorkspaceDrawer';
 import { useRef, useState } from 'react';
 import { setupRequirements, type ConditionalObligation, type GateDisposition } from '../../domain/project-state/setupGate';
@@ -15,10 +16,11 @@ export function SetupGateReview({ state, members, dirty, onRecorded }: { state: 
   useDrawerWorkState(Boolean(rationale.trim()), busy);
   const selectedAuthority = state.authorities.find(a => a.id === authority);
   async function submit() {
-    const input = request.current ?? { id: crypto.randomUUID(), authority, disposition, rationale, obligations: disposition === 'conditional_go' ? structuredClone(obligations) : [], version: state.version };
-    if (!request.current && !window.confirm(`Record ${input.disposition.replaceAll('_', ' ')} against saved Setup version ${input.version}? This decision becomes permanent history.`)) return;
-    request.current = input; setBusy(true); setError('');
+    setError('');
     try {
+      const input = request.current ?? { id: createRequestId(), authority, disposition, rationale, obligations: disposition === 'conditional_go' ? structuredClone(obligations) : [], version: state.version };
+      if (!request.current && !window.confirm(`Record ${input.disposition.replaceAll('_', ' ')} against saved Setup version ${input.version}? This decision becomes permanent history.`)) return;
+      request.current = input; setBusy(true);
       await setupRepository.decide(state.projectStateId, input.version, input.id, input.authority, input.disposition, input.rationale, input.obligations);
       const saved = await setupRepository.read(state.projectStateId);
       request.current = null; onRecorded(saved); setRationale(''); setObligations([]);

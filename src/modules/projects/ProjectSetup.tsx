@@ -1,3 +1,4 @@
+import { createRequestId } from '../../infrastructure/project-state/requestId';
 import { useEffect, useRef, useState } from 'react';
 import { setupRequirements, type SetupEvidence } from '../../domain/project-state/setupGate';
 import { setupRepository, type SetupState } from '../../infrastructure/project-state/setupRepository';
@@ -54,9 +55,10 @@ function SetupEditor({ projectStateId, onAdvanced }: { projectStateId: string; o
   async function save() {
     if (!state) return;
     // A lost response retains the exact request, rather than creating another version.
-    const request = pending.current ?? { id: crypto.randomUUID(), version: state.version, evidence: structuredClone(evidence) };
-    pending.current = request; setBusy(true); setError('');
+    setBusy(true); setError('');
     try {
+      const request = pending.current ?? { id: createRequestId(), version: state.version, evidence: structuredClone(evidence) };
+      pending.current = request;
       const saved = await setupRepository.save(projectStateId, request.version, request.id, request.evidence);
       setState(saved); setEvidence(saved.evidence); setDirty(false); pending.current = null;
       setMessage(`Saved version ${saved.savedVersion ?? saved.version}. Gate approval has not been granted.`);
