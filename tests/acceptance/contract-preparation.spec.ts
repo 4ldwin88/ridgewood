@@ -64,4 +64,47 @@ test('contract preparation survives lost response and reopens from the real back
   await page.screenshot({path:`test-results/contract-review-request-${width}.png`});
  }
  execFileSync('python',['scripts/local-acceptance-fixtures.py','contract-review-verify']);
+ await expect(drawer.getByText(/No confirmed owner authority and review permission/)).toBeVisible();
+ await drawer.getByRole('button',{name:'Request authorized review',exact:true}).click();
+ await expect(drawer.getByRole('status',{name:'Contract save status'})).toContainText('Review requested for version 2');
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','contract-owner-setup']);
+ await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'5.2 Contract & Commercial Review',exact:true}).click();
+ await expect(drawer.getByText(/Recent strong verification is required/)).toBeVisible();
+ await expect(drawer.getByRole('button',{name:'Record contract decision',exact:true})).toBeDisabled();
+ const session=JSON.parse(execFileSync('node',['scripts/local-review-session.mjs'],{encoding:'utf8'}));
+ await page.evaluate(session=>{
+  const key=Object.keys(localStorage).find(k=>k.startsWith('sb-')&&k.endsWith('-auth-token'));
+  if(!key)throw new Error('Synthetic session storage missing');
+  localStorage.setItem(key,JSON.stringify(session));
+ },session);
+ await page.reload();
+ await page.getByRole('button',{name:'Projects',exact:true}).click();
+ await page.getByRole('button',{name:'Contract preparation rehearsal',exact:true}).click();
+ await page.getByRole('button',{name:'Project Authorization & Setup',exact:true}).click();
+ await page.getByRole('button',{name:'5.2 Contract & Commercial Review',exact:true}).click();
+ await expect(drawer.getByText(/Recent strong verification is required/)).toHaveCount(0);
+ await drawer.getByLabel(/Owner authority/).selectOption({label:'Synthetic confirmed business owner'});
+ await drawer.getByLabel(/Review outcome/).selectOption('approved');
+ await drawer.getByLabel(/Decision reason/).fill('Verified synthetic agreement, parties, terms and effectiveness. No unresolved material risks.');
+ for(const label of [/I verified the exact agreement/,/I reviewed the stated value/,/I verified applicable effectiveness/,/No unresolved material contractual/])await drawer.getByLabel(label).check();
+ await expect(drawer.getByLabel(/Fee basis/)).toBeDisabled();
+ let decisionLost=false;
+ await page.route('**/rest/v1/rpc/decide_project_contract_review',async route=>{if(!decisionLost){decisionLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ page.once('dialog',dialog=>dialog.accept());
+ await drawer.getByRole('button',{name:'Record contract decision',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Retry retains the exact request');
+ await drawer.getByRole('button',{name:'Retry contract decision',exact:true}).click();
+ await expect(drawer.getByText('Decision recorded: approved.',{exact:true})).toBeVisible();
+ await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'5.2 Contract & Commercial Review',exact:true}).click();
+ await expect(drawer.getByText(/Current basis: approved/)).toBeVisible();
+ await expect(drawer.getByRole('list',{name:'Contract review requests'})).toContainText('Review decision recorded');
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  await drawer.getByRole('heading',{name:'Contract decision history',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/contract-owner-review-${width}.png`});
+ }
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','contract-owner-verify']);
+
 });
