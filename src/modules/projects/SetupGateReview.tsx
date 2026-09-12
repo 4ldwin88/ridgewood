@@ -1,3 +1,4 @@
+import { useDrawerWorkState } from '../business/WorkspaceDrawer';
 import { useRef, useState } from 'react';
 import type { ConditionalObligation, GateDisposition } from '../../domain/project-state/setupGate';
 import { setupRepository, type SetupState } from '../../infrastructure/project-state/setupRepository';
@@ -11,6 +12,7 @@ export function SetupGateReview({ state, members, dirty, onRecorded }: { state: 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const request = useRef<{ id: string; authority: string; disposition: GateDisposition; rationale: string; obligations: ConditionalObligation[]; version: number } | null>(null);
+  useDrawerWorkState(Boolean(rationale.trim()), busy);
   const selectedAuthority = state.authorities.find(a => a.id === authority);
   async function submit() {
     const input = request.current ?? { id: crypto.randomUUID(), authority, disposition, rationale, obligations: disposition === 'conditional_go' ? structuredClone(obligations) : [], version: state.version };

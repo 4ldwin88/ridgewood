@@ -1,5 +1,5 @@
 begin;
-select plan(23);
+select plan(28);
 insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
 ('00000000-0000-4000-8000-00000000f001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-editor@example.invalid',now(),now()),
 ('00000000-0000-4000-8000-00000000f002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-outsider@example.invalid',now(),now());
@@ -53,6 +53,21 @@ set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f001","role":"authenticated"}',true);
 select throws_ok($$select public.save_project_setup('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f042',current_setting('test.setup_evidence')::jsonb)$$,'P0001','setup_edit_not_allowed','archived record cannot change');
 select is(public.read_project_setup('00000000-0000-4000-8000-00000000f020')->>'canEdit','false','archived history remains read-only');
+reset role;
+insert into public.project_states(id,workspace_id,name,stage,commercial_stage,status,priority,created_by,owner_user_id) values ('00000000-0000-4000-8000-00000000f021','00000000-0000-4000-8000-00000000f010','Setup fixture','project_authorization_setup','project_authorization_setup','active','medium','00000000-0000-4000-8000-00000000f001','00000000-0000-4000-8000-00000000f001');
+insert into public.authorization_records(id,project_state_id,outcome,actor_user_id) values ('00000000-0000-4000-8000-00000000f031','00000000-0000-4000-8000-00000000f021','approved','00000000-0000-4000-8000-00000000f001');
+select set_config('test.setup_condition','[{"requirement":"communications","description":"Confirm coordination cadence","reasonToAdvance":"Formal instructions already controlled","permittedLimits":"No site work or new commitments","ownerUserId":"00000000-0000-4000-8000-00000000f001","dueDate":"2099-01-01","consequence":"Hold affected work"}]',true);
+set local role authenticated;
+select public.save_project_setup('00000000-0000-4000-8000-00000000f021',0,'00000000-0000-4000-8000-00000000f070',jsonb_set(current_setting('test.setup_evidence')::jsonb,'{0,materialBlocker}','true'));
+select throws_ok($$select public.decide_project_gate01('00000000-0000-4000-8000-00000000f021',1,'00000000-0000-4000-8000-00000000f080','00000000-0000-4000-8000-00000000f060','conditional_go','Limited advance',current_setting('test.setup_condition')::jsonb)$$,'P0001','material_disqualifying_condition','Conditional Go cannot conceal material blocker');
+select public.save_project_setup('00000000-0000-4000-8000-00000000f021',1,'00000000-0000-4000-8000-00000000f071',jsonb_set(current_setting('test.setup_evidence')::jsonb,'{10,state}','"unresolved"'));
+select throws_ok($$select public.decide_project_gate01('00000000-0000-4000-8000-00000000f021',2,'00000000-0000-4000-8000-00000000f080','00000000-0000-4000-8000-00000000f060','conditional_go','Limited advance',current_setting('test.setup_condition')::jsonb)$$,'P0001','conditional_go_not_permitted','Conditional Go requires explicit delegation limits');
+reset role;
+update public.project_gate01_authorities set permits_conditional_go=true,conditional_requirements=array['communications'] where id='00000000-0000-4000-8000-00000000f060';
+set local role authenticated;
+select is((public.decide_project_gate01('00000000-0000-4000-8000-00000000f021',2,'00000000-0000-4000-8000-00000000f080','00000000-0000-4000-8000-00000000f060','conditional_go','Limited advance',current_setting('test.setup_condition')::jsonb)).disposition,'conditional_go','scoped complete obligation permits limited advancement');
+select is((select stage::text from public.project_states where id='00000000-0000-4000-8000-00000000f021'),'preconstruction_mobilization','conditional decision advances same identity');
+select is(public.read_project_setup('00000000-0000-4000-8000-00000000f021')->'decisions'->0->'obligations',current_setting('test.setup_condition')::jsonb,'obligation remains visible after advancement');
 reset role;
 select * from finish();
 rollback;

@@ -3,6 +3,7 @@ import { setupRequirements, type SetupEvidence } from '../../domain/project-stat
 import { setupRepository, type SetupState } from '../../infrastructure/project-state/setupRepository';
 import { supabaseProjectStateRepository, type WorkspaceMemberOption } from '../../infrastructure/project-state/supabaseProjectStateRepository';
 import { SetupGateReview } from './SetupGateReview';
+import { useDrawerWorkState } from '../business/WorkspaceDrawer';
 import { WorkspaceModal } from '../business/WorkspaceModal';
 
 const guidance: Record<string, string> = {
@@ -21,12 +22,12 @@ const guidance: Record<string, string> = {
 };
 const blankEvidence = (): SetupEvidence[] => setupRequirements.map(r => ({ requirement: r.key, state: 'unresolved', details: '', evidenceReference: '', accountableUserId: '', materialBlocker: false }));
 
-export function ProjectSetup({ projectStateId }: { projectStateId: string }) {
+export function ProjectSetup({ projectStateId, onAdvanced }: { projectStateId: string; onAdvanced?: () => void }) {
   const [open, setOpen] = useState(false);
-  return <div className="authorization-handoff"><button className="secondary-button" onClick={() => setOpen(true)}>Project Authorization &amp; Setup</button>{open && <WorkspaceModal title="Project Authorization & Setup" onClose={() => setOpen(false)}><SetupEditor key={projectStateId} projectStateId={projectStateId} /></WorkspaceModal>}</div>;
+  return <div className="authorization-handoff"><button className="secondary-button" onClick={() => setOpen(true)}>Project Authorization &amp; Setup</button>{open && <WorkspaceModal title="Project Authorization & Setup" onClose={() => setOpen(false)}><SetupEditor key={projectStateId} projectStateId={projectStateId} onAdvanced={onAdvanced} /></WorkspaceModal>}</div>;
 }
 
-function SetupEditor({ projectStateId }: { projectStateId: string }) {
+function SetupEditor({ projectStateId, onAdvanced }: { projectStateId: string; onAdvanced?: () => void }) {
   const [state, setState] = useState<SetupState | null>(null);
   const [evidence, setEvidence] = useState<SetupEvidence[]>(blankEvidence);
   const [members, setMembers] = useState<WorkspaceMemberOption[]>([]);
@@ -34,6 +35,7 @@ function SetupEditor({ projectStateId }: { projectStateId: string }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [dirty, setDirty] = useState(false);
+  useDrawerWorkState(dirty, busy);
   const pending = useRef<{ id: string; version: number; evidence: SetupEvidence[] } | null>(null);
 
   useEffect(() => {
@@ -97,6 +99,6 @@ function SetupEditor({ projectStateId }: { projectStateId: string }) {
     <div className="setup-actions"><button className="primary-button" disabled={!state.canEdit || busy} onClick={() => void save()}>{busy ? 'Saving…' : pending.current ? 'Retry save' : 'Save Setup'}</button><button className="secondary-button" disabled={busy} onClick={() => void reload()}>Reload saved version</button></div>
     <h4>Gate 01 readiness</h4><p>Readiness uses the saved version. {state.approvalBlocker}</p>
     <ul>{state.unmet.map(k => <li key={k}>{setupRequirements.find(r => r.key === k)?.label}</li>)}</ul>
-    <SetupGateReview state={state} members={members} dirty={dirty || Boolean(pending.current)} onRecorded={saved => { setState(saved); setEvidence(saved.evidence); setMessage(`Gate decision recorded. Current stage: ${saved.stage.replaceAll('_', ' ')}`); }} /><h4>Save history</h4>{state.history.length ? <ul>{state.history.map(h => <li key={h.version}>Version {h.version} · {new Date(h.createdAt).toLocaleString()} · {h.actorUserId}</li>)}</ul> : <p>No Setup version saved yet.</p>}
+    <SetupGateReview state={state} members={members} dirty={dirty || Boolean(pending.current)} onRecorded={saved => { if (saved.stage === 'preconstruction_mobilization') onAdvanced?.(); setState(saved); setEvidence(saved.evidence); setMessage(`Gate decision recorded. Current stage: ${saved.stage.replaceAll('_', ' ')}`); }} /><h4>Save history</h4>{state.history.length ? <ul>{state.history.map(h => <li key={h.version}>Version {h.version} · {new Date(h.createdAt).toLocaleString()} · {h.actorUserId}</li>)}</ul> : <p>No Setup version saved yet.</p>}
   </div>;
 }

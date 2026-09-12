@@ -22,13 +22,9 @@ jobs:
           psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -f supabase/platform/replay-prerequisites.sql
           mv /tmp/ridgewood-recovered-migrations supabase/migrations
           supabase migration up --local
-      - name: Verify development Setup candidate on disposable backend
+      - name: Verify Setup and Gate 01 contracts on disposable backend
         run: |
-          psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -X -v ON_ERROR_STOP=1 -f supabase/development/gate01_setup.sql
           supabase test db supabase/tests/database/setup_persistence_test.sql
-          supabase migration --help
-          supabase migration new --help
-          supabase migration new gate01_setup_contract
       - name: Verify document lifecycle and immutability
         run: |
           supabase test db supabase/tests/database/client_privileges_test.sql supabase/tests/database/project_state_command_boundary_test.sql supabase/tests/database/qualification_grants_test.sql supabase/tests/database/project_photo_access_test.sql supabase/tests/database/organization_retirement_test.sql
@@ -57,6 +53,7 @@ jobs:
         run: |
           python -m pip install 'psycopg[binary]==3.2.10'
           python scripts/test-command-concurrency.py
+          python scripts/test-setup-concurrency.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22

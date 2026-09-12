@@ -241,6 +241,7 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await capture(page,'13-frozen-record');
   execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'verify-result']);
   await page.getByRole('dialog').getByRole('button', { name: /^Close / }).click();
+  execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'setup-gate-authority']);
   await page.getByRole('button', { name: 'Project Authorization & Setup', exact: true }).click();
   const setup = page.getByRole('dialog', { name: 'Project Authorization & Setup' });
   await expect(setup.getByText(/Saved version 0/)).toBeVisible();
@@ -260,7 +261,7 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await setup.getByRole('button', { name: 'Save Setup', exact: true }).click();
   await expect(setup.getByRole('alert')).toBeVisible();
   await setup.getByRole('button', { name: 'Retry save', exact: true }).click();
-  await expect(setup.getByRole('status')).toContainText('Saved version 1');
+  await expect(setup.locator('.setup-workspace > [role="status"]')).toContainText('Saved version 1');
   await expect(setup.getByText(/^Version 1 ·/)).toHaveCount(1);
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page,'setup-mobile-saved');
@@ -268,7 +269,36 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await page.getByRole('button', { name: 'Project Authorization & Setup', exact: true }).click();
   await setup.locator('summary').first().click();
   await expect(setup.getByLabel(/Reviewed basis and responsibilities/).first()).toHaveValue('Synthetic legal client; approved delivery name retained');
-  await expect(setup.getByRole('status')).toContainText('11 unresolved requirements');
+  await expect(setup.locator('.setup-workspace > [role="status"]')).toContainText('11 unresolved requirements');
+  for (const section of await setup.locator('details.setup-section').all()) {
+    if ((await section.getAttribute('open')) === null) await section.locator('summary').click();
+    await section.getByLabel(/Reviewed basis and responsibilities/).fill('Synthetic reviewed setup basis and role coverage');
+    await section.getByLabel(/Controlling document/).fill('fixture:approved-setup-basis');
+    await section.getByLabel(/Accountable person/).selectOption({ index: 1 });
+    await section.getByLabel(/Assessment/).selectOption('satisfied');
+  }
+  await setup.getByRole('button', { name: 'Save Setup', exact: true }).click();
+  await expect(setup.locator('.setup-workspace > [role="status"]')).toContainText('Saved version 2');
+  await setup.getByLabel('Approval authority').selectOption({ index: 1 });
+  await setup.getByLabel('Decision reason').fill('Synthetic hold pending coordination');
+  await setup.getByRole('button', { name: 'Record Gate 01 decision', exact: true }).click();
+  await expect(setup.getByText('Synthetic hold pending coordination', { exact: true })).toBeVisible();
+  await setup.getByLabel('Disposition', { exact: true }).selectOption('go');
+  await setup.getByLabel('Decision reason').fill('Synthetic approved Setup gate review');
+  let loseGateResponse = true;
+  await page.route('**/rest/v1/rpc/decide_project_gate01', async route => {
+    if (route.request().method() !== 'POST' || !loseGateResponse) return route.continue();
+    loseGateResponse = false;
+    const response = await route.fetch(); expect(response.ok()).toBeTruthy();
+    await route.abort('failed');
+  });
+  await setup.getByRole('button', { name: 'Record Gate 01 decision', exact: true }).click();
+  await expect(setup.getByRole('alert')).toBeVisible();
+  await setup.getByRole('button', { name: 'Retry decision', exact: true }).click();
+  await expect(setup.locator('.setup-workspace > [role="status"]')).toContainText('preconstruction mobilization');
+  await capture(page,'setup-gate01-advanced');
+  execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'verify-gate']);
+
   await setup.getByRole('button', { name: 'Close Project Authorization & Setup', exact: true }).click();
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.getByRole('button', { name: '← Projects', exact: true }).click();
@@ -283,5 +313,5 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await page.getByRole('button', { name: 'View Pre-Authorization / Authorization Record' }).click();
   await expect(page.getByRole('heading', { name: 'Frozen authorization record' })).toBeVisible();
   await expect(page.getByText('Synthetic executive acceptance', { exact: true })).toBeVisible();
-  execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'verify-result']);
+  execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'verify-gate']);
 });
