@@ -35,7 +35,12 @@ repository.workspaceMembers=async()=>[{userId:user.id,label:'Test owner'}];
 repository.reassessmentRequirements=async()=>[];
 repository.opportunityRequirements=async()=>[{requirementKey:'context',label:'Project context captured',status:'satisfied',required:true},{requirementKey:'action',label:'Next step identified',status:'not_started',required:true}];
 repository.listProjects=async()=>[{...items[0],id:'visual-authorized',name:'Cedar House · Synthetic',stage:'project_authorization_setup',commercialStage:'project_authorization_setup'}];
-repository.authorizationRecord=async()=>({id:'visual-authorization',outcome:'authorized',authorityBasis:'Synthetic visual fixture only',readinessSnapshot:{},evidenceSnapshot:{},actorUserId:user.id,createdAt:'2026-09-11T12:00:00Z'});
+repository.authorizationRecord=async()=>{
+ const mode=new URLSearchParams(location.search).get('basis');
+ if(mode==='missing')return null;
+ if(mode==='error')throw new Error('Synthetic basis read failure');
+ return {id:'visual-authorization',outcome:'authorized',authorityBasis:'Synthetic visual fixture only',readinessSnapshot:[{domain:'scope',readiness:'satisfied'}],evidenceSnapshot:{authorizationConditions:[{limit:'Consultant coordination only; no trade commitments',owner:'Synthetic owner'}],publishedDocuments:[{documentRecordId:'frozen-document',revisionId:'frozen-revision',revisionNumber:2,title:'Authorized scope',publishedAt:'2026-09-11T12:00:00Z',publishedBy:user.id,sourceSnapshot:mode==='partial'?null:{scope:'Frozen scope at authorization',_presentation:{version:1,title:'Authorized scope',projectName:'Cedar House at authorization',fields:[{key:'scope',label:'Approved scope',value:'Frozen scope at authorization'}]}}}]},actorUserId:user.id,createdAt:'2026-09-11T12:00:00Z'};
+};
 repository.authorizationAmendments=async()=>[];
 repository.listArchivedPreauthorization=async()=>[];
 qualification.list=async()=>[];
