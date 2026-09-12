@@ -51,4 +51,50 @@ test('scope preserves identity, references, uncertain saves and review requests'
  await drawer.getByRole('button',{name:'Save scope preparation',exact:true}).click();
  await expect(drawer.getByRole('list',{name:'Scope review requests'})).toContainText('Superseded');
  execFileSync('python',['scripts/local-acceptance-fixtures.py','scope-verify']);
+ await drawer.getByRole('button',{name:'Request scope review',exact:true}).click();
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','scope-owner-setup']);
+ const session=JSON.parse(execFileSync('node',['scripts/local-review-session.mjs','scope-contract'],{encoding:'utf8'}));
+ await page.evaluate(session=>{
+  const key=Object.keys(localStorage).find(k=>k.startsWith('sb-')&&k.endsWith('-auth-token'));
+  if(!key)throw new Error('Synthetic session storage missing');
+  localStorage.setItem(key,JSON.stringify(session));
+ },session);
+ await page.reload();
+ await page.getByRole('button',{name:'Projects',exact:true}).click();
+ await page.getByRole('button',{name:'Scope basis rehearsal',exact:true}).click();
+ await page.getByRole('button',{name:'Project Authorization & Setup',exact:true}).click();
+ await open();
+ await drawer.getByLabel(/Owner authority/).selectOption({label:'Synthetic confirmed business owner'});
+ await drawer.getByLabel(/Review outcome/).selectOption('approved');
+ await drawer.getByLabel(/Decision reason/).fill('Verified exact scope, parties and current contract basis; no unresolved scope blockers.');
+ for(const label of [/I verified that these scope items/,/I reviewed inclusions/,/No unresolved scope gap/])await drawer.getByLabel(label).check();
+ await expect(drawer.getByLabel(/Scope description/)).toBeDisabled();
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  await drawer.getByRole('button',{name:'Record scope decision',exact:true}).scrollIntoViewIfNeeded();
+  await expect(drawer.getByLabel(/No unresolved scope gap/)).toHaveCSS('width','20px');
+  await page.screenshot({path:`test-results/scope-owner-confirmations-${width}.png`});
+ }
+ let decisionLost=false;
+ await page.route('**/rest/v1/rpc/decide_project_scope_review',async route=>{if(!decisionLost){decisionLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ page.once('dialog',dialog=>dialog.accept());
+ await drawer.getByRole('button',{name:'Record scope decision',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Retry retains the exact request');
+ await drawer.getByRole('button',{name:'Retry scope decision',exact:true}).click();
+ await expect(drawer.getByText('Decision recorded: approved.',{exact:true})).toBeVisible();
+ await page.keyboard.press('Escape');await open();
+ await expect(drawer.getByText(/Current basis: approved/)).toBeVisible();
+ await expect(drawer.getByRole('list',{name:'Scope review requests'})).toContainText('Review decision recorded');
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  await drawer.getByRole('heading',{name:'Scope decision history',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/scope-owner-history-${width}.png`});
+ }
+ await drawer.getByLabel(/Scope description/).fill('Proposed additional flooring area');
+ await drawer.getByRole('button',{name:'Save scope preparation',exact:true}).click();
+ await expect(drawer.getByText(/A later preparation is a proposed change/)).toBeVisible();
+ await expect(drawer.getByRole('option',{name:'Approve the initial scope baseline',exact:true})).toBeDisabled();
+ await drawer.getByText('Original approved baseline · version 3',{exact:true}).click();
+ await expect(drawer.getByText('interface · Coordinate lobby flooring interface',{exact:true}).first()).toBeVisible();
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','scope-owner-verify']);
 });
