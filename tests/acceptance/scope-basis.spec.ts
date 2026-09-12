@@ -41,6 +41,10 @@ test('scope preserves identity, references, uncertain saves and review requests'
  await expect(drawer.getByLabel(/Classification/)).toHaveValue('interface');
  for(const width of [390,1280]){
   await page.setViewportSize({width,height:844});
+  const readiness=drawer.getByRole('complementary',{name:'Scope readiness',exact:true});
+  await readiness.scrollIntoViewIfNeeded();
+  await expect(readiness).toContainText('Current scope is not currently approved.');
+  await page.screenshot({path:`test-results/scope-readiness-${width}.png`});
   await drawer.getByRole('heading',{name:'Scope component 1',exact:true}).scrollIntoViewIfNeeded();
   await page.screenshot({path:`test-results/scope-basis-${width}.png`});
   await drawer.getByRole('heading',{name:'5.3.2 Request scope review',exact:true}).scrollIntoViewIfNeeded();
@@ -296,7 +300,7 @@ test('scope preserves identity, references, uncertain saves and review requests'
  await page.keyboard.press('Escape');
 
  await page.keyboard.press('Escape');
- await expect(drawer.getByText(/A later preparation is a proposed change/)).toBeVisible();
+ await expect(drawer.getByRole('complementary',{name:'Scope readiness',exact:true}).getByText(/A later preparation is a proposed change/)).toBeVisible();
  await expect(drawer.getByRole('option',{name:'Approve the initial scope baseline',exact:true})).toHaveJSProperty('disabled',true);
  await drawer.getByText('Original approved baseline · version 3',{exact:true}).click();
  await expect(drawer.getByText('interface · Coordinate lobby flooring interface',{exact:true}).first()).toBeVisible();
