@@ -11,12 +11,19 @@ export interface ContractState {
  canEdit: boolean; status: 'preparation'; approvalVerified: false;
  parties: ContractOption[]; agreements: ContractOption[]; evidence: ContractOption[]; risks: ContractOption[]; decisions: ContractOption[];
  history: { version: number; actorUserId: string; createdAt: string }[];
+ reviewRequests?: { id: string; version: number; actorUserId: string; createdAt: string; status: 'pending' | 'superseded' }[];
+ submittedReviewId?: string; submittedVersion?: number;
+ reviewRequestBlockers?: string[];
 }
 export class ContractSaveError extends Error {
  code: string;
  constructor(message:string,code:string){super(message);this.code=code;}
 }
 export const contractRepository = {
+ async requestReview(projectStateId: string, version: number, requestId: string): Promise<ContractState> {
+  const {data,error}=await supabase.rpc('request_project_contract_review',{project_state_input:projectStateId,version_input:version,request_id_input:requestId});
+  if(error)throw new ContractSaveError(error.message,error.code);return data as ContractState;
+ },
  async read(projectStateId: string): Promise<ContractState> {
   const {data,error}=await supabase.rpc('read_project_contract',{project_state_input:projectStateId});
   if(error)throw new Error(error.message);return data as ContractState;

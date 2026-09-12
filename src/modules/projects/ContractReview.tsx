@@ -11,14 +11,30 @@ export function ContractReview({projectStateId,onSaved}:{projectStateId:string;o
 function ContractEditor({projectStateId,onSaved}:{projectStateId:string;onSaved?:()=>void}) {
  const [state,setState]=useState<ContractState|null>(null),[data,setData]=useState<ContractData>(blankContract),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[dirty,setDirty]=useState(false);
  const pending=useRef<{id:string;version:number;data:ContractData}|null>(null);
- useDrawerWorkState(dirty,busy);
+ const pendingReview=useRef<{id:string;version:number}|null>(null);
+ useDrawerWorkState(dirty||Boolean(pendingReview.current),busy);
  useEffect(()=>{let active=true;contractRepository.read(projectStateId).then(s=>{if(active){setState(s);setData(s.data??blankContract());}}).catch(e=>{if(active)setError(e instanceof Error?e.message:'Contract preparation could not load.');});return()=>{active=false;};},[projectStateId]);
  const change=(patch:Partial<ContractData>)=>{setData(v=>({...v,...patch}));setDirty(true);setMessage('');};
  async function reload(){
-  if((dirty||pending.current)&&!window.confirm('Replace these entries with the latest saved contract preparation?'))return;
+  if((dirty||pending.current||pendingReview.current)&&!window.confirm('Replace these entries with the latest saved contract preparation and review request status?'))return;
   setBusy(true);setError('');
-  try{const s=await contractRepository.read(projectStateId);setState(s);setData(s.data??blankContract());pending.current=null;setDirty(false);setMessage('Latest saved contract preparation loaded.');}
+  try{const s=await contractRepository.read(projectStateId);setState(s);setData(s.data??blankContract());pending.current=null;pendingReview.current=null;setDirty(false);setMessage('Latest saved contract preparation loaded.');}
   catch(e){setError(e instanceof Error?e.message:'Reload failed.');}finally{setBusy(false);}
+ }
+ async function requestReview(){
+  if(!state||busy||dirty||pending.current)return;
+  setBusy(true);setError('');setMessage('');
+  try{
+   const request=pendingReview.current??{id:createRequestId(),version:state.version};pendingReview.current=request;
+   const s=await contractRepository.requestReview(projectStateId,request.version,request.id);
+   setState(s);setData(s.data??blankContract());pendingReview.current=null;onSaved?.();
+   setMessage(`Review requested for version ${s.submittedVersion}. No approval granted.`);
+  }catch(e){
+   if(e instanceof ContractSaveError && e.code==='P0001')pendingReview.current=null;
+   const reason=e instanceof Error?e.message:'';
+   const messages:Record<string,string>={contract_version_conflict:'The saved contract changed. Reload before requesting review.',contract_review_already_requested:'Review was already requested for this version. Reload to see it.',missing_setup_edit_permission:'Your access does not permit review requests.',contract_edit_not_allowed:'This project no longer permits a new review request.',save_contract_before_request:'Save a contract preparation before requesting review.'};
+   setError(`${reason==='incomplete_contract_review_basis'?'Complete the required contract basis before requesting review.':messages[reason]??'The review request could not be confirmed.'} ${pendingReview.current?'Retry uses the same request to avoid duplicates.':'Reload the saved contract to check its current status.'}`);
+  }finally{setBusy(false);}
  }
  async function save(){
   if(!state)return;setBusy(true);setError('');
@@ -33,10 +49,10 @@ function ContractEditor({projectStateId,onSaved}:{projectStateId:string;onSaved?
   }finally{setBusy(false);}
  }
  if(!state)return <div>{error?<><p role="alert">{error}</p><button disabled={busy} onClick={()=>void reload()}>Retry loading contract</button></>:<p role="status">Loading contract preparation…</p>}</div>;
- const locked=!state.canEdit||busy||Boolean(pending.current);
+ const locked=!state.canEdit||busy||Boolean(pending.current)||Boolean(pendingReview.current);
  const required=<span className="setup-required">Required for review</span>;
  const optional=<span className="optional-label">Optional</span>;
- const select=(label:string,key:'agreementRevisionId'|'agreementEvidenceId'|'reviewDecisionId',options:ContractOption[],hint:string)=><label>{label} {key==='agreementEvidenceId'?optional:required}<select value={data[key]} onChange={e=>change({[key]:e.target.value})}><option value="">Select an existing record</option>{options.map(o=><option value={o.id} key={o.id}>{o.label}</option>)}</select><small>{hint}</small></label>;
+ const select=(label:string,key:'agreementRevisionId'|'agreementEvidenceId'|'reviewDecisionId',options:ContractOption[],hint:string)=><label>{label} {key==='reviewDecisionId'?optional:<span className="setup-required">One agreement reference required</span>}<select value={data[key]} onChange={e=>change({[key]:e.target.value})}><option value="">Select an existing record</option>{options.map(o=><option value={o.id} key={o.id}>{o.label}</option>)}</select><small>{hint}</small></label>;
  const checklist=(key:'partyIds'|'riskIds',options:ContractOption[])=><div className="contract-choices">{options.length?options.map(o=><label key={o.id}><input type="checkbox" checked={data[key].includes(o.id)} disabled={locked||(o.retired&&!state.data?.[key].includes(o.id))} onChange={e=>change({[key]:e.target.checked?[...data[key],o.id]:data[key].filter(id=>id!==o.id)})}/>{o.label}{o.retired?' · Removed from new selections':''}</label>):<p>No linked records available yet.</p>}</div>;
  return <section className="stage-tool-surface contract-review">
  <h4>5.2.1 Contract preparation</h4><p>Prepare the contractual basis once. Agreement and risk references use existing project records; legal parties use the organization register.</p>
@@ -57,7 +73,15 @@ function ContractEditor({projectStateId,onSaved}:{projectStateId:string;onSaved?
  {(data.riskAssessment==='linked'||data.riskIds.length>0)&&<><h4>Referenced risks and exceptions</h4>{checklist('riskIds',state.risks)}</>}
  {select('Recorded review decision','reviewDecisionId',state.decisions,'Select the existing decision for later authority verification. Its label alone does not prove approval.')}
  </fieldset>
- <div className="setup-actions"><button disabled={!state.canEdit||busy} onClick={()=>void save()}>{busy?'Working…':pending.current?'Retry save':'Save contract preparation'}</button><button disabled={busy} onClick={()=>void reload()}>Reload saved contract</button></div>
+ <div className="setup-actions"><button disabled={!state.canEdit||busy||Boolean(pendingReview.current)} onClick={()=>void save()}>{busy?'Working…':pending.current?'Retry save':'Save contract preparation'}</button><button disabled={busy} onClick={()=>void reload()}>Reload saved contract</button></div>
+ <h4>5.2.2 Request authorized review</h4>
+ <p>Record a review request against the saved preparation version and its frozen references. Supply the required basis first; requesting review does not accept risks, sign the agreement or authorize work.</p>
+ {!!state.reviewRequestBlockers?.length&&<><p>Required before requesting review of this saved version:</p><ul>{state.reviewRequestBlockers.map(reason=><li key={reason}>{reason}</li>)}</ul></>}
+ <p>Approval is unavailable until the governing authority and review controls are implemented and verified. Requests are recorded here; no reviewer notification is sent.</p>
+ {dirty&&<p>Save your changes before requesting review.</p>}
+ <button disabled={!state.canEdit||busy||dirty||Boolean(pending.current)||state.version===0||(!pendingReview.current&&state.reviewRequests?.some(r=>r.version===state.version))} onClick={()=>void requestReview()}>{pendingReview.current?'Retry review request':'Request authorized review'}</button>
+ <h4>Review requests</h4>
+ {state.reviewRequests?.length?<ul aria-label="Contract review requests">{state.reviewRequests.map(r=><li key={r.id}>Version {r.version} · {r.status==='pending'?'Pending authorized review':'Superseded by a newer preparation'} · {new Date(r.createdAt).toLocaleString()} · {r.actorUserId}</li>)}</ul>:<p>No review requested.</p>}
  <h4>Preparation history</h4>{state.history.length?<ul>{state.history.map(v=><li key={v.version}>Version {v.version} · {new Date(v.createdAt).toLocaleString()} · {v.actorUserId}</li>)}</ul>:<p>No contract preparation saved yet.</p>}
  </section>;
 }
