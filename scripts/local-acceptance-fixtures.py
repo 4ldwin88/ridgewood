@@ -22,6 +22,14 @@ with psycopg.connect(DB) as db:
         assert len(project) == 1 and project[0][1] == 'project_authorization_setup', project
         assert db.execute('select count(*) from public.authorization_records where project_state_id=%s', (project[0][0],)).fetchone()[0] == 1
         assert db.execute("select count(*) from public.document_revisions r join public.document_records d on d.id=r.document_record_id where d.project_state_id=%s and r.state='published' and r.published_source_snapshot is not null", (project[0][0],)).fetchone()[0] == 7
+    elif command == 'setup-gate-authority':
+        owner, workspace = db.execute("select m.user_id,m.workspace_id from public.workspace_memberships m join auth.users u on u.id=m.user_id where u.email=%s", (EMAIL,)).fetchone()
+        db.execute("insert into public.project_gate01_authorities(workspace_id,user_id,basis,owner_approval_reference,effective_from) values(%s,%s,'confirmed_owner','Synthetic isolated owner identity',now()-interval '1 minute')", (workspace,owner))
+    elif command == 'verify-gate':
+        project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='QA rehearsal · v0.25'", (EMAIL,)).fetchone()
+        assert project[1] == 'preconstruction_mobilization', project
+        assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s and disposition='go'", (project[0],)).fetchone()[0] == 1
+        assert db.execute("select count(*) from public.authorization_records where project_state_id=%s", (project[0],)).fetchone()[0] == 1
     elif command == 'setup':
         status = json.loads(Path('/tmp/ridgewood-local-status.json').read_text())
         assert status['API_URL'] == API, 'Refusing non-local API'
