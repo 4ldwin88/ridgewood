@@ -35,7 +35,7 @@ begin
   n:=n+1;
   if btrim(item->>'description')='' then reasons:=array_append(reasons,'Item '||n||': description'); end if;
   if item->>'classification'='' then reasons:=array_append(reasons,'Item '||n||': classification'); end if;
-  if item->>'classification' in ('inclusion','interface','owner_supplied','allowance') and item->>'partyId'='' then reasons:=array_append(reasons,'Item '||n||': responsible party'); end if;
+  if item->>'classification' in ('interface','owner_supplied') and item->>'partyId'='' then reasons:=array_append(reasons,'Item '||n||': responsible party'); end if;
   if item->>'sourceRevisionId'='' then reasons:=array_append(reasons,'Item '||n||': governing source revision'); end if;
   if item->>'criterionRevisionId'='' and btrim(item->>'acceptanceCriteria')='' then reasons:=array_append(reasons,'Item '||n||': acceptance criterion or specification reference'); end if;
  end loop;

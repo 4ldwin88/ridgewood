@@ -23,8 +23,8 @@ are frozen with the saved preparation; the upstream authorization ID is retained
 
 5.3.2 submits the exact saved version for authorized review. Incomplete drafts can
 save; submission requires descriptions/classifications, governing source and
-acceptance basis. Included work, allowances, interfaces and owner-supplied items
-must name their responsible party. Proposed assignments do not award a contract.
+acceptance basis. Interfaces and owner-supplied items must name their responsible party; assigned
+delivery scope selects its existing party. Other preparation items may remain unassigned. Proposed assignments do not award a contract.
 Requests send no messages and grant no authority. New preparations supersede
 pending requests while preserving their immutable source versions.
 
