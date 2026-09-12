@@ -60,11 +60,12 @@ with psycopg.connect(DB) as db:
     elif command == 'scope-setup':
         owner, workspace = db.execute("select m.user_id,m.workspace_id from public.workspace_memberships m join auth.users u on u.id=m.user_id where u.email=%s", (EMAIL,)).fetchone()
         project, document = str(uuid.uuid4()), str(uuid.uuid4())
-        db.execute("insert into public.project_states(id,workspace_id,name,stage,commercial_stage,status,priority,created_by,owner_user_id) values(%s,%s,'Scope basis rehearsal','project_authorization_setup','project_authorization_setup','active','medium',%s,%s)", (project,workspace,owner,owner))
-        db.execute("insert into public.authorization_records(project_state_id,outcome,actor_user_id) values(%s,'approved',%s)", (project,owner))
+        db.execute("insert into public.project_states(id,workspace_id,name,stage,commercial_stage,status,priority,created_by,owner_user_id) values(%s,%s,'Scope basis rehearsal','predevelopment','predevelopment','active','medium',%s,%s)", (project,workspace,owner,owner))
         db.execute("insert into public.organizations(workspace_id,name,created_by) values(%s,'Synthetic flooring partner',%s)", (workspace,owner))
         db.execute("insert into public.document_records(id,project_state_id,package_key,category_key,document_type,title,owner_user_id) values(%s,%s,'predevelopment','product_program','predevelopment_product_program','Synthetic scope specification',%s)", (document,project,owner))
         db.execute("insert into public.document_revisions(document_record_id,revision_number,state,created_by,published_by,published_at,source_data,published_source_snapshot) values(%s,1,'published',%s,%s,now(),%s::jsonb,%s::jsonb)", (document,owner,owner,json.dumps({'programSummary':'Preserve the lobby access route'}),json.dumps({'programSummary':'Preserve the lobby access route'})))
+        db.execute("insert into public.authorization_records(project_state_id,outcome,actor_user_id) values(%s,'approved',%s)", (project,owner))
+        db.execute("update public.project_states set stage='project_authorization_setup',commercial_stage='project_authorization_setup' where id=%s", (project,))
     elif command == 'scope-verify':
         project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Scope basis rehearsal'", (EMAIL,)).fetchone()
         versions = db.execute("select version,items,authorization_record_id from public.project_scope_versions where project_state_id=%s order by version", (project[0],)).fetchall()
