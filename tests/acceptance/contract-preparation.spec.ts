@@ -1,0 +1,36 @@
+import { test, expect } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+
+test('contract preparation survives lost response and reopens from the real backend', async ({page})=>{
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','contract-setup']);
+ await page.goto('/?portal=1');
+ await page.getByLabel('Email').fill('edward-demo@example.invalid');
+ await page.getByLabel('Password').fill('Synthetic-local-only-2026!');
+ await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await page.getByRole('button',{name:'Projects',exact:true}).click();
+ await page.getByRole('button',{name:'Contract preparation rehearsal',exact:true}).click();
+ await page.getByRole('button',{name:'Project Authorization & Setup',exact:true}).click();
+ await page.getByRole('button',{name:'5.2 Contract & Commercial Review',exact:true}).click();
+ const drawer=page.getByRole('dialog',{name:'5.2 Contract & Commercial Review',exact:true});
+ await drawer.getByLabel('Synthetic legal client').check();
+ await drawer.getByLabel(/Compensation model/).selectOption('fee');
+ await drawer.getByLabel(/Fee basis/).fill('Monthly management fee');
+ await drawer.getByLabel(/Payment terms/).fill('Monthly invoice under agreement clause 8');
+ let lost=false;
+ await page.route('**/rest/v1/rpc/save_project_contract',async route=>{if(!lost){lost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ await drawer.getByRole('button',{name:'Save contract preparation',exact:true}).click();
+ await expect(drawer.getByRole('alert')).toContainText('Your entries remain here');
+ await drawer.getByRole('button',{name:'Retry save',exact:true}).click();
+ await expect(drawer.getByRole('status')).toContainText('Saved preparation version 1');
+ await expect(drawer.getByRole('status')).toContainText('No approval granted');
+ await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'5.2 Contract & Commercial Review',exact:true}).click();
+ await expect(drawer.getByLabel(/Fee basis/)).toHaveValue('Monthly management fee');
+ await expect(drawer.getByLabel('Synthetic legal client')).toBeChecked();
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  await expect(drawer.getByRole('button',{name:'Close 5.2 Contract & Commercial Review',exact:true})).toBeInViewport();
+  await page.screenshot({path:`test-results/contract-preparation-${width}.png`});
+ }
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','contract-verify']);
+});

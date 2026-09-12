@@ -1,3 +1,4 @@
+import { ContractReview } from './ContractReview';
 import { AuthorizedBasis } from './AuthorizedBasis';
 import { createRequestId } from '../../infrastructure/project-state/requestId';
 import { useEffect, useRef, useState } from 'react';
@@ -37,6 +38,7 @@ function SetupEditor({ projectStateId, onAdvanced }: { projectStateId: string; o
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [contractPrepared, setContractPrepared] = useState(false);
   useDrawerWorkState(dirty, busy);
   const pending = useRef<{ id: string; version: number; evidence: SetupEvidence[] } | null>(null);
 
@@ -84,13 +86,15 @@ function SetupEditor({ projectStateId, onAdvanced }: { projectStateId: string; o
     <p>Prepare the project for Gate 01. Saving records evidence and responsibilities; it does not authorize work or commitments.</p>
     <p>Project State: {projectStateId}</p>
     {state.authorizationRecordId ? <AuthorizedBasis projectStateId={projectStateId} authorizationRecordId={state.authorizationRecordId} /> : <p role="alert">Frozen authorization missing — Setup cannot be saved.</p>}
+    <ContractReview projectStateId={projectStateId} onSaved={() => { setContractPrepared(true); void setupRepository.read(projectStateId).then(setState).catch(e => setError(e instanceof Error ? e.message : 'Reload Setup readiness.')); }} />
     <p role="status">{message || `Saved version ${state.version} · ${state.unmet.length} unresolved requirements`}{dirty ? ' · Unsaved changes' : ''}</p>
     {error && <p role="alert" className="error-message">{error}</p>}
     {!state.canEdit && <p>This record is read-only for your access or the current project state.</p>}
     {evidence.map((row, index) => <details key={row.requirement} className="setup-section">
       <summary>{setupRequirements.find(r => r.key === row.requirement)?.label} · {state.unmet.includes(row.requirement) ? 'Needs evidence' : 'Ready'}</summary>
       <p>{guidance[row.requirement]}</p>
-      <fieldset disabled={locked}>
+      {(contractPrepared || Boolean(state.contractPreparationVersion)) && ['contracting_party','contract_review','commercial_terms','contractual_risks'].includes(row.requirement) && <p>Earlier checklist evidence is retained below for reference. Prepare current contract information in 5.2; authorized review remains required.</p>}
+      <fieldset disabled={locked || (contractPrepared || Boolean(state.contractPreparationVersion)) && ['contracting_party','contract_review','commercial_terms','contractual_risks'].includes(row.requirement)}>
         <label>Assessment <span className="setup-required">Required</span><select value={row.state} onChange={e => change(index, { state: e.target.value as SetupEvidence['state'] })}><option value="unresolved">Unresolved</option><option value="satisfied">Satisfied with evidence</option>{row.requirement === 'permits' && <option value="not_applicable">Not applicable with reason</option>}</select></label>
         <label>Reviewed basis and responsibilities <span className="setup-required">Required for readiness</span><textarea rows={4} value={row.details} onChange={e => change(index, { details: e.target.value })} /></label>
         <label>Controlling document / evidence reference <span className="setup-required">Required for readiness</span><input value={row.evidenceReference} onChange={e => change(index, { evidenceReference: e.target.value })} /></label>
