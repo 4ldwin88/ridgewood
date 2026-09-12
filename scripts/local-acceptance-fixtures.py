@@ -41,6 +41,12 @@ with psycopg.connect(DB) as db:
         rows = db.execute("select version,data,authorization_record_id from public.project_contract_versions where project_state_id=%s", (project,)).fetchall()
         assert len(rows)==1 and rows[0][0]==1 and rows[0][1]['feeBasis']=='Monthly management fee', rows
         assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project,)).fetchone()[0]==0
+    elif command == 'contract-review-verify':
+        project = db.execute("select p.id from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Contract preparation rehearsal'", (EMAIL,)).fetchone()[0]
+        rows = db.execute("select c.version,c.data from public.project_contract_review_requests r join public.project_contract_versions c on c.id=r.contract_version_id where r.project_state_id=%s", (project,)).fetchall()
+        assert len(rows)==1 and rows[0][0]==1 and rows[0][1]['feeBasis']=='Monthly management fee', rows
+        assert db.execute("select max(version) from public.project_contract_versions where project_state_id=%s", (project,)).fetchone()[0]==2
+        assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project,)).fetchone()[0]==0
     elif command == 'setup':
         status = json.loads(Path('/tmp/ridgewood-local-status.json').read_text())
         assert status['API_URL'] == API, 'Refusing non-local API'
