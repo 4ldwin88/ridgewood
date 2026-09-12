@@ -164,6 +164,72 @@ test('scope preserves identity, references, uncertain saves and review requests'
  }
  await drawer.getByLabel(/Scope description/).fill('Proposed additional flooring area');
  await drawer.getByRole('button',{name:'Save scope preparation',exact:true}).click();
+
+ await drawer.getByRole('button',{name:'Review change assessment',exact:true}).click();
+ const change=page.getByRole('dialog',{name:'5.3.5 Changes — Assessment & Internal Review',exact:true});
+ await expect(change.getByLabel(/Signed cost impact/)).toHaveValue('');
+ await expect(change.getByLabel(/Signed time impact in days/)).toHaveValue('');
+ await change.getByRole('button',{name:'Save change assessment',exact:true}).click();
+ await expect(change.getByRole('status',{name:'Change assessment status'})).toContainText('version 1');
+ await change.getByRole('button',{name:'Request change internal review',exact:true}).click();
+ await expect(change.getByRole('alert')).toContainText('Complete and save the assessment');
+ await change.getByLabel(/Change description/).fill('Additional flooring area with a reviewed credit and no time extension');
+ await change.getByLabel(/Proposed scope version/).selectOption('4');
+ await change.getByLabel(/^Cost assessment/).selectOption('assessed');
+ await change.getByLabel(/Signed cost impact/).fill('-250.00');
+ await change.getByLabel(/Impact currency/).fill('USD');
+ await change.getByLabel(/^Time assessment/).selectOption('assessed');
+ await change.getByLabel(/Signed time impact in days/).fill('0');
+ await change.getByLabel(/Time calendar basis/).selectOption('working_days');
+ await change.getByLabel(/Other impacts and notice implications/).fill('Reviewed procurement, quality, safety, permits, responsibilities and notices; no other impacts identified.');
+ await change.getByLabel(/Material blocker assessment/).selectOption('none_identified');
+ await change.getByLabel('Synthetic scope specification · revision 1',{exact:true}).check();
+ page.once('dialog',dialog=>dialog.dismiss());await page.keyboard.press('Escape');await expect(change).toBeVisible();
+ let changeLost=false;
+ await page.route('**/rest/v1/rpc/save_project_change',async route=>{if(!changeLost){changeLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ await change.getByRole('button',{name:'Save change assessment',exact:true}).click();
+ await expect(change.getByRole('alert')).toContainText('Retry preserves the exact request');
+ await expect(change.getByLabel(/Change description/)).toBeDisabled();
+ await change.getByRole('button',{name:'Retry change assessment save',exact:true}).click();
+ await expect(change.getByRole('status',{name:'Change assessment status'})).toContainText('version 2');
+ let changeRequestLost=false;
+ await page.route('**/rest/v1/rpc/request_project_change_review',async route=>{if(!changeRequestLost){changeRequestLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ await change.getByRole('button',{name:'Request change internal review',exact:true}).click();
+ await expect(change.getByRole('alert')).toContainText('Retry preserves the exact request');
+ await change.getByRole('button',{name:'Retry change review request',exact:true}).click();
+ await expect(change.getByRole('list',{name:'Change review requests'})).toContainText('Version 2 · current');
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});await change.getByLabel(/Change description/).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/change-assessment-${width}.png`});
+ }
+ let changeDecisionLost=false;
+ await page.route('**/rest/v1/rpc/decide_project_change_dimension',async route=>{if(!changeDecisionLost){changeDecisionLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ for(const dimension of ['scope','cost','time']){
+  await change.getByLabel(/Review dimension/).selectOption(dimension);
+  await change.getByLabel(/Change owner authority/).selectOption({label:'Synthetic confirmed business owner'});
+  await change.getByLabel(/^Internal decision/).selectOption('approved');
+  await change.getByLabel(/Change decision rationale/).fill(`Reviewed ${dimension} independently against the exact proposed scope and published evidence.`);
+  await change.getByLabel(/I reviewed the selected/).check();
+  page.once('dialog',dialog=>dialog.accept());
+  await change.getByRole('button',{name:'Record change internal decision',exact:true}).click();
+  if(dimension==='scope'){
+   await expect(change.getByRole('alert')).toContainText('Retry preserves the exact request');
+   await change.getByRole('button',{name:'Retry change decision',exact:true}).click();
+  }
+  await expect(change.getByRole('list',{name:'Change dimension status'})).toContainText(`${dimension}: approved internally`);
+  if(dimension!=='time')await expect(change.getByRole('list',{name:'Change dimension status'})).toContainText('time: not reviewed');
+ }
+ await expect(change.getByText('All three dimensions have current internal approval.',{exact:true})).toBeVisible();
+ await page.keyboard.press('Escape');await drawer.getByRole('button',{name:'Review change assessment',exact:true}).click();
+ await expect(change.getByLabel(/Signed cost impact/)).toHaveValue('-250.00');
+ await expect(change.getByLabel(/Signed time impact in days/)).toHaveValue('0');
+ await expect(change.getByRole('list',{name:'Change decision history'}).locator(':scope > li')).toHaveCount(3);
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});await change.getByRole('heading',{name:'Execution remains blocked',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/change-internal-decisions-${width}.png`});
+  expect(await change.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+ }
+ await page.keyboard.press('Escape');
  await expect(drawer.getByText(/A later preparation is a proposed change/)).toBeVisible();
  await expect(drawer.getByRole('option',{name:'Approve the initial scope baseline',exact:true})).toHaveJSProperty('disabled',true);
  await drawer.getByText('Original approved baseline · version 3',{exact:true}).click();

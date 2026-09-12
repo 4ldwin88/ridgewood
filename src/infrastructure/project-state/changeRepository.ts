@@ -1,0 +1,16 @@
+import { supabase } from '../auth/supabaseClient';
+import type { ScopeState, ScopeOutcome } from './scopeRepository';
+export type ChangeDimension='scope'|'cost'|'time';
+export interface ChangeData {description:string;proposedScopeVersion:string;costAssessment:''|'assessed';costAmount:string;currency:string;timeAssessment:''|'assessed';timeDays:string;calendarBasis:''|'working_days'|'calendar_days';assumptions:string;otherImpacts:string;materialAssessment:''|'none_identified'|'identified';basisRevisionIds:string[]}
+export const blankChange=():ChangeData=>({description:'',proposedScopeVersion:'',costAssessment:'',costAmount:'',currency:'',timeAssessment:'',timeDays:'',calendarBasis:'',assumptions:'',otherImpacts:'',materialAssessment:'',basisRevisionIds:[]});
+export interface ChangeDecision {id:string;version:number;dimension:ChangeDimension;sequence:number;authorityId:string;outcome:ScopeOutcome;rationale:string;confirmed:boolean}
+export interface ChangeState {projectStateId:string;changeId:string;version:number;data:ChangeData|null;baselineId:string|null;dimensions:Record<ChangeDimension,{sequence:number;outcome:ScopeOutcome|null;current:boolean}>;blockers:string[];internalApproved:boolean;workAuthorized:false;executionBlockers:string[];origin:{queryId:string;question:string;response:string;scopeVersion:number;ownerUserId:string;identifiedOn:string};canEdit:boolean;reviewAccess:ScopeState['reviewAccess'];sources:ScopeState['sources'];scopeHistory:ScopeState['history'];baseline:ScopeState['baseline'];requests:{id:string;version:number;status:string}[];history:{version:number;data:ChangeData;createdAt:string;actorUserId:string;references:{id:string;documentId:string;documentType:string;category:string;publishedAt:string;publishedBy:string;title:string;revisionNumber:number;published_source_snapshot:Record<string,unknown>}[]}[];decisions:{id:string;version:number;dimension:ChangeDimension;sequence:number;outcome:ScopeOutcome;rationale:string;createdAt:string;actorUserId:string;authorityReference:string}[];savedVersion?:number;submittedVersion?:number}
+export class ChangeCommandError extends Error {constructor(message:string,public code:string){super(message);}}
+async function call(name:string,args:Record<string,unknown>):Promise<ChangeState>{const {data,error}=await supabase.rpc(name,args);if(error)throw new ChangeCommandError(error.message,error.code);return data;}
+const ids=(projectStateId:string,changeId:string)=>({project_state_input:projectStateId,change_id_input:changeId});
+export const changeRepository={
+ read:(p:string,c:string)=>call('read_project_change',ids(p,c)),
+ save:(p:string,c:string,version:number,id:string,data:ChangeData)=>call('save_project_change',{...ids(p,c),expected_version_input:version,request_id_input:id,data_input:data}),
+ request:(p:string,c:string,version:number,id:string)=>call('request_project_change_review',{...ids(p,c),version_input:version,request_id_input:id}),
+ decide:(p:string,c:string,d:ChangeDecision)=>call('decide_project_change_dimension',{...ids(p,c),version_input:d.version,dimension_input:d.dimension,sequence_input:d.sequence,request_id_input:d.id,authority_id_input:d.authorityId,outcome_input:d.outcome,rationale_input:d.rationale,confirmed_input:d.confirmed}),
+};
