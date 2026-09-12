@@ -4,6 +4,7 @@ import type { ConditionalObligation, GateDisposition, SetupEvidence, SetupRequir
 export interface SetupState {
   projectStateId: string;
   version: number;
+  contractPreparationVersion?: number;
   savedVersion?: number;
   authorizationRecordId: string | null;
   evidence: SetupEvidence[];

@@ -217,3 +217,12 @@
 .authorized-basis{min-width:0;overflow-wrap:anywhere}
 .authorized-basis dl{margin:12px 0}.authorized-basis dt{font-weight:600;text-transform:capitalize}.authorized-basis dd{margin:4px 0 12px;white-space:pre-wrap}
 .authorized-basis .document-viewer{min-width:0;max-width:100%}
+
+.contract-review fieldset{border:0;padding:0;margin:0;min-width:0}
+.contract-review label{display:block;margin:16px 0}.contract-review label>small{display:block;color:var(--muted);margin-top:6px}
+.contract-review :is(input:not([type=checkbox]),select,textarea){display:block;box-sizing:border-box;width:100%;margin-top:6px;min-height:44px}
+.contract-review textarea{min-height:96px}.contract-review input::placeholder,.contract-review textarea::placeholder{color:#858585;opacity:1}
+.contract-review .optional-label{color:#858585;font-size:12px;font-weight:400}
+.contract-review .contract-choices label{display:flex;gap:10px;align-items:center;min-height:44px;margin:4px 0}
+.app-frame .contract-review .contract-choices input[type=checkbox]{width:20px;min-width:20px;max-width:20px;height:20px;min-height:20px;flex:0 0 20px;margin:0;padding:0}
+.contract-review label>small{font-weight:400;font-size:12px}
