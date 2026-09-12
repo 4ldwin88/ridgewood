@@ -256,6 +256,7 @@ test('scope preserves identity, references, uncertain saves and review requests'
  await expect(proposal.getByRole('status',{name:'Client proposal status'})).toContainText('version 2');
  for(const width of [390,1280]){
   await page.setViewportSize({width,height:844});await proposal.getByLabel(/Client recipient/).scrollIntoViewIfNeeded();
+  expect(await proposal.locator('.setup-actions').evaluate(el=>Math.abs(el.getBoundingClientRect().bottom-window.innerHeight))).toBeLessThanOrEqual(1);
   await page.screenshot({path:`test-results/client-proposal-${width}.png`});
  }
  await proposal.getByLabel(/Proposal owner authority/).selectOption({label:'Synthetic confirmed business owner'});
