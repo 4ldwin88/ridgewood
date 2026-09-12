@@ -79,11 +79,11 @@ begin
  if data_input->>'agreementRevisionId'<>'' and not exists(select 1 from public.document_revisions r join public.document_records d on d.id=r.document_record_id where r.id::text=data_input->>'agreementRevisionId' and d.project_state_id=p.id and r.state in ('published','superseded') and r.published_source_snapshot is not null) then raise exception 'invalid_contract_agreement'; end if;
  if data_input->>'agreementEvidenceId'<>'' and not exists(select 1 from public.evidence_references e where e.id::text=data_input->>'agreementEvidenceId' and e.project_state_id=p.id) then raise exception 'invalid_contract_evidence'; end if;
  if data_input->>'reviewDecisionId'<>'' and not exists(select 1 from public.decisions d where d.id::text=data_input->>'reviewDecisionId' and d.project_state_id=p.id) then raise exception 'invalid_contract_decision'; end if;
- refs:=jsonb_build_object('parties',(select coalesce(jsonb_agg(to_jsonb(o)),'[]') from public.organizations o where data_input->'partyIds' ? o.id::text),
- 'agreement',(select to_jsonb(r) from public.document_revisions r where r.id::text=data_input->>'agreementRevisionId'),
- 'evidence',(select to_jsonb(e) from public.evidence_references e where e.id::text=data_input->>'agreementEvidenceId'),
- 'decision',(select to_jsonb(d) from public.decisions d where d.id::text=data_input->>'reviewDecisionId'),
- 'risks',(select coalesce(jsonb_agg(to_jsonb(r)),'[]') from public.risk_issues r where data_input->'riskIds' ? r.id::text));
+ refs:=jsonb_build_object('parties',(select coalesce(jsonb_agg(to_jsonb(o)),'[]') from public.organizations o where data_input->'partyIds' ? o.id::text and o.workspace_id=p.workspace_id),
+ 'agreement',(select to_jsonb(r) from public.document_revisions r join public.document_records d on d.id=r.document_record_id where r.id::text=data_input->>'agreementRevisionId' and d.project_state_id=p.id),
+ 'evidence',(select to_jsonb(e) from public.evidence_references e where e.id::text=data_input->>'agreementEvidenceId' and e.project_state_id=p.id),
+ 'decision',(select to_jsonb(d) from public.decisions d where d.id::text=data_input->>'reviewDecisionId' and d.project_state_id=p.id),
+ 'risks',(select coalesce(jsonb_agg(to_jsonb(r)),'[]') from public.risk_issues r where data_input->'riskIds' ? r.id::text and r.project_state_id=p.id));
  insert into public.project_contract_versions(project_state_id,authorization_record_id,version,request_id,data,references_snapshot,actor_user_id)
  values(p.id,coalesce(v.authorization_record_id,a),expected_version_input+1,request_id_input,data_input,refs,auth.uid());
  insert into public.audit_events(project_state_id,event_type,actor_user_id,payload,occurred_at) values(p.id,'contract_preparation_saved',auth.uid(),jsonb_build_object('version',expected_version_input+1,'requestId',request_id_input),now());

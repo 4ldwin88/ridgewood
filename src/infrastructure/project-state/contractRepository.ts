@@ -12,6 +12,10 @@ export interface ContractState {
  parties: ContractOption[]; agreements: ContractOption[]; evidence: ContractOption[]; risks: ContractOption[]; decisions: ContractOption[];
  history: { version: number; actorUserId: string; createdAt: string }[];
 }
+export class ContractSaveError extends Error {
+ code: string;
+ constructor(message:string,code:string){super(message);this.code=code;}
+}
 export const contractRepository = {
  async read(projectStateId: string): Promise<ContractState> {
   const {data,error}=await supabase.rpc('read_project_contract',{project_state_input:projectStateId});
@@ -19,6 +23,6 @@ export const contractRepository = {
  },
  async save(projectStateId:string,version:number,requestId:string,values:ContractData):Promise<ContractState>{
   const {data,error}=await supabase.rpc('save_project_contract',{project_state_input:projectStateId,expected_version_input:version,request_id_input:requestId,data_input:values});
-  if(error)throw new Error(error.message);return data as ContractState;
+  if(error)throw new ContractSaveError(error.message,error.code);return data as ContractState;
  },
 };

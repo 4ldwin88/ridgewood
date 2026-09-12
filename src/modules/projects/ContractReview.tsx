@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { blankContract, contractRepository, type ContractData, type ContractState, type ContractOption } from '../../infrastructure/project-state/contractRepository';
+import { blankContract, contractRepository, ContractSaveError, type ContractData, type ContractState, type ContractOption } from '../../infrastructure/project-state/contractRepository';
 import { createRequestId } from '../../infrastructure/project-state/requestId';
 import { WorkspaceModal } from '../business/WorkspaceModal';
 import { useDrawerWorkState } from '../business/WorkspaceDrawer';
@@ -23,17 +23,24 @@ function ContractEditor({projectStateId,onSaved}:{projectStateId:string;onSaved?
  async function save(){
   if(!state)return;setBusy(true);setError('');
   try{const request=pending.current??{id:createRequestId(),version:state.version,data:structuredClone(data)};pending.current=request;const s=await contractRepository.save(projectStateId,request.version,request.id,request.data);setState(s);setData(s.data??blankContract());pending.current=null;setDirty(false);onSaved?.();setMessage(`Saved preparation version ${s.savedVersion??s.version}. No approval granted.`);}
-  catch(e){setError(`${e instanceof Error?e.message:'Save response unavailable.'} Your entries remain here. Retry preserves the same request; reload to resolve a version conflict.`);}finally{setBusy(false);}
+  catch(e){
+   const reason=e instanceof Error?e.message:'';
+   // A confirmed database rejection did not commit; let the user correct inputs.
+   // An uncertain/lost response retains the exact request for recovery.
+   if(e instanceof ContractSaveError && ['P0001','22007','22008'].includes(e.code) && reason!=='contract_version_conflict')pending.current=null;
+   const messages:Record<string,string>={contract_version_conflict:'Another version was saved. Reload the saved contract before continuing.',invalid_contract_money:'Enter a non-negative amount with at most two decimal places and a three-letter currency.',invalid_contract_date_order:'The expiry date must not precede the effective date.',invalid_contract_party:'A selected legal party is unavailable or removed from new selections.',invalid_contract_agreement:'Select an available published agreement revision from this project.',invalid_contract_evidence:'Select evidence belonging to this project.',invalid_contract_risk:'Select risks belonging to this project.',invalid_contract_decision:'Select a decision belonging to this project.',missing_setup_edit_permission:'Your access does not permit contract preparation changes.',contract_edit_not_allowed:'This project no longer permits changes to contract preparation.',missing_frozen_authorization:'A frozen authorization record is required before saving.'};
+   setError(`${messages[reason]??'Contract preparation could not be saved.'} Your entries remain here. ${pending.current?'Retry preserves the same request; reload to resolve a version conflict.':'Correct the entry or access issue, then save again.'}`);
+  }finally{setBusy(false);}
  }
  if(!state)return <div>{error?<><p role="alert">{error}</p><button disabled={busy} onClick={()=>void reload()}>Retry loading contract</button></>:<p role="status">Loading contract preparation…</p>}</div>;
  const locked=!state.canEdit||busy||Boolean(pending.current);
  const required=<span className="setup-required">Required for review</span>;
  const optional=<span className="optional-label">Optional</span>;
  const select=(label:string,key:'agreementRevisionId'|'agreementEvidenceId'|'reviewDecisionId',options:ContractOption[],hint:string)=><label>{label} {key==='agreementEvidenceId'?optional:required}<select value={data[key]} onChange={e=>change({[key]:e.target.value})}><option value="">Select an existing record</option>{options.map(o=><option value={o.id} key={o.id}>{o.label}</option>)}</select><small>{hint}</small></label>;
- const checklist=(key:'partyIds'|'riskIds',options:ContractOption[])=><div className="contract-choices">{options.length?options.map(o=><label key={o.id}><input type="checkbox" checked={data[key].includes(o.id)} disabled={locked||(o.retired&&!data[key].includes(o.id))} onChange={e=>change({[key]:e.target.checked?[...data[key],o.id]:data[key].filter(id=>id!==o.id)})}/>{o.label}{o.retired?' · Removed from new selections':''}</label>):<p>No linked records available yet.</p>}</div>;
+ const checklist=(key:'partyIds'|'riskIds',options:ContractOption[])=><div className="contract-choices">{options.length?options.map(o=><label key={o.id}><input type="checkbox" checked={data[key].includes(o.id)} disabled={locked||(o.retired&&!state.data?.[key].includes(o.id))} onChange={e=>change({[key]:e.target.checked?[...data[key],o.id]:data[key].filter(id=>id!==o.id)})}/>{o.label}{o.retired?' · Removed from new selections':''}</label>):<p>No linked records available yet.</p>}</div>;
  return <section className="stage-tool-surface contract-review">
  <h4>5.2.1 Contract preparation</h4><p>Prepare the contractual basis once. Agreement and risk references use existing project records; legal parties use the organization register.</p>
- <p role="status">{message||`Saved preparation version ${state.version}`}{dirty?' · Unsaved changes':''}</p>
+ <p role="status" aria-label="Contract save status">{message||`Saved preparation version ${state.version}`}{dirty?' · Unsaved changes':''}</p>
  <p>Preparation only. An attached decision is a reference, not verified signing or review authority. This tool cannot grant contract approval or satisfy Gate 01.</p>
  {error&&<p role="alert">{error}</p>}{!state.canEdit&&<p>This contract preparation is read-only for your access or the current project state.</p>}
  <fieldset disabled={locked}>
