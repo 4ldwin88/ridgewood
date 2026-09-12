@@ -13,7 +13,7 @@ export interface SetupState {
   approvalBlocker: string;
   canDecide: boolean;
   authorities: { id: string; basis: string; reference: string; permitsConditionalGo: boolean; conditionalRequirements: SetupRequirementKey[] }[];
-  decisions: { id: string; disposition: GateDisposition; rationale: string; actorUserId: string; createdAt: string; obligations: ConditionalObligation[] }[];
+  decisions: { id: string; disposition: GateDisposition; rationale: string; actorUserId: string; createdAt: string; obligations: ConditionalObligation[]; setupVersion: number; authorityReference: string; evidence: SetupEvidence[] }[];
   history: { version: number; actorUserId: string; createdAt: string }[];
 }
 export const setupRepository = {

@@ -278,7 +278,7 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
     await section.getByLabel(/Assessment/).selectOption('satisfied');
   }
   for (const role of ['project lead', 'coordination document control', 'commercial finance', 'oversight']) await setup.getByLabel(new RegExp(role+' Required coverage')).selectOption({ index: 1 });
-  await setup.getByLabel('Field leadership applicability', { exact: true }).selectOption('not_applicable');
+  await setup.getByRole('combobox', { name: 'Field leadership applicability', exact: true }).selectOption('not_applicable');
   await setup.getByLabel('Field leadership applicability reason', { exact: true }).fill('No field activity in this synthetic Setup');
   await setup.getByRole('button', { name: 'Save Setup', exact: true }).click();
   await expect(setup.locator('.setup-workspace > [role="status"]')).toContainText('Saved version 2');
@@ -286,7 +286,7 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await setup.getByLabel('Decision reason').fill('Synthetic hold pending coordination');
   await setup.getByRole('button', { name: 'Record Gate 01 decision', exact: true }).click();
   await expect(setup.getByText('Synthetic hold pending coordination', { exact: true })).toBeVisible();
-  await setup.getByLabel('Disposition', { exact: true }).selectOption('go');
+  await setup.getByRole('combobox', { name: 'Disposition', exact: true }).selectOption('go');
   await setup.getByLabel('Decision reason').fill('Synthetic approved Setup gate review');
   let loseGateResponse = true;
   await page.route('**/rest/v1/rpc/decide_project_gate01', async route => {

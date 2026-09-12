@@ -1,6 +1,6 @@
 import { useDrawerWorkState } from '../business/WorkspaceDrawer';
 import { useRef, useState } from 'react';
-import type { ConditionalObligation, GateDisposition } from '../../domain/project-state/setupGate';
+import { setupRequirements, type ConditionalObligation, type GateDisposition } from '../../domain/project-state/setupGate';
 import { setupRepository, type SetupState } from '../../infrastructure/project-state/setupRepository';
 import type { WorkspaceMemberOption } from '../../infrastructure/project-state/supabaseProjectStateRepository';
 
@@ -53,6 +53,6 @@ export function SetupGateReview({ state, members, dirty, onRecorded }: { state: 
     {error && <p role="alert">{error}</p>}
     <h4>Decision history and continuing obligations</h4>
     {!state.decisions.length && <p>No Gate 01 decision recorded.</p>}
-    {state.decisions.map(d => <article key={d.id} className="setup-section"><strong>{d.disposition.replaceAll('_', ' ')} · {new Date(d.createdAt).toLocaleString()}</strong><p>{d.rationale}</p><p>Approver: {d.actorUserId} · Decision {d.id}</p>{d.obligations.map(o => <div key={o.requirement}><strong>Continuing obligation: {o.description}</strong><p>Reason: {o.reasonToAdvance}</p><p>Limits: {o.permittedLimits}</p><p>Owner: {o.ownerUserId} · Due: {o.dueDate || o.dueTrigger}</p><p>Consequence: {o.consequence}</p></div>)}</article>)}
+    {state.decisions.map(d => <article key={d.id} className="setup-section"><strong>{d.disposition.replaceAll('_', ' ')} · {new Date(d.createdAt).toLocaleString()}</strong><p>{d.rationale}</p><p>Approver: {d.actorUserId} · Decision {d.id}</p><details><summary>Frozen decision basis · Setup version {d.setupVersion}</summary><p>Authority: {d.authorityReference}</p>{d.evidence.map(e => <div key={e.requirement}><strong>{setupRequirements.find(r => r.key === e.requirement)?.label}</strong><p>{e.details || 'Unresolved'}</p><p>Evidence: {e.evidenceReference || 'Missing'} · Accountable: {e.accountableUserId || 'Unassigned'}</p></div>)}</details>{d.obligations.map(o => <div key={o.requirement}><strong>Continuing obligation: {o.description}</strong><p>Reason: {o.reasonToAdvance}</p><p>Limits: {o.permittedLimits}</p><p>Owner: {o.ownerUserId} · Due: {o.dueDate || o.dueTrigger}</p><p>Consequence: {o.consequence}</p></div>)}</article>)}
   </section>;
 }
