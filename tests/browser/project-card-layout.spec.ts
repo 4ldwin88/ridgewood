@@ -36,6 +36,7 @@ for (const width of [390, 1280]) {
       await page.getByRole('button', { name: section, exact: true }).click();
       const card = page.locator('.project-register-card').first();
       const name = await card.locator('.record-link').innerText();
+      await card.scrollIntoViewIfNeeded();
       const box = (await card.boundingBox())!;
       // Whitespace away from title and management controls must activate the title button.
       await page.mouse.click(box.x + 8, box.y + box.height - 8);
