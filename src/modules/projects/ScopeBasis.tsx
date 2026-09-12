@@ -4,6 +4,7 @@ import { scopeRepository, ScopeCommandError, type ScopeState, type ScopeSource }
 import { createRequestId } from '../../infrastructure/project-state/requestId';
 import { WorkspaceModal } from '../business/WorkspaceModal';
 import { useDrawerWorkState } from '../business/WorkspaceDrawer';
+import { ScopeQueries } from './ScopeQueries';
 import { ScopeDecision } from './ScopeDecision';
 import { PublishedDocumentView } from '../business/PublishedDocumentView';
 
@@ -17,10 +18,11 @@ function SourceView({source}:{source:ScopeSource}){
 function ScopeEditor({projectStateId,onSaved}:{projectStateId:string;onSaved:()=>void}){
  const [state,setState]=useState<ScopeState|null>(null),[items,setItems]=useState<ScopeItem[]>([]),[dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
  const [decisionDirty,setDecisionDirty]=useState(false),[decisionBusy,setDecisionBusy]=useState(false),[decisionKey,setDecisionKey]=useState(0);
+ const [queryDirty,setQueryDirty]=useState(false),[queryBusy,setQueryBusy]=useState(false);
  const pending=useRef<{kind:'save'|'request';id:string;version:number;items:ScopeItem[]}|null>(null);
- useDrawerWorkState(dirty||decisionDirty||Boolean(pending.current),busy||decisionBusy);
+ useDrawerWorkState(dirty||decisionDirty||queryDirty||Boolean(pending.current),busy||decisionBusy||queryBusy);
  useEffect(()=>{let active=true;scopeRepository.read(projectStateId).then(s=>{if(active){setState(s);setItems(s.items);}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[projectStateId]);
- async function reload(){if((dirty||decisionDirty||pending.current)&&!window.confirm('Discard unsaved scope entries and load the latest saved preparation?'))return;setBusy(true);try{const s=await scopeRepository.read(projectStateId);setState(s);setItems(s.items);pending.current=null;setDirty(false);setError('');setMessage('Latest saved scope loaded.');setDecisionKey(k=>k+1);setDecisionDirty(false);}catch{setError('Scope could not load. Try again.');}finally{setBusy(false);}}
+ async function reload(){if((dirty||decisionDirty||queryDirty||pending.current)&&!window.confirm('Discard unsaved scope entries and load the latest saved preparation?'))return;setBusy(true);try{const s=await scopeRepository.read(projectStateId);setState(s);setItems(s.items);pending.current=null;setDirty(false);setError('');setMessage('Latest saved scope loaded.');setDecisionKey(k=>k+1);setDecisionDirty(false);setQueryDirty(false);}catch{setError('Scope could not load. Try again.');}finally{setBusy(false);}}
  function change(id:string,patch:Partial<ScopeItem>){setItems(rows=>rows.map(row=>row.id===id?{...row,...patch}:row));setDirty(true);setMessage('');}
  async function command(kind:'save'|'request'){
   if(!state||busy)return;setBusy(true);setError('');setMessage('');
@@ -33,7 +35,7 @@ function ScopeEditor({projectStateId,onSaved}:{projectStateId:string;onSaved:()=
   }finally{setBusy(false);}
  }
  if(!state)return <div>{error?<><p role="alert">{error}</p><button onClick={()=>void reload()} disabled={busy}>Retry loading scope</button></>:<p>Loading scope…</p>}</div>;
- const locked=!state.canEdit||busy||decisionDirty||decisionBusy||Boolean(pending.current),required=<span className="setup-required">Required for review</span>,optional=<span className="optional-label">Optional</span>;
+ const locked=!state.canEdit||busy||decisionDirty||decisionBusy||queryDirty||queryBusy||Boolean(pending.current),required=<span className="setup-required">Required for review</span>,optional=<span className="optional-label">Optional</span>;
  const picker=(item:ScopeItem,key:'sourceRevisionId'|'criterionRevisionId'|'programRevisionId',label:string)=> <label>{label} {key==='sourceRevisionId'?required:optional}<select value={item[key]} onChange={e=>change(item.id,{[key]:e.target.value})}><option value="">Select a published revision</option>{state.sources.filter(s=>key!=='programRevisionId'||s.category==='product_program').map(s=><option key={s.id} value={s.id}>{s.label}{s.state==='superseded'?' · Superseded':''}</option>)}</select><small>{key==='sourceRevisionId'?'Trace this component to its governing drawing, specification or scope document. A publication is not scope approval.':key==='criterionRevisionId'?'Reference the specification containing the acceptance criterion instead of copying it.':'Optional link to an existing Product & Program publication.'}</small></label>;
  return <section className="stage-tool-surface contract-review scope-basis">
  <h4>5.3.1 Scope basis and interfaces</h4><p>Describe controlled delivery components here. Other tools reference these scope items. Proposed assignments and exclusions do not change a contract or approved baseline.</p>
@@ -53,11 +55,12 @@ function ScopeEditor({projectStateId,onSaved}:{projectStateId:string;onSaved:()=
  {error&&<p role="alert">{error}</p>}<p role="status" aria-label="Scope save status">{message||`Saved scope version ${state.version}`}{dirty?' · Unsaved changes':''}</p>
  <h4>5.3.2 Request scope review</h4><p>Submit the exact saved version for authorized review. This creates a request and audit record; it sends no notification and grants no scope, spending or Gate authority.</p>
  {state.blockers.length>0&&<div><strong>Saved preparation needs:</strong><ul>{state.blockers.map(b=><li key={b}>{b}</li>)}</ul></div>}
- <button disabled={!state.canEdit||busy||decisionDirty||decisionBusy||dirty||state.version===0||pending.current?.kind==='save'||(!pending.current&&state.requests.some(r=>r.version===state.version))} onClick={()=>void command('request')}>{pending.current?.kind==='request'?'Retry scope review request':'Request scope review'}</button>
+ <button disabled={!state.canEdit||busy||decisionDirty||decisionBusy||queryDirty||queryBusy||dirty||state.version===0||pending.current?.kind==='save'||(!pending.current&&state.requests.some(r=>r.version===state.version))} onClick={()=>void command('request')}>{pending.current?.kind==='request'?'Retry scope review request':'Request scope review'}</button>
  <ul aria-label="Scope review requests">{state.requests.map(r=><li key={r.id}>Version {r.version} · {r.status==='pending'?'Pending authorized baseline review':r.status==='reviewed'?'Review decision recorded':'Superseded by newer preparation'}</li>)}</ul>
- <ScopeDecision key={decisionKey} state={state} blocked={dirty||busy||Boolean(pending.current)} onWorkChange={(d,b)=>{setDecisionDirty(d);setDecisionBusy(b);}} onRecorded={s=>{setState(s);setItems(s.items);onSaved();}}/>
+ <ScopeDecision key={decisionKey} state={state} blocked={dirty||busy||queryDirty||queryBusy||Boolean(pending.current)} onWorkChange={(d,b)=>{setDecisionDirty(d);setDecisionBusy(b);}} onRecorded={s=>{setState(s);setItems(s.items);onSaved();}}/>
+ <ScopeQueries key={`queries-${decisionKey}`} state={state} blocked={dirty||busy||decisionDirty||decisionBusy||Boolean(pending.current)} onWorkChange={(d,b)=>{setQueryDirty(d);setQueryBusy(b);}} onRecorded={s=>{setState(s);setItems(s.items);onSaved();}}/>
  {state.baseline&&<details className="setup-section"><summary>Original approved baseline · version {state.baseline.version}</summary><p>Retained original scope. Later preparations require change approval and do not overwrite this record.</p><ul>{state.baseline.items.map(i=><li key={i.id}><strong>{i.classification} · {i.description}</strong><p>{i.acceptanceCriteria||'Acceptance: referenced specification'}</p><p>Party: {state.parties.find(p=>p.id===i.partyId)?.label||'Unassigned'}</p><p>Source: {state.sources.find(s=>s.id===i.sourceRevisionId)?.label||i.sourceRevisionId}</p></li>)}</ul></details>}
  <h4>Scope preparation history</h4>{state.history.map(h=><details className="setup-section" key={h.version}><summary>Version {h.version} · {new Date(h.createdAt).toLocaleString()} · {h.items.length} components</summary><ul>{h.items.map(i=><li key={i.id}>{i.classification||'Unassessed'} · {i.description||'Description not supplied'}<dl><dt>Responsible party reference</dt><dd>{i.partyId||'Unassigned'}</dd><dt>Governing source revision</dt><dd>{i.sourceRevisionId||'Not supplied'}</dd><dt>Acceptance specification revision</dt><dd>{i.criterionRevisionId||'Not supplied'}</dd><dt>Acceptance criterion</dt><dd>{i.acceptanceCriteria||'Not supplied; consult the referenced specification'}</dd><dt>Related program revision</dt><dd>{i.programRevisionId||'Not supplied'}</dd></dl></li>)}</ul></details>)}
- <div className="setup-actions scope-actions"><button disabled={!state.canEdit||busy||decisionDirty||decisionBusy||pending.current?.kind==='request'} onClick={()=>void command('save')}>{pending.current?.kind==='save'?'Retry scope save':'Save scope preparation'}</button><button disabled={busy||decisionBusy} onClick={()=>void reload()}>Reload saved scope</button></div>
+ <div className="setup-actions scope-actions"><button disabled={!state.canEdit||busy||decisionDirty||decisionBusy||queryDirty||queryBusy||pending.current?.kind==='request'} onClick={()=>void command('save')}>{pending.current?.kind==='save'?'Retry scope save':'Save scope preparation'}</button><button disabled={busy||decisionBusy||queryBusy} onClick={()=>void reload()}>Reload saved scope</button></div>
  </section>;
 }
