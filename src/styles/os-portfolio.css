@@ -226,3 +226,6 @@
 .contract-review .contract-choices label{display:flex;gap:10px;align-items:center;min-height:44px;margin:4px 0}
 .app-frame .contract-review .contract-choices input[type=checkbox]{width:20px;min-width:20px;max-width:20px;height:20px;min-height:20px;flex:0 0 20px;margin:0;padding:0}
 .contract-review label>small{font-weight:400;font-size:12px}
+
+.scope-basis .scope-actions{position:sticky;bottom:0;z-index:2;margin-top:16px;padding:12px 0;background:var(--surface,#f5f7fa);border-top:1px solid var(--line,#d8dde3)}
+.scope-basis dd{overflow-wrap:anywhere}
