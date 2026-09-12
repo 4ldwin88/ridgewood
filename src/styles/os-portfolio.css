@@ -237,3 +237,5 @@
 .project-register-card .project-card-open:not(:disabled)::after{content:"";position:absolute;inset:0;border-radius:12px;cursor:pointer}
 .project-register-card .project-card-open:focus-visible::after{outline:2px solid currentColor;outline-offset:2px}
 .app-frame .project-register-card .photo-menu{z-index:2}
+.obligation-plan .setup-actions{position:sticky;bottom:-48px;z-index:2;padding:12px 0;background:var(--surface,#f5f7fa);border-top:1px solid var(--line,#d8dde3)}
+@media(max-width:760px){.obligation-plan .setup-actions{bottom:-40px}}

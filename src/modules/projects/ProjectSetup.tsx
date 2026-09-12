@@ -1,4 +1,5 @@
 import { ScopeBasis } from './ScopeBasis';
+import { ObligationPlan } from './ObligationPlan';
 import { ContractReview } from './ContractReview';
 import { AuthorizedBasis } from './AuthorizedBasis';
 import { createRequestId } from '../../infrastructure/project-state/requestId';
@@ -89,6 +90,7 @@ function SetupEditor({ projectStateId, onAdvanced }: { projectStateId: string; o
     {state.authorizationRecordId ? <AuthorizedBasis projectStateId={projectStateId} authorizationRecordId={state.authorizationRecordId} /> : <p role="alert">Frozen authorization missing — Setup cannot be saved.</p>}
     <ContractReview projectStateId={projectStateId} onSaved={() => { setContractPrepared(true); void setupRepository.read(projectStateId).then(setState).catch(e => setError(e instanceof Error ? e.message : 'Reload Setup readiness.')); }} />
     <ScopeBasis projectStateId={projectStateId} onSaved={() => { void setupRepository.read(projectStateId).then(setState).catch(() => setError('Reload Setup readiness.')); }} />
+    <ObligationPlan projectStateId={projectStateId} onSaved={() => { void setupRepository.read(projectStateId).then(setState).catch(() => setError('Reload Setup readiness.')); }} />
     <p role="status">{message || `Saved version ${state.version} · ${state.unmet.length} unresolved requirements`}{dirty ? ' · Unsaved changes' : ''}</p>
     {error && <p role="alert" className="error-message">{error}</p>}
     {!state.canEdit && <p>This record is read-only for your access or the current project state.</p>}
@@ -97,7 +99,8 @@ function SetupEditor({ projectStateId, onAdvanced }: { projectStateId: string; o
       <p>{guidance[row.requirement]}</p>
       {(contractPrepared || Boolean(state.contractPreparationVersion)) && ['contracting_party','contract_review','commercial_terms','contractual_risks'].includes(row.requirement) && <p>These contractual checks reference the current 5.2 review. Edit preparation and record authorized decisions in 5.2.</p>}
       {row.requirement === 'scope' && state.scopePreparationVersion && <p>Scope is owned by 5.3. This earlier checklist remains historical; review the current preparation in its numbered tool.</p>}
-      <fieldset disabled={locked || (row.requirement === 'scope' && Boolean(state.scopePreparationVersion)) || (contractPrepared || Boolean(state.contractPreparationVersion)) && ['contracting_party','contract_review','commercial_terms','contractual_risks'].includes(row.requirement)}>
+      {row.requirement === 'permits' && Boolean(state.obligationPlanVersion) && <p>Obligations are owned by 5.4. This checklist is historical and cannot clear the plan review requirement.</p>}
+      <fieldset disabled={locked || (row.requirement === 'permits' && Boolean(state.obligationPlanVersion)) || (row.requirement === 'scope' && Boolean(state.scopePreparationVersion)) || (contractPrepared || Boolean(state.contractPreparationVersion)) && ['contracting_party','contract_review','commercial_terms','contractual_risks'].includes(row.requirement)}>
         <label>Assessment <span className="setup-required">Required</span><select value={row.state} onChange={e => change(index, { state: e.target.value as SetupEvidence['state'] })}><option value="unresolved">Unresolved</option><option value="satisfied">Satisfied with evidence</option>{row.requirement === 'permits' && <option value="not_applicable">Not applicable with reason</option>}</select></label>
         <label>Reviewed basis and responsibilities <span className="setup-required">Required for readiness</span><textarea rows={4} value={row.details} onChange={e => change(index, { details: e.target.value })} /></label>
         <label>Controlling document / evidence reference <span className="setup-required">Required for readiness</span><input value={row.evidenceReference} onChange={e => change(index, { evidenceReference: e.target.value })} /></label>

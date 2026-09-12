@@ -35,7 +35,7 @@ jobs:
           supabase migration up --local
       - name: Verify Setup and Gate 01 contracts on disposable backend
         run: |
-          supabase test db supabase/tests/database/setup_persistence_test.sql supabase/tests/database/contract_preparation_test.sql supabase/tests/database/contract_review_requests_test.sql supabase/tests/database/contract_owner_review_test.sql supabase/tests/database/scope_basis_test.sql supabase/tests/database/scope_owner_review_test.sql supabase/tests/database/scope_queries_test.sql supabase/tests/database/change_assessment_test.sql supabase/tests/database/change_proposal_test.sql
+          supabase test db supabase/tests/database/setup_persistence_test.sql supabase/tests/database/contract_preparation_test.sql supabase/tests/database/contract_review_requests_test.sql supabase/tests/database/contract_owner_review_test.sql supabase/tests/database/scope_basis_test.sql supabase/tests/database/scope_owner_review_test.sql supabase/tests/database/scope_queries_test.sql supabase/tests/database/change_assessment_test.sql supabase/tests/database/change_proposal_test.sql supabase/tests/database/obligation_plan_test.sql
       - name: Inspect isolated database security advisors
         run: supabase db advisors --local --type security --level warn --fail-on none
       - name: Verify document lifecycle and immutability
@@ -67,6 +67,7 @@ jobs:
           python -m pip install 'psycopg[binary]==3.2.10'
           python scripts/test-command-concurrency.py
           python scripts/test-setup-concurrency.py
+          python scripts/test-obligation-concurrency.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
