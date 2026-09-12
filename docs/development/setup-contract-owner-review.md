@@ -23,7 +23,9 @@ and are not inferred. This is internal contract-basis review, not legal executio
 payment authorization or a Gate decision.
 
 The command requires explicit review permission, currently effective owner evidence,
-a live Supabase session and AAL2 with TOTP verification in the preceding five minutes.
+a live Supabase session still at AAL2 with a currently verified TOTP factor and
+TOTP verification in the preceding five minutes. Downgraded sessions cannot rely
+on a previously issued AAL2 token.
 It does not use or extend the Gate2A QA assurance exception. No hosted Auth setting,
 credential or factor is changed. The UI exposes the verification requirement but
 does not implement factor enrollment or a new authentication flow.

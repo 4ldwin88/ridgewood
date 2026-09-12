@@ -46,7 +46,9 @@ revoke all on function private.protect_contract_decision() from public,anon,auth
 
 create function private.contract_strong_session() returns boolean language sql stable security definer set search_path='' as $$
  select coalesce(auth.uid() is not null and auth.jwt()->>'aal'='aal2'
- and exists(select 1 from auth.sessions s where s.id::text=auth.jwt()->>'session_id' and s.user_id=auth.uid() and (s.not_after is null or s.not_after>now()))
+ and exists(select 1 from auth.sessions s join auth.mfa_factors f on f.id=s.factor_id and f.user_id=s.user_id
+  where s.id::text=auth.jwt()->>'session_id' and s.user_id=auth.uid() and s.aal='aal2'
+  and f.factor_type='totp' and f.status='verified' and (s.not_after is null or s.not_after>now()))
  and exists(select 1 from jsonb_array_elements(coalesce(auth.jwt()->'amr','[]')) m
   where m->>'method'='totp' and case when m->>'timestamp' ~ '^[0-9]{1,12}(\.[0-9]+)?$'
    then (m->>'timestamp')::numeric between extract(epoch from now()-interval '5 minutes') and extract(epoch from now()+interval '30 seconds') else false end),false)
