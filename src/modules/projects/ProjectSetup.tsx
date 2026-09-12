@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { setupRequirements, type SetupEvidence } from '../../domain/project-state/setupGate';
 import { setupRepository, type SetupState } from '../../infrastructure/project-state/setupRepository';
 import { supabaseProjectStateRepository, type WorkspaceMemberOption } from '../../infrastructure/project-state/supabaseProjectStateRepository';
+import { SetupGateReview } from './SetupGateReview';
 import { WorkspaceModal } from '../business/WorkspaceModal';
 
 const guidance: Record<string, string> = {
@@ -96,6 +97,6 @@ function SetupEditor({ projectStateId }: { projectStateId: string }) {
     <div className="setup-actions"><button className="primary-button" disabled={!state.canEdit || busy} onClick={() => void save()}>{busy ? 'Saving…' : pending.current ? 'Retry save' : 'Save Setup'}</button><button className="secondary-button" disabled={busy} onClick={() => void reload()}>Reload saved version</button></div>
     <h4>Gate 01 readiness</h4><p>Readiness uses the saved version. {state.approvalBlocker}</p>
     <ul>{state.unmet.map(k => <li key={k}>{setupRequirements.find(r => r.key === k)?.label}</li>)}</ul>
-    <h4>Save history</h4>{state.history.length ? <ul>{state.history.map(h => <li key={h.version}>Version {h.version} · {new Date(h.createdAt).toLocaleString()} · {h.actorUserId}</li>)}</ul> : <p>No Setup version saved yet.</p>}
+    <SetupGateReview state={state} members={members} dirty={dirty || Boolean(pending.current)} onRecorded={saved => { setState(saved); setEvidence(saved.evidence); setMessage(`Gate decision recorded. Current stage: ${saved.stage.replaceAll('_', ' ')}`); }} /><h4>Save history</h4>{state.history.length ? <ul>{state.history.map(h => <li key={h.version}>Version {h.version} · {new Date(h.createdAt).toLocaleString()} · {h.actorUserId}</li>)}</ul> : <p>No Setup version saved yet.</p>}
   </div>;
 }

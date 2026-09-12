@@ -1,5 +1,5 @@
 begin;
-select plan(14);
+select plan(23);
 insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
 ('00000000-0000-4000-8000-00000000f001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-editor@example.invalid',now(),now()),
 ('00000000-0000-4000-8000-00000000f002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-outsider@example.invalid',now(),now());
@@ -23,6 +23,27 @@ select is((public.save_project_setup('00000000-0000-4000-8000-00000000f020',0,'0
 select is((select count(*)::integer from public.project_setup_versions),1,'retry appends nothing');
 select throws_ok($$select public.save_project_setup('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-00000000f041',current_setting('test.setup_evidence')::jsonb)$$,'P0001','setup_version_conflict','stale editor cannot overwrite');
 select throws_ok($$select public.enter_project_state_preconstruction_mobilization('00000000-0000-4000-8000-00000000f020')$$,'P0001','governed_gate01_decision_required','legacy checkbox transition cannot bypass gate');
+reset role;
+insert into public.user_permission_overrides(workspace_id,user_id,permission_key,effect) values ('00000000-0000-4000-8000-00000000f010','00000000-0000-4000-8000-00000000f001','project.gate01.decide','grant');
+set local role authenticated;
+select throws_ok($$select public.decide_project_gate01('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f050','00000000-0000-4000-8000-00000000f060','go','Reviewed','[]')$$,'P0001','owner_authority_unresolved','permission without owner authority cannot advance');
+reset role;
+insert into public.project_gate01_authorities(id,workspace_id,user_id,basis,owner_approval_reference,effective_from) values ('00000000-0000-4000-8000-00000000f060','00000000-0000-4000-8000-00000000f010','00000000-0000-4000-8000-00000000f001','confirmed_owner','synthetic-owner-identity',now()-interval '1 day');
+set local role authenticated;
+select is((public.decide_project_gate01('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f051','00000000-0000-4000-8000-00000000f060','hold','Hold for coordination','[]')).disposition,'hold','Hold records governed decision');
+select is((select stage::text from public.project_states where id='00000000-0000-4000-8000-00000000f020'),'project_authorization_setup','Hold does not advance');
+reset role;
+update public.project_gate01_authorities set revoked_at=now() where id='00000000-0000-4000-8000-00000000f060';
+set local role authenticated;
+select throws_ok($$select public.decide_project_gate01('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f050','00000000-0000-4000-8000-00000000f060','go','Reviewed','[]')$$,'P0001','owner_authority_unresolved','revoked authority cannot advance');
+reset role;
+update public.project_gate01_authorities set revoked_at=null where id='00000000-0000-4000-8000-00000000f060';
+set local role authenticated;
+select is((public.decide_project_gate01('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f050','00000000-0000-4000-8000-00000000f060','go','Reviewed','[]')).disposition,'go','Go records decision');
+select is((select stage::text from public.project_states where id='00000000-0000-4000-8000-00000000f020'),'preconstruction_mobilization','Go advances same Project State');
+select is((public.decide_project_gate01('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f050','00000000-0000-4000-8000-00000000f060','go','Reviewed','[]')).disposition,'go','lost-response retry recovers same decision after advancement');
+select is((select count(*)::integer from public.project_gate01_decisions where disposition='go'),1,'exactly one advancing decision');
+select throws_ok($$select public.decide_project_gate01('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f052','00000000-0000-4000-8000-00000000f060','go','Reviewed','[]')$$,'P0001','gate_not_applicable','different duplicate command cannot advance again');
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f002","role":"authenticated"}',true);
 select is((select count(*)::integer from public.project_setup_versions),0,'outsider cannot read versions');
 select throws_ok($$select public.read_project_setup('00000000-0000-4000-8000-00000000f020')$$,'P0001','project_state_not_found_or_access_denied','outsider RPC rejected');
