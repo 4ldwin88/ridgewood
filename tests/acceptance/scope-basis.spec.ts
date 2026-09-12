@@ -105,6 +105,11 @@ test('scope preserves identity, references, uncertain saves and review requests'
  }
  await fillQuestion(question);
  await expect(drawer.getByRole('button',{name:'Save scope preparation',exact:true})).toBeDisabled();
+ await expect(drawer.locator('.drawer-state')).toHaveText('Unsaved changes');
+ expect(page.listenerCount('dialog'),'No stale confirmation handler before dirty-close check').toBe(0);
+ page.once('dialog',dialog=>dialog.dismiss());
+ await drawer.getByRole('button',{name:'Close 5.3 Scope, Exclusions & Interfaces',exact:true}).click();
+ await expect(drawer).toBeVisible();
  page.once('dialog',dialog=>dialog.dismiss());await page.keyboard.press('Escape');await expect(drawer).toBeVisible();
  let queryLost=false;
  await page.route('**/rest/v1/rpc/capture_project_scope_query',async route=>{if(!queryLost){queryLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
