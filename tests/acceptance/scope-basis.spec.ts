@@ -229,6 +229,72 @@ test('scope preserves identity, references, uncertain saves and review requests'
   await page.screenshot({path:`test-results/change-internal-decisions-${width}.png`});
   expect(await change.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
  }
+
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','proposal-setup']);
+ await change.getByRole('button',{name:'5.3.6 Client Change Proposal',exact:true}).click();
+ const proposal=page.getByRole('dialog',{name:'5.3.6 Client Change Proposal',exact:true});
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveValue('');
+ await proposal.getByRole('button',{name:'Save client proposal',exact:true}).click();
+ await expect(proposal.getByRole('status',{name:'Client proposal status'})).toContainText('version 1');
+ await proposal.getByLabel(/Client recipient/).selectOption({label:'Synthetic scope client'});
+ await proposal.getByLabel(/Proposed client amount/).fill('-200.00');
+ await proposal.getByLabel(/Markup and fee treatment/).fill('50.00 retained fee against the assessed 250.00 credit');
+ await proposal.getByLabel(/Client commercial terms/).fill('Tax excluded. Valid until withdrawn in writing. No changed work directed.');
+ await proposal.getByLabel(/Exact published client proposal/).selectOption({label:'Synthetic client change proposal · revision 1'});
+ page.once('dialog',dialog=>dialog.dismiss());await page.keyboard.press('Escape');await expect(proposal).toBeVisible();
+ await proposal.getByLabel(/Proposed client amount/).fill('1.001');
+ await proposal.getByRole('button',{name:'Save client proposal',exact:true}).click();
+ await expect(proposal.getByRole('alert')).toContainText('Enter a signed client amount');
+ await expect(proposal.getByLabel(/Proposed client amount/)).toBeEnabled();
+ await proposal.getByLabel(/Proposed client amount/).fill('-200.00');
+ let proposalLost=false;
+ await page.route('**/rest/v1/rpc/save_change_proposal',async route=>{if(!proposalLost){proposalLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ await proposal.getByRole('button',{name:'Save client proposal',exact:true}).click();
+ await expect(proposal.getByRole('alert')).toContainText('Retry preserves the exact request');
+ await expect(proposal.getByLabel(/Proposed client amount/)).toBeDisabled();
+ await proposal.getByRole('button',{name:'Retry client proposal save',exact:true}).click();
+ await expect(proposal.getByRole('status',{name:'Client proposal status'})).toContainText('version 2');
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});await proposal.getByLabel(/Client recipient/).scrollIntoViewIfNeeded();
+  expect(await proposal.locator('.setup-actions').evaluate(el=>Math.abs(el.getBoundingClientRect().bottom-window.innerHeight))).toBeLessThanOrEqual(1);
+  await page.screenshot({path:`test-results/client-proposal-${width}.png`});
+ }
+ await proposal.getByLabel(/Proposal owner authority/).selectOption({label:'Synthetic confirmed business owner'});
+ await proposal.getByLabel(/Proposal release outcome/).selectOption('approved');
+ await proposal.getByLabel(/Proposal decision reason/).fill('Verified contract client, price, fee and exact proposal against current independently reviewed scope/time.');
+ await proposal.getByLabel(/I verified the recipient is the contract client/).check();
+ let releaseLost=false;
+ await page.route('**/rest/v1/rpc/decide_change_proposal',async route=>{if(!releaseLost){releaseLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
+ page.once('dialog',dialog=>dialog.accept());
+ await proposal.getByRole('button',{name:'Record proposal release decision',exact:true}).click();
+ await expect(proposal.getByRole('alert')).toContainText('Retry preserves the exact request');
+ await proposal.getByRole('button',{name:'Retry proposal release decision',exact:true}).click();
+ await expect(proposal.getByLabel('Proposal release state',{exact:true})).toContainText('Current proposal release is owner-authorized.');
+ await page.keyboard.press('Escape');await change.getByRole('button',{name:'5.3.6 Client Change Proposal',exact:true}).click();
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveValue('-200.00');
+ await expect(proposal.getByRole('list',{name:'Proposal decision history'}).locator(':scope > li')).toHaveCount(1);
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});await proposal.getByLabel('Proposal release state',{exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:`test-results/client-proposal-release-${width}.png`});
+  expect(await proposal.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+ }
+ execFileSync('python',['scripts/local-acceptance-fixtures.py','proposal-verify']);
+ await page.keyboard.press('Escape');
+ await change.getByLabel(/Impact currency/).fill('CAD');
+ await change.getByRole('button',{name:'Save change assessment',exact:true}).click();
+ await expect(change.getByRole('status',{name:'Change assessment status'})).toContainText('version 3');
+ await change.getByRole('button',{name:'5.3.6 Client Change Proposal',exact:true}).click();
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveValue('-200.00');
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveAccessibleName(/USD/);
+ await expect(proposal.getByLabel('Proposal release state',{exact:true})).toContainText('Current proposal release is not authorized.');
+ page.once('dialog',dialog=>dialog.accept());
+ await proposal.getByRole('button',{name:'Prepare proposal against current assessment',exact:true}).click();
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveValue('');
+ await expect(proposal.getByLabel(/Proposed client amount/)).toHaveAccessibleName(/CAD/);
+ await proposal.getByRole('button',{name:'Save client proposal',exact:true}).click();
+ await expect(proposal.getByRole('status',{name:'Client proposal status'})).toContainText('version 3');
+ await page.keyboard.press('Escape');
+
  await page.keyboard.press('Escape');
  await expect(drawer.getByText(/A later preparation is a proposed change/)).toBeVisible();
  await expect(drawer.getByRole('option',{name:'Approve the initial scope baseline',exact:true})).toHaveJSProperty('disabled',true);
