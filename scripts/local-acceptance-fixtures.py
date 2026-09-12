@@ -48,6 +48,15 @@ with psycopg.connect(DB) as db:
         assert len(rows)==1 and rows[0][0]==1 and rows[0][1]['feeBasis']=='Monthly management fee', rows
         assert db.execute("select max(version) from public.project_contract_versions where project_state_id=%s", (project,)).fetchone()[0]==2
         assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project,)).fetchone()[0]==0
+    elif command == 'contract-owner-setup':
+        owner, workspace = db.execute("select m.user_id,m.workspace_id from public.workspace_memberships m join auth.users u on u.id=m.user_id where u.email=%s", (EMAIL,)).fetchone()
+        db.execute("insert into public.workspace_business_owners(workspace_id,user_id,evidence_reference,effective_from) values(%s,%s,'Synthetic confirmed business owner',now()-interval '1 minute')", (workspace,owner))
+    elif command == 'contract-owner-verify':
+        project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Contract preparation rehearsal'", (EMAIL,)).fetchone()
+        rows = db.execute("select c.version,d.outcome,r.verification_snapshot from public.project_contract_review_decisions r join public.decisions d on d.id=r.decision_id join public.project_contract_versions c on c.id=r.contract_version_id where r.project_state_id=%s", (project[0],)).fetchall()
+        assert len(rows)==1 and rows[0][0]==2 and rows[0][1]=='approved' and rows[0][2]['aal']=='aal2', rows
+        assert project[1]=='project_authorization_setup'
+        assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project[0],)).fetchone()[0]==0
     elif command == 'setup':
         status = json.loads(Path('/tmp/ridgewood-local-status.json').read_text())
         assert status['API_URL'] == API, 'Refusing non-local API'

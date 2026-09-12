@@ -15,6 +15,17 @@ jobs:
       - name: Initialize isolated local configuration
         run: |
           supabase init
+          # Only this generated disposable localhost stack enables synthetic TOTP.
+          python - <<'PYCONFIG'
+          from pathlib import Path
+          import tomllib
+          p = Path('supabase/config.toml')
+          before = p.read_text()
+          old = '[auth.mfa.totp]\nenroll_enabled = false\nverify_enabled = false'
+          assert before.count(old) == 1, 'Unexpected generated MFA defaults'
+          p.write_text(before.replace(old, '[auth.mfa.totp]\nenroll_enabled = true\nverify_enabled = true'))
+          assert tomllib.loads(p.read_text())['auth']['mfa']['totp'] == {'enroll_enabled': True, 'verify_enabled': True}
+          PYCONFIG
           mv supabase/migrations /tmp/ridgewood-recovered-migrations
       - name: Replay migrations on clean Supabase
         run: |
@@ -24,7 +35,7 @@ jobs:
           supabase migration up --local
       - name: Verify Setup and Gate 01 contracts on disposable backend
         run: |
-          supabase test db supabase/tests/database/setup_persistence_test.sql supabase/tests/database/contract_preparation_test.sql supabase/tests/database/contract_review_requests_test.sql
+          supabase test db supabase/tests/database/setup_persistence_test.sql supabase/tests/database/contract_preparation_test.sql supabase/tests/database/contract_review_requests_test.sql supabase/tests/database/contract_owner_review_test.sql
       - name: Inspect isolated database security advisors
         run: supabase db advisors --local --type security --level warn --fail-on none
       - name: Verify document lifecycle and immutability
