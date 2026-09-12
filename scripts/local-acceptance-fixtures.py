@@ -73,6 +73,21 @@ with psycopg.connect(DB) as db:
         db.execute("insert into public.evidence_references(project_state_id,title,created_by) values(%s,'Synthetic scope contract',%s)", (project,owner))
         if not db.execute("select id from public.workspace_business_owners where workspace_id=%s and user_id=%s and revoked_at is null", (workspace,owner)).fetchone():
             db.execute("insert into public.workspace_business_owners(workspace_id,user_id,evidence_reference,effective_from) values(%s,%s,'Synthetic confirmed business owner',now()-interval '1 minute')", (workspace,owner))
+    elif command == 'proposal-setup':
+        owner, workspace = db.execute("select m.user_id,m.workspace_id from public.workspace_memberships m join auth.users u on u.id=m.user_id where u.email=%s", (EMAIL,)).fetchone()
+        project = db.execute("select id from public.project_states where name='Scope basis rehearsal' and workspace_id=%s", (workspace,)).fetchone()[0]
+        document = str(uuid.uuid4())
+        payload = json.dumps({'client':'Synthetic scope client','scope':'Proposed additional flooring area','clientAmount':'-200.00','currency':'USD','feeTreatment':'50.00 retained fee against the assessed 250.00 credit','timeDays':'0','calendarBasis':'working_days','commercialTerms':'Tax excluded. Valid until withdrawn in writing. No changed work directed.'})
+        db.execute("insert into public.document_records(id,project_state_id,package_key,category_key,document_type,title,owner_user_id) values(%s,%s,'project_authorization_setup','client_proposal','client_change_proposal','Synthetic client change proposal',%s)", (document,project,owner))
+        db.execute("insert into public.document_revisions(document_record_id,revision_number,state,created_by,published_by,published_at,source_data,published_source_snapshot) values(%s,1,'published',%s,%s,now(),%s::jsonb,%s::jsonb)", (document,owner,owner,payload,payload))
+    elif command == 'proposal-verify':
+        project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Scope basis rehearsal'", (EMAIL,)).fetchone()
+        proposals = db.execute("select version,data from public.project_change_proposal_versions where project_state_id=%s order by version", (project[0],)).fetchall()
+        assert len(proposals)==2 and proposals[1][1]['clientAmount']=='-200.00', proposals
+        releases = db.execute("select d.outcome,r.verification_snapshot from public.project_change_proposal_decisions r join public.decisions d on d.id=r.decision_id where r.project_state_id=%s", (project[0],)).fetchall()
+        assert len(releases)==1 and releases[0][0]=='approved' and releases[0][1]['aal']=='aal2', releases
+        assert project[1]=='project_authorization_setup'
+        assert db.execute("select count(*) from public.project_gate01_decisions where project_state_id=%s", (project[0],)).fetchone()[0]==0
     elif command == 'scope-owner-verify':
         project = db.execute("select p.id,p.stage from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Scope basis rehearsal'", (EMAIL,)).fetchone()
         rows = db.execute("select s.version,d.outcome,r.verification_snapshot from public.project_scope_review_decisions r join public.decisions d on d.id=r.decision_id join public.project_scope_versions s on s.id=r.scope_version_id where r.project_state_id=%s", (project[0],)).fetchall()
