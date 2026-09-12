@@ -25,6 +25,8 @@ jobs:
       - name: Verify Setup and Gate 01 contracts on disposable backend
         run: |
           supabase test db supabase/tests/database/setup_persistence_test.sql supabase/tests/database/contract_preparation_test.sql
+      - name: Inspect isolated database security advisors
+        run: supabase db advisors --local --type security --level warn --fail-on none
       - name: Verify document lifecycle and immutability
         run: |
           supabase test db supabase/tests/database/client_privileges_test.sql supabase/tests/database/project_state_command_boundary_test.sql supabase/tests/database/qualification_grants_test.sql supabase/tests/database/project_photo_access_test.sql supabase/tests/database/organization_retirement_test.sql
