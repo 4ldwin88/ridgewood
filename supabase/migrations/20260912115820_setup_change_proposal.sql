@@ -37,7 +37,7 @@ begin
  select d.outcome into outcome from public.decisions d where d.id=latest.decision_id;
  if p.stage<>'project_authorization_setup' or p.status<>'active' or p.archived_at is not null then reasons:=array_append(reasons,'The project does not currently permit Setup proposal release.'); end if;
  foreach k in array array['recipientPartyId','clientAmount','feeTreatment','commercialTerms','proposalRevisionId'] loop
-  if nullif(btrim(v.data->>k),'') is null then reasons:=array_append(reasons,'Complete '||k||' in the saved proposal.'); end if;
+  if nullif(btrim(v.data->>k),'') is null then reasons:=array_append(reasons,case k when 'recipientPartyId' then 'Choose the client recipient.' when 'clientAmount' then 'Enter the proposed client amount, including an explicit reviewed zero if applicable.' when 'feeTreatment' then 'Explain the markup and fee treatment.' when 'commercialTerms' then 'State the offer terms, conditions and validity.' else 'Select the exact current published client proposal.' end); end if;
  end loop;
  if c->>'internalApproved' is distinct from 'true' then reasons:=array_append(reasons,'Current independent scope, cost and time approval is required.'); end if;
  if a.version is distinct from (c->>'version')::integer then reasons:=array_append(reasons,'The proposal refers to an earlier assessment; save against the latest assessment.'); end if;

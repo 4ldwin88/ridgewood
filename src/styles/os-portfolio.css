@@ -229,3 +229,5 @@
 
 .scope-basis .scope-actions{position:sticky;bottom:0;z-index:2;margin-top:16px;padding:12px 0;background:var(--surface,#f5f7fa);border-top:1px solid var(--line,#d8dde3)}
 .scope-basis dd{overflow-wrap:anywhere}
+
+.change-proposal .setup-actions,.change-assessment .setup-actions{position:sticky;bottom:0;z-index:2;margin-top:16px;padding:12px 0;background:var(--surface,#f5f7fa);border-top:1px solid var(--line,#d8dde3)}
