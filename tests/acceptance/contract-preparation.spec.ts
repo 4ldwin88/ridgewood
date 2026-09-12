@@ -89,6 +89,12 @@ test('contract preparation survives lost response and reopens from the real back
  await drawer.getByLabel(/Decision reason/).fill('Verified synthetic agreement, parties, terms and effectiveness. No unresolved material risks.');
  for(const label of [/I verified the exact agreement/,/I reviewed the stated value/,/I verified applicable effectiveness/,/No unresolved material contractual/])await drawer.getByLabel(label).check();
  await expect(drawer.getByLabel(/Fee basis/)).toBeDisabled();
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  await drawer.getByRole('button',{name:'Record contract decision',exact:true}).scrollIntoViewIfNeeded();
+  await expect(drawer.getByLabel(/No unresolved material contractual/)).toHaveCSS('width','20px');
+  await page.screenshot({path:`test-results/contract-owner-confirmations-${width}.png`});
+ }
  let decisionLost=false;
  await page.route('**/rest/v1/rpc/decide_project_contract_review',async route=>{if(!decisionLost){decisionLost=true;await route.fetch();await route.abort('failed');}else await route.continue();});
  page.once('dialog',dialog=>dialog.accept());

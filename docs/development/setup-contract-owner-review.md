@@ -49,7 +49,8 @@ New database tests cover permission versus authority, owner effectiveness/revoca
 live and fresh assurance, missing confirmations, Hold/approval, concurrency conflicts,
 lost-response recovery, immutable history, risk invalidation, separate Gate authority,
 same-identity advancement and outsider denial. Authenticated acceptance uses genuine
-TOTP for a synthetic disposable localhost account, then checks lost-response approval,
+TOTP for a synthetic disposable localhost account (enabled only in generated CI
+configuration), then checks lost-response approval,
 exactly one decision, reopen and mobile/desktop screenshots. CI outcome and exact
 commit are recorded in the PR and supersede pending validation language here.
 

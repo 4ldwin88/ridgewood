@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 const status=JSON.parse(readFileSync('/tmp/ridgewood-local-status.json','utf8'));
 if(status.API_URL!=='http://127.0.0.1:54321')throw new Error('Refusing non-local authentication');
 const client=createClient(status.API_URL,status.ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
-function checked(result){if(result.error)throw new Error('Synthetic authentication ceremony failed');return result.data;}
+function checked(result){if(result.error)throw new Error(`Synthetic authentication ceremony failed (${result.error.code??'unknown'}; ${result.error.status??'unknown'})`);return result.data;}
 checked(await client.auth.signInWithPassword({email:'edward-demo@example.invalid',password:'Synthetic-local-only-2026!'}));
 const factor=checked(await client.auth.mfa.enroll({factorType:'totp',friendlyName:'Disposable contract review test'}));
 const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
