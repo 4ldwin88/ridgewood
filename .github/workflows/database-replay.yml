@@ -79,6 +79,15 @@ jobs:
           python scripts/local-acceptance-fixtures.py setup
           supabase functions serve project-authorization > /tmp/ridgewood-edge.log 2>&1 &
           npx playwright test --config playwright.acceptance.config.ts
+      - name: Verify frozen v0.32 frontend against candidate database
+        run: python scripts/test-v032-compatibility.py
+      - name: Preserve v0.32 compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v032-candidate-database-compatibility
+          path: ${{ runner.temp }}/ridgewood-v032-compat/test-results/
+          retention-days: 30
       - name: Preserve authenticated visual evidence
         if: always()
         uses: actions/upload-artifact@v4
