@@ -38,7 +38,9 @@ from a subsequent preparation retains its identity and earlier versions.
 Once scope preparation exists, the legacy Setup scope fact is read-only in UI
 and normalized from earlier saved evidence on the server. Go/Conditional Go remain
 blocked pending an authorized baseline command; existing projects that have not
-used the new module retain their current behavior. No migration advances projects.
+used the new module retain their current behavior. No migration advances projects. First Setup saves also work when contract/scope
+preparation already exists: missing aliases initialize as unresolved, while existing
+historical facts and retry ordering remain intact.
 
 ## Validation and known limits
 
