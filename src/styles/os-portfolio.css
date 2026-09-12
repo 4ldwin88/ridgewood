@@ -213,3 +213,7 @@
 .setup-gate-review fieldset{border:0;padding:0;display:grid;gap:1rem}.setup-gate-review label{display:block}.setup-gate-review textarea,.setup-gate-review select,.setup-gate-review input:not([type=checkbox]){display:block;width:100%;box-sizing:border-box;min-width:0}.setup-gate-review fieldset{min-width:0}
 
 .setup-gate-review > button{margin-top:1rem}
+
+.authorized-basis{min-width:0;overflow-wrap:anywhere}
+.authorized-basis dl{margin:12px 0}.authorized-basis dt{font-weight:600;text-transform:capitalize}.authorized-basis dd{margin:4px 0 12px;white-space:pre-wrap}
+.authorized-basis .document-viewer{min-width:0;max-width:100%}

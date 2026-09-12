@@ -233,10 +233,10 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await page.getByRole('button', { name: 'Projects', exact: true }).click();
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   await capture(page,'12-projects');
-  await expect(page.getByRole('button', { name: 'View Pre-Authorization / Authorization Record' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '5.1 Authorized Basis' })).toHaveCount(0);
   await page.getByRole('button', { name, exact: true }).click();
-  await page.getByRole('button', { name: 'View Pre-Authorization / Authorization Record' }).click();
-  await expect(page.getByRole('heading', { name: 'Frozen authorization record' })).toBeVisible();
+  await page.getByRole('button', { name: '5.1 Authorized Basis' }).click();
+  await expect(page.getByRole('heading', { name: '5.1.1 Frozen mandate' })).toBeVisible();
   await expect(page.getByText('Synthetic executive acceptance', { exact: true })).toBeVisible();
   await capture(page,'13-frozen-record');
   execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'verify-result']);
@@ -311,10 +311,10 @@ test('real authenticated Opportunity to Authorize, revocation and lost response 
   await page.getByRole('button', { name: 'Archived projects', exact: true }).click();
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   await page.getByRole('button', { name, exact: true }).click();
-  await expect(page.getByRole('button', { name: 'View Pre-Authorization / Authorization Record' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '5.1 Authorized Basis' })).toBeVisible();
   await capture(page,'14-archived');
-  await page.getByRole('button', { name: 'View Pre-Authorization / Authorization Record' }).click();
-  await expect(page.getByRole('heading', { name: 'Frozen authorization record' })).toBeVisible();
+  await page.getByRole('button', { name: '5.1 Authorized Basis' }).click();
+  await expect(page.getByRole('heading', { name: '5.1.1 Frozen mandate' })).toBeVisible();
   await expect(page.getByText('Synthetic executive acceptance', { exact: true })).toBeVisible();
   execFileSync('python', ['scripts/local-acceptance-fixtures.py', 'verify-gate']);
 });

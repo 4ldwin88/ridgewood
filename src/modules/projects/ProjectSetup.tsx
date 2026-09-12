@@ -1,3 +1,4 @@
+import { AuthorizedBasis } from './AuthorizedBasis';
 import { createRequestId } from '../../infrastructure/project-state/requestId';
 import { useEffect, useRef, useState } from 'react';
 import { setupRequirements, type SetupEvidence } from '../../domain/project-state/setupGate';
@@ -82,7 +83,7 @@ function SetupEditor({ projectStateId, onAdvanced }: { projectStateId: string; o
   return <div className="stage-tool-surface setup-workspace">
     <p>Prepare the project for Gate 01. Saving records evidence and responsibilities; it does not authorize work or commitments.</p>
     <p>Project State: {projectStateId}</p>
-    <p>Frozen authorization: {state.authorizationRecordId ?? 'Missing — Setup cannot be saved'}</p>
+    {state.authorizationRecordId ? <AuthorizedBasis projectStateId={projectStateId} authorizationRecordId={state.authorizationRecordId} /> : <p role="alert">Frozen authorization missing — Setup cannot be saved.</p>}
     <p role="status">{message || `Saved version ${state.version} · ${state.unmet.length} unresolved requirements`}{dirty ? ' · Unsaved changes' : ''}</p>
     {error && <p role="alert" className="error-message">{error}</p>}
     {!state.canEdit && <p>This record is read-only for your access or the current project state.</p>}
