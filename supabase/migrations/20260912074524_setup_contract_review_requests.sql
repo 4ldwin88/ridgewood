@@ -16,6 +16,22 @@ create policy contract_review_requests_read on public.project_contract_review_re
 create trigger contract_review_requests_immutable before update or delete on public.project_contract_review_requests
  for each row execute function private.reject_setup_history_mutation();
 
+create function private.contract_review_request_blockers(data_input jsonb) returns text[]
+ language sql immutable set search_path='' as $$
+ select array_remove(array[
+  case when coalesce(jsonb_array_length(data_input->'partyIds'),0)=0 then 'Select contracting parties.' end,
+  case when coalesce(data_input->>'agreementRevisionId','')='' and coalesce(data_input->>'agreementEvidenceId','')='' then 'Select an agreement publication or agreement evidence.' end,
+  case when coalesce(data_input->>'compensationModel','') not in ('fixed','fee','mixed') then 'Assess the compensation model.' end,
+  case when data_input->>'compensationModel' in ('fixed','mixed') and (coalesce(data_input->>'contractValue','')='' or coalesce(data_input->>'currency','')='') then 'Enter the stated value and currency.' end,
+  case when data_input->>'compensationModel' in ('fee','mixed') and btrim(coalesce(data_input->>'feeBasis',''))='' then 'Enter the fee basis.' end,
+  case when btrim(coalesce(data_input->>'paymentTerms',''))='' then 'Enter the payment terms.' end,
+  case when coalesce(data_input->>'riskAssessment','') not in ('none_identified','linked') then 'Assess contractual risks.' end,
+  case when data_input->>'riskAssessment'='linked' and jsonb_array_length(data_input->'riskIds')=0 then 'Link the identified risks or exceptions.' end,
+  case when data_input->>'riskAssessment'='none_identified' and jsonb_array_length(data_input->'riskIds')>0 then 'Reconcile the risk assessment with its linked risks.' end
+ ]::text[],null)
+$$;
+revoke all on function private.contract_review_request_blockers(jsonb) from public,anon,authenticated;
+
 alter function private.read_project_contract_command(uuid) rename to read_project_contract_before_requests;
 revoke all on function private.read_project_contract_before_requests(uuid) from public, anon, authenticated;
 create function private.read_project_contract_command(project_state_input uuid) returns jsonb
@@ -23,7 +39,7 @@ create function private.read_project_contract_command(project_state_input uuid) 
 declare result jsonb;
 begin
  result:=private.read_project_contract_before_requests(project_state_input);
- return result||jsonb_build_object('reviewRequests',(
+ return result||jsonb_build_object('reviewRequestBlockers',to_jsonb(private.contract_review_request_blockers(result->'data')),'reviewRequests',(
   select coalesce(jsonb_agg(jsonb_build_object('id',r.id,'version',v.version,'createdAt',r.created_at,
    'actorUserId',r.actor_user_id,'status',case when v.version=(result->>'version')::integer then 'pending' else 'superseded' end)
    order by v.version desc),'[]')
@@ -51,8 +67,8 @@ begin
  select * into v from public.project_contract_versions where project_state_id=p.id order by version desc limit 1;
  if v.id is null or v.version<>version_input then raise exception 'contract_version_conflict'; end if;
  if exists(select 1 from public.project_contract_review_requests where contract_version_id=v.id) then raise exception 'contract_review_already_requested'; end if;
- -- A request may deliberately ask an authorized reviewer to resolve missing evidence or
- -- material terms. It is not a completeness claim. Approval must validate the full basis.
+ if cardinality(private.contract_review_request_blockers(v.data))>0 then raise exception 'incomplete_contract_review_basis'; end if;
+ -- Submission sufficiency is distinct from authorized review, validity or risk acceptance.
  insert into public.project_contract_review_requests(project_state_id,contract_version_id,request_id,actor_user_id)
  values(p.id,v.id,request_id_input,auth.uid()) returning * into previous;
  insert into public.audit_events(project_state_id,event_type,actor_user_id,payload,occurred_at)

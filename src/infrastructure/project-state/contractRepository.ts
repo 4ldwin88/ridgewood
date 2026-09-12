@@ -13,6 +13,7 @@ export interface ContractState {
  history: { version: number; actorUserId: string; createdAt: string }[];
  reviewRequests?: { id: string; version: number; actorUserId: string; createdAt: string; status: 'pending' | 'superseded' }[];
  submittedReviewId?: string; submittedVersion?: number;
+ reviewRequestBlockers?: string[];
 }
 export class ContractSaveError extends Error {
  code: string;

@@ -13,6 +13,8 @@ test('contract preparation survives lost response and reopens from the real back
  await page.getByRole('button',{name:'5.2 Contract & Commercial Review',exact:true}).click();
  const drawer=page.getByRole('dialog',{name:'5.2 Contract & Commercial Review',exact:true});
  await drawer.getByLabel('Synthetic legal client').check();
+ await drawer.getByLabel(/Supporting agreement evidence/).selectOption({label:'Synthetic contract evidence'});
+ await drawer.getByLabel(/Contractual risk assessment/).selectOption('none_identified');
  await drawer.getByLabel(/Compensation model/).selectOption('fee');
  await drawer.getByLabel(/Fee basis/).fill('Monthly management fee');
  await drawer.getByLabel(/Payment terms/).fill('Monthly invoice under agreement clause 8');

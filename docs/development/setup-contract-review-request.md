@@ -12,8 +12,10 @@ the handoff. This branch stacks on PR22 at
 The request references its immutable contract version (including its frozen
 authorization and evidence references), with server actor/time and audit event.
 It does not duplicate the contract's writable fields or treat a selected decision
-as verified approval. Incomplete preparation may be submitted for help resolving
-missing terms; this is explicitly not a completeness or readiness assertion.
+as verified approval. Incomplete drafts can save, but required parties, agreement evidence, commercial
+terms and risk assessment must be supplied before requesting review. Server
+validation and visible saved-version blockers enforce the distinction. Submission
+still does not prove contractual validity, risk acceptance or approval.
 
 The server serializes requests with saves on the Project State lock, checks
 membership and explicit Setup-edit permission, rejects stale/new duplicate
@@ -52,7 +54,7 @@ that conversation length caused it.
 ## Validation and release boundary
 
 Local typecheck, 36 unit tests, lint (zero errors, seven existing warnings) and
-production build passed. New tests exercise request recovery, uniqueness,
+production build passed. Nineteen database tests exercise submission prerequisites, request recovery, uniqueness,
 version changes, preserved source data, permissions, foreign workspace access,
 archive denial and continued gate denial. Authenticated acceptance adds a lost
 review response, retry, reopen, supersession and desktop/mobile captures.

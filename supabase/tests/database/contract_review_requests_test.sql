@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(19);
 insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
 ('00000000-0000-4000-8000-00000000f001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-editor@example.invalid',now(),now()),
 ('00000000-0000-4000-8000-00000000f002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','setup-outsider@example.invalid',now(),now());
@@ -10,11 +10,14 @@ insert into public.authorization_records(id,project_state_id,outcome,actor_user_
 
 select set_config('test.contract_data','{"partyIds":[],"agreementRevisionId":"","agreementEvidenceId":"","compensationModel":"fee","contractValue":"","currency":"","feeBasis":"Monthly management fee","paymentTerms":"Monthly invoice","reviewDecisionId":"","riskAssessment":"","riskIds":[],"effectiveFrom":"","effectiveUntil":""}',true);
 insert into public.user_permission_overrides(workspace_id,user_id,permission_key,effect) values ('00000000-0000-4000-8000-00000000f010','00000000-0000-4000-8000-00000000f001','project.setup.edit','grant');
+insert into public.organizations(id,workspace_id,name,created_by) values ('00000000-0000-4000-8000-00000000f070','00000000-0000-4000-8000-00000000f010','Synthetic legal party','00000000-0000-4000-8000-00000000f001');
+insert into public.evidence_references(id,project_state_id,title,created_by) values ('00000000-0000-4000-8000-00000000f071','00000000-0000-4000-8000-00000000f020','Synthetic agreement','00000000-0000-4000-8000-00000000f001');
+select set_config('test.contract_data',(current_setting('test.contract_data')::jsonb||'{"partyIds":["00000000-0000-4000-8000-00000000f070"],"agreementEvidenceId":"00000000-0000-4000-8000-00000000f071","riskAssessment":"none_identified"}')::text,true);
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f001","role":"authenticated"}',true);
 select throws_ok($$select public.request_project_contract_review('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-00000000f060')$$,'P0001','save_contract_before_request','unsaved preparation cannot be requested');
 select public.save_project_contract('00000000-0000-4000-8000-00000000f020',0,'00000000-0000-4000-8000-00000000f040',current_setting('test.contract_data')::jsonb);
-select is(public.request_project_contract_review('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f060')->>'submittedVersion','1','nonbinding review may identify incomplete preparation');
+select is(public.request_project_contract_review('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f060')->>'submittedVersion','1','review request references submitted preparation');
 select is(public.request_project_contract_review('00000000-0000-4000-8000-00000000f020',1,'00000000-0000-4000-8000-00000000f060')->>'submittedVersion','1','lost response recovers same request');
 select is((select count(*)::integer from public.project_contract_review_requests),1,'retry produces exactly one request');
 select is(public.read_project_contract('00000000-0000-4000-8000-00000000f020')->'reviewRequests'->0->>'status','pending','reopen exposes pending request');
@@ -37,6 +40,11 @@ select is((select count(*)::integer from public.project_contract_review_requests
 select throws_ok($$select public.request_project_contract_review('00000000-0000-4000-8000-00000000f020',2,'00000000-0000-4000-8000-00000000f061')$$,'P0001','project_state_not_found_or_access_denied','outsider cannot request review');
 reset role;
 update public.user_permission_overrides set effect='grant' where permission_key='project.setup.edit' and workspace_id='00000000-0000-4000-8000-00000000f010';
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f001","role":"authenticated"}',true);
+select public.save_project_contract('00000000-0000-4000-8000-00000000f020',2,'00000000-0000-4000-8000-00000000f042',current_setting('test.contract_data')::jsonb||'{"paymentTerms":""}');
+select throws_ok($$select public.request_project_contract_review('00000000-0000-4000-8000-00000000f020',3,'00000000-0000-4000-8000-00000000f062')$$,'P0001','incomplete_contract_review_basis','incomplete draft can save but cannot enter review');
+reset role;
 update public.project_states set archived_at=now() where id='00000000-0000-4000-8000-00000000f020';
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f001","role":"authenticated"}',true);

@@ -36,6 +36,7 @@ with psycopg.connect(DB) as db:
         db.execute("insert into public.project_states(id,workspace_id,name,stage,commercial_stage,status,priority,created_by,owner_user_id) values(%s,%s,'Contract preparation rehearsal','project_authorization_setup','project_authorization_setup','active','medium',%s,%s)", (project,workspace,owner,owner))
         db.execute("insert into public.authorization_records(project_state_id,outcome,actor_user_id) values(%s,'approved',%s)", (project,owner))
         db.execute("insert into public.organizations(workspace_id,name,created_by) values(%s,'Synthetic legal client',%s)", (workspace,owner))
+        db.execute("insert into public.evidence_references(project_state_id,title,created_by) values(%s,'Synthetic contract evidence',%s)", (project,owner))
     elif command == 'contract-verify':
         project = db.execute("select p.id from public.project_states p join auth.users u on u.id=p.created_by where u.email=%s and p.name='Contract preparation rehearsal'", (EMAIL,)).fetchone()[0]
         rows = db.execute("select version,data,authorization_record_id from public.project_contract_versions where project_state_id=%s", (project,)).fetchall()
