@@ -49,6 +49,12 @@ test('edge and header swipes close; short, reverse and vertical gestures do not;
   await swipe(page, '.workspace-drawer__edge', 180);
   await expect(drawer).toBeVisible();
   await expect(page.getByRole('button', { name: /Owned/ })).toHaveAttribute('aria-pressed', 'true');
+  for (let attempt=0; attempt<2; attempt++) {
+    page.once('dialog', dialog => dialog.dismiss());
+    await page.keyboard.press('Escape');
+    await expect(drawer).toBeVisible();
+    await expect(page.getByRole('button', { name: /Owned/ })).toHaveAttribute('aria-pressed', 'true');
+  }
   await page.getByRole('button', { name: 'Save draft', exact: true }).click();
   await expect(drawer).toHaveAttribute('aria-busy', 'true');
   await swipe(page, '.workspace-drawer__header', 180);

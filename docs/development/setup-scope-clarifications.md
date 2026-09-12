@@ -41,6 +41,16 @@ UI uses the shared numbered drawer, dirty/busy guards, typed date/member/source
 selectors, blank dispositions, explicit checkbox confirmation, saved/reopened
 history and frozen publication viewer with print/zoom. No notification is sent.
 
+## Escape guard correction
+
+Authenticated validation exposed a native Escape close after the discard prompt
+was rejected. The shared drawer now intercepts Escape at keydown and invokes the
+same dirty/busy guard as the close button and swipe. Repeated Escape must retain
+unsaved fields; nested propagation stops at the active drawer. Native cancel
+handling remains for other platform close requests. The HTML close-watcher
+standard permits non-cancelable native requests after history-action activation
+is consumed: https://html.spec.whatwg.org/multipage/interaction.html#close-watcher-infrastructure.
+
 ## Validation and remaining implementation
 
 Local build/unit/lint and exact-head disposable CI results are recorded in the PR;

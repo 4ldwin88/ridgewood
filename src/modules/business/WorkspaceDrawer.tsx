@@ -101,7 +101,11 @@ export function WorkspaceDrawer({ title, contextKey, onClose, onEvent, children,
 
   return <dialog ref={dialog} className={`workspace-drawer${expanded ? ' workspace-drawer--expanded' : ''}${dragX ? ' is-dragging' : ''}`}
     style={{transform:dragX?`translateX(${dragX}px)`:undefined}}
-    aria-label={title} aria-busy={state.busy || busy} onCancel={event => { event.preventDefault(); event.stopPropagation(); close(); }}>
+    aria-label={title} aria-busy={state.busy || busy}
+    // Native close-watcher cancel events can become non-cancelable after a prior
+    // close request. Route the keyboard action through the same work guard first.
+    onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); } }}
+    onCancel={event => { event.preventDefault(); event.stopPropagation(); close(); }}>
     <header className="workspace-drawer__header" {...gestureHandlers}>
       <div><p className="eyebrow">Project workspace</p><h2>{title}</h2><small className="drawer-state" role="status">{state.busy||busy?'Saving…':state.dirty?'Unsaved changes':'Swipe header right to close'}</small></div>
       <div className="form-actions">
